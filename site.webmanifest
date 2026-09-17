@@ -1,0 +1,17 @@
+{
+  "name": "GOGO - Smart Hike Zero Queue",
+  "short_name": "GOGO",
+  "description": "Book a seat on a hike leaving your street. Door collection, verified drivers, live tracking for up to 3 people.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#232328",
+  "categories": ["travel", "navigation"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

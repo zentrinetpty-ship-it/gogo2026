@@ -1,0 +1,86 @@
+/* =========================================================================
+   GOGO — Why GOGO: explanation blocks, comparison, FAQ
+   ========================================================================= */
+
+/* ── reason cards ─────────────────────────────────────────────────────── */
+.g-why {
+  height: 100%; display: flex; flex-direction: column;
+  background: var(--card); border: 1px solid rgba(11, 11, 11, .10); border-radius: 4px;
+  padding: 18px; box-shadow: 0 2px 0 rgba(11, 11, 11, .05);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.g-why:hover { transform: translateY(-2px); border-color: rgba(11, 11, 11, .2); box-shadow: 0 12px 26px rgba(11, 11, 11, .10); }
+.g-why .g-h3 { margin-top: 12px; }
+.g-why .g-s { flex: 1; }
+.g-why-proof {
+  margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(11, 11, 11, .14);
+  font-size: 11.5px; font-weight: 700; color: rgba(11, 11, 11, .58); display: flex; gap: 7px; align-items: flex-start;
+}
+.g-why-ic { flex: 0 0 auto; }
+
+/* ── old way vs GOGO ─────────────────────────────────────────────────── */
+.g-vs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .g-vs { grid-template-columns: 1fr; } }
+.g-vs-col { border-radius: 4px; padding: 15px 16px; border: 1px solid rgba(11, 11, 11, .10); }
+.g-vs-col.bad { background: rgba(11, 11, 11, .035); }
+.g-vs-col.good { background: rgba(141, 182, 0, .10); border-color: rgba(141, 182, 0, .45); }
+.g-vs-head { font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.g-vs-col.good .g-vs-head { color: #4F6800; }
+.g-vs-col ul { margin: 0; padding-left: 18px; }
+.g-vs-col li { font-size: 13px; font-weight: 600; color: var(--ink-soft); padding: 4px 0; line-height: 1.45; }
+.g-vs-col.good li { color: #3C5000; }
+
+/* ── numbered step ───────────────────────────────────────────────────── */
+.g-step-no {
+  width: 30px; height: 30px; flex: 0 0 auto; border-radius: 4px; display: grid; place-items: center;
+  background: linear-gradient(180deg, #2B2B2B, #000); color: #fff; font-weight: 900; font-size: 13px;
+  box-shadow: 0 2px 0 rgba(11, 11, 11, .22);
+}
+
+/* ── tick list ───────────────────────────────────────────────────────── */
+.g-ticks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 18px; }
+@media (max-width: 680px) { .g-ticks { grid-template-columns: 1fr; } }
+.g-ticks li { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+/* ── FAQ ─────────────────────────────────────────────────────────────── */
+.g-faq { border: 1px solid rgba(11, 11, 11, .10); border-radius: 4px; overflow: hidden; background: var(--card); }
+.g-faq-item { border-top: 1px solid rgba(11, 11, 11, .08); }
+.g-faq-item:first-child { border-top: 0; }
+.g-faq-item summary {
+  cursor: pointer; list-style: none; padding: 15px 17px;
+  display: flex; align-items: center; gap: 14px; font-size: 14.5px; font-weight: 800; color: var(--ink);
+}
+.g-faq-item summary::-webkit-details-marker { display: none; }
+.g-faq-item summary:hover { background: rgba(141, 182, 0, .08); }
+.g-faq-plus { margin-left: auto; font-size: 17px; font-weight: 900; color: rgba(11, 11, 11, .35); transition: transform .2s ease; }
+.g-faq-item[open] .g-faq-plus { transform: rotate(45deg); color: #CF9B00; }
+.g-faq-item p { padding: 0 17px 16px; margin: 0; }
+
+/* ── footer link groups ──────────────────────────────────────────────── */
+.g-foot-cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 26px; }
+@media (max-width: 860px) { .g-foot-cols { grid-template-columns: 1fr 1fr; gap: 20px; } }
+@media (max-width: 520px) { .g-foot-cols { grid-template-columns: 1fr; } }
+.g-foot-col h4 { font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: rgba(11, 11, 11, .45); margin: 0 0 10px; }
+.g-foot-col a { display: block; font-size: 13px; font-weight: 600; color: rgba(11, 11, 11, .72); padding: 4px 0; }
+.g-foot-col a:hover { color: var(--ink); }
+
+/* ── long-form page type ─────────────────────────────────────────────── */
+.g-prose p { font-size: 14.5px; }
+.g-prose h3 { margin-top: 22px; }
+.g-legal h2 { margin-top: 26px; }
+.g-legal p, .g-legal li { font-size: 14px; color: var(--ink-soft); }
+.g-legal li { padding: 3px 0; }
+.g-legal ul { margin: 8px 0 8px 18px; }
+
+/* ── accessibility: skip link + focus rings ──────────────────────────── */
+.g-skip {
+  position: absolute; left: -9999px; top: 8px; z-index: 200;
+  background: #0B0B0B; color: #fff; padding: 10px 16px; border-radius: 4px;
+  font-size: 13px; font-weight: 800; text-decoration: none;
+}
+.g-skip:focus { left: 12px; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible,
+details:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid #0B0B0B; outline-offset: 2px; border-radius: 4px;
+}
+.g-nav a:focus-visible, .g-dock a:focus-visible { outline-color: #0B0B0B; outline-offset: -2px; }

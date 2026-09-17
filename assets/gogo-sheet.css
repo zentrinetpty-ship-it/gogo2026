@@ -1,0 +1,269 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   GOGO /gogo2 — the map is the page.
+   Nothing on this screen scrolls except the sheet. The map is fixed behind
+   everything, the search sheet is fixed above the dock, and the sheet is the
+   only thing that moves: drag it up for more, down for less.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body.g2 {
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+  background: #E9EDF0;
+}
+body.g2 #main { min-height: 0; padding: 0; }
+body.g2 .g-foot { display: none; }
+
+/* ── the map, full screen, behind everything ─────────────────────────────── */
+body.g2 .g2-map {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;                 /* the sheet is what you touch */
+  background: #E9EDF0;
+}
+body.g2 .g2-map #heroMap,
+body.g2 .g2-map #bodyMap,
+body.g2 .g2-map .g-hero-map,
+body.g2 .g2-map .g-body-map {
+  position: absolute !important; inset: 0 !important;
+  width: 100% !important; height: 100% !important;
+  display: block !important; opacity: 1 !important;
+  border-radius: 0; margin: 0; background: #E9EDF0;
+}
+body.g2 .g2-map .g-map-stage { position: absolute; left: 0; top: 0;
+  filter: saturate(1.18) contrast(1.06) brightness(.99); }
+/* the empty shell that keeps gogo-map's boot happy must never paint */
+body.g2 .g2-map .g2-map-stub {
+  background: transparent !important; pointer-events: none; z-index: 0;
+}
+/* the map credit stays on the map, above the sheet */
+body.g2 .g2-credit {
+  position: absolute; right: 10px; left: auto; top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 22;
+  font-size: 9.5px; letter-spacing: .01em; color: rgba(38, 38, 43, .5);
+  background: rgba(255, 255, 255, .72); padding: 2px 6px; border-radius: 4px;
+  pointer-events: none;
+}
+body.g2 .g-hero-scrim { display: none; }        /* the map is the surface, not a backdrop */
+
+/* ── the top bar floats over the map (desktop only: hidden on phones) ────── */
+body.g2 .g-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+}
+@media (max-width: 900px) {
+  /* on phones the bar keeps only the logo and the account chip: no links, no
+     panel, nothing to read as a top nav */
+  body.g2 .g-nav {
+    background: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    pointer-events: none;            /* only the logo and the chip are touchable */
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 18px 0;
+  }
+  body.g2 .g-nav .g-brand,
+  body.g2 .g-nav #acct { pointer-events: auto; }
+  /* the bar was built for a dark strip, so put the mark on the light palette */
+  body.g2 .g-nav .g-brand .g-brand-p1 { color: #26262B; }
+  body.g2 .g-nav .g-brand .g-brand-p2 { color: #8DB600; }
+  body.g2 .g-nav .g-brand .g-brand-dot { background: #A3E635; }
+  body.g2 .g-nav .g-lamp { fill: #8DB600 !important; }
+  body.g2 .g-nav .g-nav-links { display: none !important; }
+  body.g2 .g-nav .g-nav-right > a:not(#acct) { display: none !important; }
+  body.g2 .g-nav .g-brand { font-size: 24px; }
+}
+
+/* ── the dock ──────────────────────────────────────────────────────────────
+   This block used to flatten the nav into a full-width square bar pinned to
+   the bottom edge, from when this page was a map-first experiment. Every
+   other page has a floating rounded bar, so that override is removed: the
+   nav's real geometry lives in gogo-live.css and nothing here restates it. */
+
+
+/* ── no fee line under the booking card on this page ─────────────────────── */
+body.g2 .g-bk-fee { display: none; }
+
+/* ── the open picker always sits on top ──────────────────────────────────────
+   The pickup row is z-index 3 and the destination row 2, which is what lifts the
+   pickup list over the destination field. The destination's own province panel
+   lives inside that z-2 row, so without this it renders behind the pickup field.
+   Lifting the row that currently holds focus settles it in both directions. */
+body.g2 .g-bk-pair .g-bk-fld-pick { z-index: 3; }
+body.g2 .g-bk-pair > .g-bk-fld:not(.g-bk-fld-pick) { z-index: 2; }
+body.g2 .g-bk-pair .g-bk-fld:focus-within { z-index: 130 !important; }
+
+/* ── the hero header and sub header, on a soft veil so it always reads ───── */
+body.g2 .g2-top {
+  position: fixed; inset: 0; z-index: 25; pointer-events: none;
+}
+body.g2 .g2-top::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 358px; z-index: 20;
+  /* firm through the text block, then a long fade so the map stays the page */
+  background: linear-gradient(#FFFFFF 9%, rgba(255, 255, 255, .985) 42%,
+              rgba(255, 255, 255, .95) 64%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+body.g2 .g2-hero {
+  position: absolute; z-index: 21; pointer-events: none;
+  left: 22px; right: 22px;
+  top: calc(var(--g2-nav, 62px) + 4px + env(safe-area-inset-top, 0px));
+}
+/* the same type as the main landing: heavy, tight, two lines */
+body.g2 .g2-hero .g-impact {
+  margin: 0; font-weight: 900; letter-spacing: -.05em; line-height: 1.0;
+  font-size: clamp(2.55rem, 12.6vw, 3.5rem); color: var(--ink);
+}
+body.g2 .g2-hero .g-eyebrow {
+  display: inline-block; margin: 10px 0 0; font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase; color: #5F7A00;
+  text-shadow: 0 1px 8px rgba(255, 255, 255, .95), 0 0 4px rgba(255, 255, 255, .9);
+}
+body.g2 .g2-hero .g-lead {
+  margin: 16px 0 0; max-width: 33ch;
+  font-size: 14px; line-height: 1.5; color: rgba(38, 38, 43, .82);
+  text-shadow: 0 1px 10px rgba(255, 255, 255, .95), 0 0 4px rgba(255, 255, 255, .9),
+               0 0 18px rgba(255, 255, 255, .8);
+}
+body.g2 .g2-hero .g-lead b { color: var(--ink); }
+/* the map credit is off the landing by request; the attribution now lives in
+   the terms, which keeps the OpenStreetMap and Esri licence terms satisfied
+   without a label sitting on the map. One line to bring it back if wanted. */
+body.g2 .g2-credit { display: none !important; }
+@media (min-width: 901px) {
+  body.g2 .g2-hero { left: 22px; right: auto; max-width: 560px; top: calc(var(--g2-nav, 66px) + 30px); }
+  body.g2 .g2-hero .g-impact { font-size: clamp(3.3rem, 4vw, 4.2rem); }
+  body.g2 .g2-hero .g-lead { font-size: 15.5px; max-width: 42ch; }
+}
+
+/* ── the sheet: fixed, above the dock, moved by transform only ───────────── */
+body.g2 .g2-sheet {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(var(--g2-dock) + env(safe-area-inset-bottom, 0px));
+  height: var(--g2-h);
+  z-index: 30;
+  display: flex; flex-direction: column;
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -16px 44px rgba(38, 38, 43, .20), 0 -1px 0 rgba(38, 38, 43, .06);
+  /* the bottom edge sits on the dock and must not move, so the sheet grows by
+     height, never by transform: a transform would drag the bottom edge with it */
+  transition: height .36s cubic-bezier(.22, .82, .22, 1);
+}
+body.g2 .g2-sheet.dragging { transition: none; }
+
+/* the grab handle */
+body.g2 .g2-grab {
+  flex: 0 0 auto;
+  padding: 11px 0 7px;
+  display: flex; justify-content: center;
+  touch-action: none; cursor: grab;
+}
+body.g2 .g2-grab:active { cursor: grabbing; }
+body.g2 .g2-grab i {
+  width: 44px; height: 4px; border-radius: 99px;
+  background: rgba(38, 38, 43, .2);
+  transition: background .2s ease;
+}
+body.g2 .g2-sheet:hover .g2-grab i { background: rgba(38, 38, 43, .32); }
+
+/* the peek bar: what you see when the sheet is down */
+body.g2 .g2-peek {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 11px;
+  margin: 0 16px 10px;
+  padding: 11px 13px;
+  border: 1px solid rgba(38, 38, 43, .12);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(38, 38, 43, .05);
+  cursor: pointer;
+  touch-action: none;                /* a drag must not scroll the page behind */
+  -webkit-tap-highlight-color: transparent;
+}
+body.g2 .g2-peek:active { background: #f6f7f4; }
+/* the peek bar is the summary; the real fields take over as the sheet rises */
+body.g2 .g2-sheet:not(.near-peek) .g2-peek {
+  flex: 0 0 auto; height: 0; min-height: 0; margin: 0; padding: 0 13px; opacity: 0;
+  border-width: 0; overflow: hidden; pointer-events: none;
+}
+body.g2 .g2-sheet .g2-peek { transition: opacity .2s ease, height .3s cubic-bezier(.22,.82,.22,1), margin .3s ease, padding .3s ease; }
+body.g2 .g2-peek-ic {
+  width: 30px; height: 30px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border-radius: 9px; background: rgba(163, 230, 53, .22);
+  font-size: 15px; line-height: 1;
+}
+body.g2 .g2-peek-txt { min-width: 0; flex: 1 1 auto; }
+body.g2 .g2-peek-k {
+  display: block; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #5F7A00;
+}
+body.g2 .g2-peek-v {
+  display: block; font-size: 15px; font-weight: 700; color: #26262B;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.g2 .g2-peek-v.empty { color: rgba(38, 38, 43, .42); font-weight: 600; }
+body.g2 .g2-peek-go {
+  flex: 0 0 auto; width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 11px;
+  background: #A3E635; color: #26262B;
+  cursor: pointer;
+}
+body.g2 .g2-peek-go svg { width: 19px; height: 19px; }
+
+/* the scrolling part of the sheet */
+body.g2 .g2-body {
+  flex: 1 1 auto; min-height: 0;
+  /* hidden, always: a flex item with visible overflow cannot shrink below its
+     content, which is what stopped the sheet closing to the collapsed height */
+  overflow: hidden;
+  padding: 0 18px 22px;
+}
+body.g2 .g2-sheet.near-peek .g2-body {
+  padding-bottom: 0;                   /* no sliver of the form under the bar */
+}
+body.g2 .g2-sheet.at-full .g2-body {
+  overflow-y: auto;                    /* the card is taller than the screen here */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+/* the place picker is absolutely positioned and must escape the body's overflow.
+   Fixed works cleanly here because this page never scrolls, so body-relative and
+   viewport-relative are the same thing. */
+body.g2 .g2-body .g-ac {
+  position: fixed;
+  z-index: 200;
+}
+
+/* the booking card becomes flat inside the sheet: the sheet is the surface */
+body.g2 .g2-body .g-book,
+body.g2 .g2-body #bookForm {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  width: 100%;
+}
+body.g2 .g2-body .g-bk-sec { margin-bottom: 14px; }
+body.g2 .g2-body .g-bk-h { margin-bottom: 8px; }
+/* the sheet supplies the padding, so the fields stop carrying a card gutter */
+body.g2 .g2-body .g-book { padding-left: 0 !important; padding-right: 0 !important; }
+
+/* ── desktop: a floating panel, the way the map apps do it ───────────────── */
+@media (min-width: 901px) {
+  body.g2 .g-nav { position: fixed; }
+  body.g2 .g2-sheet {
+    left: 22px; right: auto;
+    width: 430px;
+    bottom: calc(var(--g2-dock) + 16px);
+    border-radius: 18px;
+    max-height: none;
+  }
+  body.g2 .g2-map #heroMap { border-radius: 0; }
+  body.g2 .g2-peek-go { width: 42px; height: 42px; }
+}

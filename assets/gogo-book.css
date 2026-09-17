@@ -1,0 +1,179 @@
+/* =========================================================================
+   GOGO — BOOKING CARD
+   Reference pattern: section headings (Destinations · Details · Boarding),
+   48px fields with a leading icon, full-width outline detail buttons that
+   cycle their options, and a matte black submit. GOGO content throughout.
+   ========================================================================= */
+
+.g-book {
+  width: 100%; max-width: 27rem;
+  border-radius: 4px; padding: 24px;
+  display: block;
+}
+.g-bk-sec { margin-bottom: 22px; }
+.g-bk-sec:last-of-type { margin-bottom: 20px; }
+.g-bk-h {
+  margin: 0 0 9px; font-size: 14.5px; font-weight: 800; letter-spacing: -.01em;
+  color: var(--ink);
+}
+.g-bk-inwrap { position: relative; display: flex; align-items: center; margin-bottom: 8px; }
+.g-bk-inwrap:last-child { margin-bottom: 0; }
+.g-bk-ic {
+  position: absolute; left: 13px; width: 20px; height: 20px;
+  color: var(--ink-mute); pointer-events: none; flex: 0 0 auto;
+}
+.g-bk-ic svg { width: 20px; height: 20px; display: block; }
+
+.g-bk-in {
+  height: 48px; width: 100%;
+  border-radius: 3px; border: 1px solid var(--line);
+  background: var(--card-2); color: var(--ink);
+  padding: 0 46px 0 41px;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.g-bk-in::placeholder { color: var(--ink-mute); font-weight: 500; }
+.g-bk-in:hover { border-color: rgba(11, 11, 11, .3); }
+.g-bk-in:focus {
+  outline: none; background: var(--card);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(11, 11, 11, .12);
+}
+
+.g-bk-inwrap .g-swap { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
+.g-book .g-swap button {
+  width: 36px; height: 36px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink);
+  font-size: 15px; line-height: 1;
+}
+.g-book .g-swap button:hover { background: var(--paper-2); }
+
+.g-bk-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.g-bk-row:last-child { margin-bottom: 0; }
+.g-bk-info {
+  position: relative; height: 48px; flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 11px; padding: 0 15px 0 41px;
+  border-radius: 3px; border: 1px solid var(--line);
+  background: var(--card-2); color: var(--ink);
+  font-family: inherit; font-size: 13.5px; font-weight: 700; text-align: left;
+  cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  transition: border-color .16s ease, background .16s ease;
+}
+.g-bk-info:hover { background: var(--card); border-color: rgba(11, 11, 11, .3); }
+.g-bk-info:active { background: var(--paper-2); }
+.g-bk-info .g-bk-ic { left: 12px; }
+
+.g-bk-submit {
+  height: 48px; width: 100%; border-radius: 3px;
+  font-size: 15.5px; font-weight: 800; gap: 9px;
+}
+.g-bk-submit .g-bk-ic { position: static; color: var(--on-black); }
+.g-bk-fee { text-align: center; margin: 12px 0 0; }
+
+/* the detail selects hold state in the DOM but stay out of sight */
+.g-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── staggered entrance: the framer-motion feel, no dependency ────────── */
+@keyframes gBkIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.g-book .g-bk-sec,
+.g-book .g-bk-submit,
+.g-book .g-bk-fee { animation: gBkIn .52s cubic-bezier(.2, .8, .2, 1) both; }
+.g-book .g-bk-sec:nth-of-type(1) { animation-delay: .05s; }
+.g-book .g-bk-sec:nth-of-type(2) { animation-delay: .13s; }
+.g-book .g-bk-sec:nth-of-type(3) { animation-delay: .21s; }
+.g-book .g-bk-submit { animation-delay: .29s; }
+.g-book .g-bk-fee { animation-delay: .35s; }
+@media (prefers-reduced-motion: reduce) {
+  .g-book .g-bk-sec, .g-book .g-bk-submit, .g-book .g-bk-fee { animation: none; }
+}
+@media (max-width: 420px) {
+  .g-book { padding: 18px; border-radius: 4px; }
+  .g-bk-h { font-size: 14px; }
+  .g-bk-info { font-size: 12.5px; gap: 9px; padding: 0 12px 0 39px; }
+}
+
+/* ── the Going-to picker: provinces first, towns unfold in the same menu ─ */
+.g-ac { max-height: 62vh; overflow-y: auto; padding: 6px; }
+.g-ac-two { padding: 6px; }
+.g-ac-prow {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; margin-bottom: 2px;
+  border: 1px solid transparent; border-radius: 3px; background: transparent;
+  color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 800;
+  text-align: left; cursor: pointer;
+}
+.g-ac-prow:hover { background: rgba(11, 11, 11, .06); }
+.g-ac-prow.on { background: var(--paper-2); border-color: var(--line); }
+.g-ac-prow.mine { box-shadow: inset 3px 0 0 var(--lime); }
+.g-ac-prow.is-cursor, .g-ac-item.is-cursor { background: rgba(11, 11, 11, .1); }
+.g-ac-plabel { display: flex; align-items: center; color: var(--ink-mute); }
+.g-ac-plabel svg { width: 13px; height: 13px; }
+.g-ac-pname { flex: 1; min-width: 0; }
+.g-ac-chev { width: 14px; height: 14px; color: var(--ink-mute); transition: transform .18s ease; flex: 0 0 auto; }
+.g-ac-prow.on .g-ac-chev { transform: rotate(180deg); }
+.g-ac-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  margin: 0 0 8px 10px; padding-left: 9px;
+  border-left: 1px solid var(--line);
+  animation: gAcGrid .18s ease both;
+}
+@keyframes gAcGrid { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+.g-ac-cbtn {
+  text-align: left; padding: 6px 7px; border: 0; border-radius: 3px; background: transparent;
+  color: var(--ink-soft); font-family: inherit; font-size: 11.5px; font-weight: 600;
+  cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.g-ac-cbtn:hover { background: rgba(11, 11, 11, .07); color: var(--ink); }
+.g-ac-cbtn.on { background: var(--lime-wash); color: var(--ink); font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .g-ac-grid { animation: none; } }
+
+/* ── glass: the card has no colour of its own, the app shows through ───── */
+.g-book {
+  background: rgba(255, 255, 255, .62);
+  background-image: none;
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  border: 1px solid rgba(38, 38, 43, .10);
+  box-shadow: 0 1px 2px rgba(38, 38, 43, .05), 0 22px 46px -30px rgba(38, 38, 43, .4), inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+/* fields keep enough body to stay readable on glass */
+.g-bk-in, .g-bk-info {
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-color: rgba(38, 38, 43, .16);
+}
+.g-bk-in:focus { background: #FFFFFF; box-shadow: 0 0 0 3px rgba(141, 182, 0, .22); }
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .g-book { background: var(--card); }
+  .g-bk-in, .g-bk-info { background: var(--card-2); }
+}
+
+/* the account avatar */
+.g-avatar {
+  width: 26px; height: 26px; border-radius: 3px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  background: var(--black); color: var(--on-black);
+  font-size: 11.5px; font-weight: 900; letter-spacing: .02em;
+}
+#acct { display: inline-flex; align-items: center; gap: 8px; }
+.g-acct-min { display: none; }
+
+/* The staggered entrance animates a transform on each section, which makes
+   every section its own stacking context. The picker lives in the first one,
+   so lift that section above the rest or the panel hides behind them. */
+.g-bk-sec:nth-of-type(1) { position: relative; z-index: 30; }
+.g-bk-inwrap { z-index: 31; }
+
+/* ── the account chip: name on desktop, avatar only on mobile ─────────── */
+@media (max-width: 900px) {
+  .g-acct-name { display: none !important; }
+  .g-acct-min { display: inline !important; }
+}
+@media (min-width: 901px) {
+  .g-acct-min { display: none !important; }
+  .g-acct-name { display: inline; }
+}

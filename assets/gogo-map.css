@@ -1,0 +1,156 @@
+/* =========================================================================
+   GOGO — live map hero: light, colourful, high contrast
+   ========================================================================= */
+
+.g-hero-map {
+  position: absolute; inset: 0; overflow: hidden;
+  background: linear-gradient(180deg, #FFFDF4 0%, #F4F7EF 100%);
+}
+.g-map-stage { position: absolute; left: 0; top: 0; z-index: 0; will-change: transform; }
+.g-map-overlay { position: absolute; left: 0; top: 0; z-index: 2; will-change: transform; }
+.g-map-tile { position: absolute; width: 256px; height: 256px; opacity: 0; transition: opacity .5s ease; }
+.g-map-ready .g-map-tile { opacity: 1; }
+.g-map-off .g-map-tile { opacity: 0; }
+.g-map-route { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+/* the basemap is deliberately washed out so the pins and route carry the eye */
+.g-map-stage { filter: saturate(1.15) contrast(1.04) brightness(.99); }
+
+/* ── city pins: coloured squircle badge + white chip ─────────────────── */
+.g-map-pin { position: absolute; transform: translate(-50%, -50%); pointer-events: none; display: flex; align-items: center; gap: 7px; }
+.g-map-badge {
+  width: 31px; height: 31px; border-radius: 4px; position: relative; display: grid; place-items: center;
+  font-size: 15px; background: #A3E635; color: #0B0B0B; flex: 0 0 auto;
+  border: 2.5px solid #fff; box-shadow: 0 6px 16px rgba(11, 11, 11, .30), 0 1px 0 rgba(11, 11, 11, .12);
+}
+.g-map-pin.hub .g-map-badge { width: 35px; height: 35px; border-radius: 4px; }
+.g-map-pin.tone-lime .g-map-badge { background: linear-gradient(180deg, #A7CE2E, #8DB600); }
+.g-map-pin.tone-navy .g-map-badge { background: linear-gradient(180deg, #2A3550, #232328); color: #fff; }
+.g-map-pin.tone-gold .g-map-badge { background: linear-gradient(180deg, #C6EE6A, #A3E635); }
+
+.g-map-chip {
+  background: var(--card); border-radius: 4px; padding: 5px 10px;
+  border: 1px solid rgba(11, 11, 11, .10); box-shadow: 0 6px 16px rgba(11, 11, 11, .14);
+  display: flex; flex-direction: column; line-height: 1.2; white-space: nowrap;
+}
+.g-map-chip b { font-size: 12.5px; font-weight: 800; color: #0B0B0B; }
+.g-map-chip i { font-style: normal; font-size: 10px; font-weight: 700; color: rgba(11, 11, 11, .52); }
+.g-map-pin.hub .g-map-chip b { font-size: 14px; }
+
+/* the two end points get a soft pulse so the corridor reads as live */
+.g-map-pin.hub .g-map-badge::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 4px;
+  border: 2px solid rgba(141, 182, 0, .55); animation: gPulse 2.6s ease-out infinite;
+}
+.g-map-pin.hub { position: absolute; }
+@keyframes gPulse { 0% { transform: scale(.85); opacity: .9; } 70% { transform: scale(1.25); opacity: 0; } 100% { opacity: 0; } }
+
+/* ── points of interest ──────────────────────────────────────────────── */
+.g-map-poi { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 5px; pointer-events: none; }
+.g-map-poi-ic {
+  width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; font-size: 12px;
+  background: var(--card); border: 1px solid rgba(11, 11, 11, .12); box-shadow: 0 3px 10px rgba(11, 11, 11, .16);
+}
+.g-map-poi.tone-navy .g-map-poi-ic { background: #232328; border-color: #232328; }
+.g-map-poi.tone-lime .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
+.g-map-poi.tone-gold .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
+.g-map-poi-lb {
+  background: rgba(255, 255, 255, .9); border-radius: 4px; padding: 2px 6px;
+  font-size: 9px; font-weight: 800; color: rgba(11, 11, 11, .5);
+  border: 1px solid rgba(11, 11, 11, .08); white-space: nowrap;
+}
+
+/* ── live vans ───────────────────────────────────────────────────────── */
+.g-map-car { position: absolute; transform: translate(-50%, -50%); }
+.g-map-car-body {
+  position: relative; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%;
+  background: linear-gradient(180deg, #C6EE6A, #8DB600 62%, #6C8C00); font-size: 16px;
+  border: 2px solid #fff; box-shadow: 0 5px 14px rgba(11, 11, 11, .26);
+}
+.g-map-car-ring {
+  position: absolute; inset: -9px; border-radius: 50%;
+  border: 2px solid rgba(141, 182, 0, .75); animation: gRing 2s ease-out infinite;
+}
+@keyframes gRing { 0% { transform: scale(.7); opacity: 1; } 80% { transform: scale(1.35); opacity: 0; } 100% { opacity: 0; } }
+
+/* ── the veil: whitish, so the hero reads light and text stays legible ─ */
+.g-hero-scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 253, 244, .74) 0%, rgba(255, 253, 244, .34) 34%, rgba(255, 253, 244, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, 0) 46%);
+}
+
+.g-hero-credit {
+  position: absolute; right: 12px; bottom: 8px; z-index: 6;
+  font-size: 9.5px; font-weight: 700; color: rgba(11, 11, 11, .42);
+  background: rgba(255, 255, 255, .78); border-radius: 4px; padding: 2px 7px;
+}
+
+/* ── hero copy on a light map: ink, not white ────────────────────────── */
+.g-hero-kicker { color: #0B0B0B; opacity: .62; }
+.g-hero .g-h1 { color: #0B0B0B; }
+.g-hero .g-s { color: rgba(11, 11, 11, .76); }
+.g-hero-stats { position: relative; z-index: 5; }
+.g-hero-stats .g-label { color: rgba(11, 11, 11, .55); }
+.g-hero-stats .g-kpi-val { color: #0B0B0B; }
+
+/* content and the booking card sit ABOVE the map markers, so nothing covers them */
+.g-hero-inner { position: relative; z-index: 5; }
+.g-book { position: relative; z-index: 5; }
+
+@media (max-width: 640px) {
+  .g-map-chip { padding: 4px 8px; }
+  .g-map-chip b { font-size: 11.5px; }
+  .g-map-chip i { display: none; }
+  .g-map-badge { width: 30px; height: 30px; }
+  .g-map-pin.hub .g-map-badge { width: 36px; height: 36px; }
+  .g-map-poi-lb { display: none; }
+  .g-hero-credit { font-size: 8.5px; right: 8px; bottom: 6px; }
+  .g-hero-scrim {
+    background: linear-gradient(180deg, rgba(255, 253, 244, .82) 0%, rgba(255, 253, 244, .34) 30%, rgba(255, 253, 244, 0) 56%, rgba(255, 253, 244, .22) 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-map-car-ring, .g-map-pin.hub .g-map-badge::after { animation: none; }
+}
+
+/* ── inline SVG glyphs (render the same on every device) ─────────────── */
+.g-map-badge svg { width: 56%; height: 56%; fill: #0B0B0B; display: block; }
+.g-map-pin.tone-navy .g-map-badge svg { fill: #fff; }
+.g-map-pin.tone-lime .g-map-badge svg,
+.g-map-pin.tone-gold .g-map-badge svg { fill: #0B0B0B; }
+.g-map-poi-ic svg { width: 62%; height: 62%; fill: #0B0B0B; display: block; }
+.g-map-poi.tone-navy .g-map-poi-ic svg { fill: #fff; }
+.g-map-poi.tone-lime .g-map-poi-ic svg { fill: #fff; }
+.g-map-poi.tone-gold .g-map-poi-ic svg { fill: #0B0B0B; }
+.g-map-car-body svg { width: 60%; height: 60%; fill: #0B0B0B; display: block; }
+
+/* ── label hierarchy: hubs get the full chip, stops a compact one ─────── */
+.g-map-chip.mini { display: none; }
+
+.g-map-chip.hub { padding: 6px 11px; }
+.g-map-chip.hub b { font-size: 14.5px; }
+
+@media (max-width: 900px) {
+  /* the booking card sits over the map on phones: markers only, no labels */
+  .g-map-chip { display: none; }
+  .g-map-badge { width: 30px; height: 30px; }
+  .g-map-pin.hub .g-map-badge { width: 34px; height: 34px; }
+  .g-map-car-body { width: 28px; height: 28px; }
+  .g-map-poi-ic { width: 20px; height: 20px; }
+  .g-map-poi-lb { display: none; }
+}
+
+/* ── mobile: map on the body, route in the hero (light veil so it reads) ─ */
+@media (max-width: 900px) {
+  .g-hero-scrim {
+    background: linear-gradient(180deg, rgba(255, 253, 244, .80) 0%, rgba(255, 253, 244, .30) 30%, rgba(255, 253, 244, 0) 56%, rgba(255, 253, 244, .20) 100%);
+  }
+  .g-hero-map-route, .g-hero-map-blank { background: none !important; }
+  .g-body-map .g-map-stage { filter: saturate(1.25) contrast(1.1) brightness(.95); }
+  /* the corridor lines sit in the hero, so weight them for small screens */
+  .g-hero-map-route .g-map-route polyline:first-child { stroke-width: 10; }
+  .g-hero-map-route .g-map-route polyline:last-child { stroke-width: 5; }
+}

@@ -1,0 +1,276 @@
+/* =========================================================================
+   GOGO — THEME
+   The Cleanic light theme: bright white ground with a soft grid, dark gray
+   in place of navy, lime as the accent that carries the energy.
+
+   GROUND     #FFFFFF with a 46px grid at 5.5%, radially masked (Cleanic)
+   SURFACES   #FFFFFF cards, #FAFAFB fields, #F4F4F6 insets
+   INK        #26262B on white = 15.4:1 · soft .72 = 8.3:1 · mute = 5.2:1
+   ACTIONS    dark gray #2A2A2F (white text 13.6:1) and lime #8DB600
+              (dark gray text on lime = 6.2:1)
+   ========================================================================= */
+
+/* Anton — the display face, self-hosted, same file the landing uses.
+   It belongs to the numbered page titles and the ride card's town codes. */
+@font-face {
+  font-family: "Anton";
+  src: url("../fonts/Anton.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── ground ── */
+  --paper:        #FFFFFF;
+  --paper-2:      #F4F4F6;
+  --paper-deep:   #EDEDF0;
+
+  /* ── surfaces ── */
+  --card:         #FFFFFF;
+  --card-2:       #FAFAFB;
+  --card-3:       #F4F4F6;
+
+  /* ── ink: dark gray, never pure black ── */
+  --ink:          #26262B;
+  --ink-2:        #33333A;
+  --ink-soft:     rgba(38, 38, 43, .72);
+  --ink-mute:     rgba(38, 38, 43, .56);
+  --ink-faint:    rgba(38, 38, 43, .10);
+  --on-black:     #FFFFFF;
+
+  /* ── dark gray actions ── */
+  --black:        #2A2A2F;
+  --black-2:      #3A3A42;
+
+  /* ── lime accents ── */
+  --lime:         #8DB600;
+  --lime-deep:    #5F7A00;   /* 5.0:1 on white, AA for small text */
+  --lime-bright:  #A3E635;
+  --lime-wash:    rgba(141, 182, 0, .14);
+
+  /* ── lines, shadows ── */
+  --line:         rgba(38, 38, 43, .16);
+  --line-soft:    rgba(38, 38, 43, .09);
+  --grid-line:    rgba(38, 38, 43, .13);
+  --shadow-lift:  0 22px 42px -30px rgba(38, 38, 43, .35);
+  --shadow-card:  0 1px 2px rgba(38, 38, 43, .05), 0 14px 30px -22px rgba(38, 38, 43, .28);
+
+  --radius:       4px;
+  --radius-sm:    3px;
+  --btn-radius:   3px;
+  --danger:       #B3261E;
+
+  /* legacy aliases: the old taxi-yellow family now resolves to lime, so any
+     rule that still asks for it lands on the accent instead of a stray gold */
+  --yellow:       var(--lime);
+  --yellow-deep:  var(--lime-deep);
+  --yellow-2:     var(--lime-bright);
+  --yellow-wash:  var(--lime-wash);
+
+  /* kept for the glass card, effectively invisible on white */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='.04'/%3E%3C/svg%3E");
+}
+
+/* ── the bright white ground, with Cleanic's grid over it ─────────────── */
+html, body {
+  background-color: var(--paper);
+  background-image:
+    /* a whisper of Cleanic's mesh, just enough to warm the white */
+    radial-gradient(ellipse 60% 40% at 78% -6%, rgba(163, 230, 53, .10) 0%, rgba(163, 230, 53, 0) 62%),
+    radial-gradient(ellipse 70% 46% at 12% -4%, rgba(38, 38, 43, .05) 0%, rgba(38, 38, 43, 0) 60%),
+    linear-gradient(180deg, #FFFFFF 0%, #FCFCFD 60%, #FAFAFB 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+}
+body::before {
+  /* the grid, faded out radially so the edges stay calm */
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -2;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(ellipse 135% 125% at 50% 0%, #000 62%, transparent 100%);
+          mask-image: radial-gradient(ellipse 135% 125% at 50% 0%, #000 62%, transparent 100%);
+}
+
+/* ── surfaces: white cards, hairlines, soft shadows ───────────────────── */
+.g-card, .g-book, .g-req, .g-bubble, .g-sheet-card, .g-why, .g-faq,
+.g-ac, .g-person, .g-map-chip, .g-map-poi-ic, .g-seg, .g-track-card {
+  background-color: var(--card);
+  background-image: none;
+}
+.g-card, .g-book, .g-why, .g-faq, .g-sheet-card, .g-person, .g-track-card, .g-req {
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-card);
+}
+.g-field, .g-composer textarea, .g-input, input[type="text"], input[type="tel"], select, textarea {
+  background-color: var(--card-2);
+  color: var(--ink);
+  border-color: var(--line);
+}
+input::placeholder, textarea::placeholder { color: var(--ink-mute); }
+.g-f-k, .g-label, .g-msg-who { color: var(--ink-mute); }
+
+/* inset tiles: a calm gray, never a cold wash */
+.g-card .g-tile, .g-tile {
+  background: var(--card-3);
+  border-color: var(--line-soft);
+}
+.g-card-dark .g-tile, .g-hero .g-tile, .g-panel-ink .g-tile {
+  background: rgba(38, 38, 43, .06);
+  border-color: var(--line-soft);
+}
+.g-req { background: var(--card); }
+.g-req.pending { background: rgba(163, 230, 53, .10); border-color: rgba(141, 182, 0, .40); }
+.g-req.accepted { background: var(--lime-wash); border-color: var(--lime); }
+
+/* ── type ─────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, .g-h1, .g-h2, .g-h3, .g-t, .g-kpi-val { color: var(--ink); }
+.g-s, .g-s-sm, .g-list-s, .g-ticks li, .g-vs-col li { color: var(--ink-soft); }
+.g-hero .g-h1, .g-hero .g-s, .g-hero-kicker { color: var(--ink); }
+.g-hero-stats .g-label { color: var(--ink-mute); }
+
+/* ── actions: dark gray, and lime for the one that carries the energy ─── */
+.g-btn {
+  background-image: none;
+  border-color: var(--line);
+  box-shadow: 0 1px 2px rgba(38, 38, 43, .07);
+}
+.g-btn:hover { box-shadow: 0 3px 8px -4px rgba(38, 38, 43, .22); }
+.g-btn:active { box-shadow: inset 0 2px 5px rgba(38, 38, 43, .18); }
+
+.g-btn-ink {
+  background: var(--black);
+  background-image: none;
+  color: var(--on-black);
+  border-color: var(--black);
+  box-shadow: 0 1px 2px rgba(38, 38, 43, .16), 0 10px 20px -16px rgba(38, 38, 43, .5);
+}
+.g-btn-ink:hover { background: var(--black-2); }
+
+.g-btn-lime {
+  background: var(--lime-bright);
+  background-image: none;
+  color: var(--ink);
+  border-color: var(--lime-deep);
+  box-shadow: 0 1px 2px rgba(108, 140, 0, .25), 0 10px 22px -16px rgba(108, 140, 0, .55);
+}
+.g-btn-lime:hover { background: var(--lime); }
+
+.g-btn-yellow {
+  background: var(--card);
+  background-image: none;
+  color: var(--ink);
+  border-color: var(--line);
+}
+.g-btn-yellow:hover { background: var(--card-3); }
+.g-btn-ghost { background: var(--card); background-image: none; color: var(--ink); border-color: var(--line); }
+.g-btn-ghost:hover { background: var(--card-2); }
+.g-btn-outline { color: var(--ink); border-color: var(--line); background: transparent; }
+.g-btn-outline:hover { background: var(--ink-faint); }
+
+/* ── chrome: white glass, hairline, gentle shadow ─────────────────────── */
+.g-nav {
+  background: rgba(255, 255, 255, .82);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: 0 8px 22px -20px rgba(38, 38, 43, .45);
+}
+.g-nav a { color: var(--ink-soft); }
+.g-nav a.on { color: var(--ink); }
+/* The bottom nav is a floating rounded bar, not a full-width card. The old
+   rule here drew a solid white strip across the whole width with a top border
+   and a shadow above it, which is what made it read as a card sitting under
+   the page. The bar's real geometry lives in gogo-live.css, so this must not
+   restate any of it. */
+.g-dock {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  box-shadow: none;
+}
+.g-dock a { color: var(--ink-mute); }
+.g-dock a.on { color: var(--ink); }
+.g-hero { background: var(--paper); border-bottom: 1px solid var(--line-soft); }
+.g-foot {
+  background-color: var(--paper);
+  background-image: none;
+  border-top: 1px solid var(--line-soft);
+}
+.g-section, .g-wrap { background: transparent; }
+
+/* ── lime is a fill, never small text on white (2.9:1) ────────────────── */
+.g-ic-lime { background: var(--lime-bright); border-color: var(--lime); color: var(--ink); }
+.g-stamp-lime, .g-pill-lime, .g-tag-lime { background: var(--lime-bright); color: var(--ink); border-color: var(--lime); }
+.g-link-lime { color: var(--lime-deep); font-weight: 800; }
+
+/* ── states ───────────────────────────────────────────────────────────── */
+.g-stamp-ink { background: var(--black); color: var(--on-black); border-color: var(--black); }
+.g-stamp-open { background: var(--card-3); color: var(--ink); border-color: var(--line); }
+.g-seat.taken { background: var(--black); }
+.g-seat.open { border-color: var(--lime); }
+.g-seat.open i { background: var(--lime-bright); }
+.g-danger, .g-err { color: var(--danger); }
+
+/* ── focus + skip link ────────────────────────────────────────────────── */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible,
+.g-btn:focus-visible {
+  outline: 3px solid var(--lime-deep);
+  outline-offset: 2px;
+}
+.g-skip { background: var(--black); color: var(--on-black); }
+
+/* ── the map: neutral and light so the white ground stays calm ────────── */
+.g-map-stage,
+.g-body-map .g-map-stage {
+  filter: saturate(.95) contrast(.98) brightness(1.04);
+}
+.g-hero-scrim {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .94) 0%, rgba(255, 255, 255, .80) 30%, rgba(255, 255, 255, .34) 55%, rgba(255, 255, 255, .06) 76%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, .30) 0%, rgba(255, 255, 255, 0) 52%);
+}
+@media (max-width: 900px) {
+  .g-hero-scrim {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .88) 0%, rgba(255, 255, 255, .40) 32%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, .28) 100%);
+  }
+  .g-body-map { background: var(--paper); }
+}
+.g-map-badge { background: var(--card) !important; border-color: var(--ink); }
+.g-map-badge svg { fill: var(--ink); }
+.g-map-pin.hub .g-map-badge { background: var(--black) !important; }
+.g-map-pin.hub .g-map-badge svg { fill: var(--on-black); }
+.g-map-poi-ic { background: var(--card); border-color: var(--ink); }
+.g-map-poi-ic svg { fill: var(--ink); }
+.g-map-poi.tone-navy .g-map-poi-ic, .g-map-poi.tone-lime .g-map-poi-ic { background: var(--lime); border-color: var(--lime-deep); }
+.g-map-poi.tone-navy .g-map-poi-ic svg, .g-map-poi.tone-lime .g-map-poi-ic svg { fill: var(--ink); }
+.g-map-poi-lb { background: rgba(255, 255, 255, .95); color: var(--ink-soft); border-color: var(--line-soft); }
+.g-map-car-body { background: var(--black); background-image: none; border-color: var(--card); box-shadow: 0 6px 16px rgba(38, 38, 43, .28); }
+.g-map-car-body .g-van { fill: var(--on-black); }
+.g-map-car-ring { border-color: rgba(163, 230, 53, .95); }
+.g-map-credit, .g-hero-credit { color: var(--ink-mute); }
+
+/* ── cards that used to be yellow are plain white cards now ───────────── */
+.g-card-dark, .g-card-yellow {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+}
+.g-card-dark, .g-card-yellow { color: var(--ink); }
+/* buttons keep their own colours inside these cards */
+.g-card-dark .g-btn-ink, .g-card-yellow .g-btn-ink { color: var(--on-black); }
+.g-card-dark .g-btn-lime, .g-card-yellow .g-btn-lime { color: var(--ink); }
+
+/* ── chat: yours is lime, theirs is white ─────────────────────────────── */
+.g-bubble-me { background: var(--lime-wash); border-color: rgba(141, 182, 0, .45); color: var(--ink); }
+.g-bubble, .g-msg-system .g-bubble { background: var(--card); color: var(--ink); }
+
+/* ── the one action that carries the energy ───────────────────────────── */
+.g-bk-submit { background: var(--lime-bright); color: var(--ink); border-color: var(--lime); }
+.g-bk-submit:hover { background: var(--lime); }
+.g-bk-submit .g-bk-ic { color: var(--ink); }

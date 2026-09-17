@@ -1,0 +1,304 @@
+/* =========================================================================
+   GOGO — DASHBOARD STYLES
+
+   Lifted from the Cleanic dashboard so the two apps feel like one family.
+   Cleanic's own tokens, used as-is:
+
+     navy          #0A192F   hero banner, chosen slots, primary text
+     lime          #8DB600   CTAs, active tab underline, card hairlines
+     surface       #F4F6FB   quiet panels
+     hairline      rgba(141,182,0,.45)   card borders
+     shadow        rgba(10,27,61,.08)    the only elevation Cleanic uses
+     radius        8px cards, 16px hero
+
+   Text sizes match the reference: 10px uppercase keys, 22px stat numbers,
+   13.5px body. Nothing here is heavier than the Cleanic original.
+   ========================================================================= */
+
+.g-db {
+  --db-navy: #0A192F;
+  --db-lime: #8DB600;
+  --db-lime-soft: rgba(141, 182, 0, .12);
+  --db-hair: rgba(141, 182, 0, .45);
+  --db-surface: #F4F6FB;
+  --db-line: rgba(10, 25, 47, .10);
+  --db-shadow: 0 4px 16px rgba(10, 27, 61, .08);
+  --db-mute: #6B7280;
+
+  display: grid;
+  gap: 18px;
+  padding-top: 26px;
+  padding-bottom: 40px;
+}
+
+/* ── hero: navy banner ─────────────────────────────────────────────────── */
+.g-db-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 28px;
+  background: var(--db-navy);
+  border: 1px solid var(--db-hair);
+  border-radius: 16px;
+}
+.g-db-hero-l { min-width: 0; flex: 1 1 320px; }
+.g-db-hero-ic {
+  display: inline-grid; place-items: center;
+  width: 38px; height: 38px; margin-bottom: 12px;
+  border-radius: 999px; font-size: 18px;
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .16);
+}
+.g-db-hero-eyebrow {
+  margin: 0 0 6px;
+  font-size: 10px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(255, 255, 255, .62);
+}
+.g-db-hero-h {
+  margin: 0 0 8px;
+  font-family: "Anton", "Poppins", sans-serif; font-weight: 400;
+  font-size: 30px; line-height: 1.08; letter-spacing: -.01em;
+  color: #fff;
+}
+.g-db-hero-p {
+  margin: 0;
+  font-size: 13.5px; font-weight: 500; line-height: 1.55;
+  color: rgba(255, 255, 255, .72);
+  max-width: 42ch;
+}
+.g-db-hero-a { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* ── buttons ───────────────────────────────────────────────────────────── */
+.g-db-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  height: 42px; padding: 0 20px;
+  border: 0; border-radius: 8px; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 800;
+  text-decoration: none; white-space: nowrap;
+  transition: transform .2s ease, background .2s ease, opacity .2s ease;
+}
+.g-db-btn-lime { background: var(--db-lime); color: #fff; }
+.g-db-btn-lime:hover { background: #7DA300; transform: translateY(-1px); }
+.g-db-btn-ghost {
+  background: transparent; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .28);
+}
+.g-db-btn-ghost:hover { background: rgba(255, 255, 255, .10); }
+.g-db-btn-wide { width: 100%; margin-top: 12px; }
+
+/* ── the tab strip: uppercase, lime underline on the active one ────────── */
+.g-db-tabs {
+  display: flex; gap: 2px;
+  border-bottom: 1px solid var(--db-line);
+}
+.g-db-tab {
+  position: relative; padding: 11px 14px;
+  background: none; border: 0; cursor: pointer;
+  font-family: inherit; font-size: 11px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--db-mute);
+  transition: color .2s ease;
+}
+.g-db-tab:hover { color: var(--db-navy); }
+.g-db-tab.is-on { color: var(--db-navy); }
+.g-db-tab.is-on::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px;
+  height: 2px; background: var(--db-lime); border-radius: 2px;
+}
+
+/* ── views ─────────────────────────────────────────────────────────────── */
+.g-db-view { display: none; }
+.g-db-view.is-on { display: grid; gap: 16px; }
+
+.g-db-k {
+  margin: 0;
+  font-size: 10px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--db-mute);
+}
+
+/* ── the stat row: four cards, white with a lime hairline ──────────────── */
+.g-db-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 700px) { .g-db-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.g-db-stat {
+  display: grid; gap: 3px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--db-hair);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.g-db-stat:hover { transform: translateY(-2px); box-shadow: var(--db-shadow); }
+.g-db-stat-ic { font-size: 17px; line-height: 1; margin-bottom: 2px; }
+.g-db-stat-k {
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--db-mute);
+}
+.g-db-stat-n {
+  font-family: "Anton", "Poppins", sans-serif;
+  font-size: 22px; line-height: 1.1; color: var(--db-navy);
+}
+.g-db-stat-sub { font-size: 10.5px; font-weight: 600; color: var(--db-mute); }
+
+/* ── two-column panel row ──────────────────────────────────────────────── */
+.g-db-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 800px) { .g-db-cols { grid-template-columns: minmax(0, 1fr); } }
+
+.g-db-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--db-hair);
+  border-radius: 12px;
+}
+.g-db-card-h {
+  margin: 0 0 14px;
+  font-size: 14px; font-weight: 800; letter-spacing: -.01em;
+  color: var(--db-navy);
+}
+
+.g-db-note { margin: 10px 0 0; font-size: 11.5px; font-weight: 500; line-height: 1.6; color: var(--db-mute); }
+.g-db-link {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
+  font-size: 12px; font-weight: 800; color: var(--db-navy);
+  text-decoration: none; border-bottom: 1px solid var(--db-hair); padding-bottom: 1px;
+}
+.g-db-link:hover { color: var(--db-lime); border-color: var(--db-lime); }
+
+/* ── the cost list ─────────────────────────────────────────────────────── */
+
+
+/* ── rows for trips and parcels ────────────────────────────────────────── */
+.g-db-list { display: grid; gap: 8px; }
+.g-db-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: #fff; border: 1px solid var(--db-hair); border-radius: 8px;
+  text-decoration: none;
+  transition: border-color .2s ease, transform .2s ease;
+}
+.g-db-row:hover { transform: translateY(-1px); border-color: var(--db-lime); }
+.g-db-row-ic { font-size: 17px; line-height: 1; }
+.g-db-row-t { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
+.g-db-row-t b { font-size: 13px; font-weight: 800; color: var(--db-navy); }
+.g-db-row-t span { font-size: 11px; font-weight: 600; color: var(--db-mute); }
+.g-db-row-go { font-size: 14px; font-weight: 800; color: var(--db-lime); }
+
+/* ── empty states ──────────────────────────────────────────────────────── */
+.g-db-empty {
+  display: grid; justify-items: center; gap: 7px;
+  padding: 34px 22px; text-align: center;
+  background: #fff; border: 1px dashed var(--db-hair); border-radius: 12px;
+}
+.g-db-empty > span { font-size: 26px; line-height: 1; }
+.g-db-empty b { font-size: 14px; font-weight: 800; color: var(--db-navy); }
+.g-db-empty p { margin: 0; max-width: 40ch; font-size: 12px; line-height: 1.6; color: var(--db-mute); }
+.g-db-empty .g-db-btn { margin-top: 6px; }
+
+/* ── folded panels, the same accordion idea as the reference ───────────── */
+.g-db-panel {
+  background: #fff;
+  border: 1px solid var(--db-hair);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.g-db-panel-h {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 15px 18px;
+  background: none; border: 0; cursor: pointer; font-family: inherit;
+  text-align: left;
+}
+.g-db-panel-k {
+  flex: 0 0 auto;
+  font-size: 9.5px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--db-lime);
+}
+.g-db-panel-t { flex: 1 1 auto; min-width: 0; font-size: 13.5px; font-weight: 800; color: var(--db-navy); }
+.g-db-chev {
+  flex: 0 0 auto; font-size: 18px; line-height: 1; color: var(--db-mute);
+  transition: transform .22s ease;
+}
+.g-db-panel.is-open .g-db-chev { transform: rotate(90deg); }
+.g-db-panel-b { display: none; padding: 0 18px 18px; }
+.g-db-panel.is-open .g-db-panel-b { display: block; }
+.g-db-panel-sub { margin: 0 0 10px; font-size: 11.5px; font-weight: 500; color: var(--db-mute); }
+
+.g-db-bullets { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.g-db-bullets li {
+  position: relative; padding-left: 16px;
+  font-size: 12.5px; line-height: 1.6; color: var(--db-navy);
+}
+.g-db-bullets li::before {
+  content: ""; position: absolute; left: 0; top: .52em;
+  width: 5px; height: 5px; border-radius: 999px; background: var(--db-lime);
+}
+
+@media (max-width: 560px) {
+  .g-db { gap: 14px; padding-top: 18px; }
+  .g-db-hero { padding: 20px; }
+  .g-db-hero-h { font-size: 24px; }
+  .g-db-hero-a { width: 100%; }
+  .g-db-hero-a .g-db-btn { flex: 1 1 auto; }
+  .g-db-tab { padding: 10px 9px; font-size: 10px; letter-spacing: .06em; }
+  .g-db-card { padding: 16px; }
+}
+
+/* ── popular routes: two rows of three, each a live search link ─────────── */
+/* ── popular routes: a 2 x 3 grid ─────────────────────────────────────────
+   Three rows of two, so the six destinations read as a tidy block inside the
+   half-width card rather than one long list. */
+.g-db-routes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+/* Two columns at every width. On a very narrow phone the route name wraps
+   onto a second line rather than the grid collapsing to one column, because a
+   single column made four routes a long scroll for no gain. */
+@media (max-width: 340px) {
+  .g-db-routes { gap: 6px; }
+  .g-db-route-t b { font-size: 12px; }
+}
+.g-db-card .g-db-routes .g-db-route { padding: 10px 12px; }
+
+.g-db-route { padding: 10px 12px; }
+
+.g-db-route {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--db-hair);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.g-db-route:hover {
+  transform: translateY(-2px);
+  border-color: var(--db-lime);
+  box-shadow: var(--db-shadow);
+}
+.g-db-route-ic { flex: 0 0 auto; font-size: 16px; line-height: 1; }
+.g-db-route-t { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
+/* In a 2-up grid the label has to wrap — "East London → Butterworth" is far
+   too long to sit on one line in a narrow column without being cut off. */
+.g-db-route-t b {
+  font-size: 12px; font-weight: 800; color: var(--db-navy);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.g-db-route-t span { font-size: 10.5px; font-weight: 600; color: var(--db-mute); }
+.g-db-route-go {
+  flex: 0 0 auto; font-size: 13px; font-weight: 800; color: var(--db-lime);
+  opacity: 0; transition: opacity .2s ease;
+}
+.g-db-route:hover .g-db-route-go { opacity: 1; }
+
+/* With the fare card gone the routes card is alone in its row. Left at half
+   width it would sit beside empty space, so it spans the full width and the
+   2x2 grid gets the room it needs. */
+.g-db-card-wide { grid-column: 1 / -1; }

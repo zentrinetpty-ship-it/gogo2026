@@ -1,0 +1,710 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Anton, self-hosted ──────────────────────────────────────────────────
+   The display face for every header on this page: the hero impact line,
+   section headings and card titles. One weight, so it only ever sets
+   headings, never body copy. Licensed under the SIL Open Font License 1.1
+   (see /fonts/OFL.txt). font-display: swap so first paint is never blocked. */
+@font-face {
+  font-family: "Anton";
+  src: url("/gogo/fonts/Anton.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── GOGO design tokens · one light theme, white ground, ink type, lime accent ── */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 0 0% 96.5%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 74 100% 36%;
+    --accent-foreground: 0 0% 4%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 74 100% 36%;
+    --radius: 0.75rem;
+  }
+
+  * { border-color: hsl(var(--border)); }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: #8DB600; color: #fff; }
+
+  /* headings wear the rounded face (Poppins). Anton is reserved for the two
+     places that are brand furniture: the logo and the hero impact line. */
+  h1, h2, h3, h4 {
+    font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  /* the eyebrow / label face stays Poppins too */
+  .gh-lab { font-family: inherit; }
+
+  /* the one heading that wears the display face */
+  .gh-impact {
+    font-family: "Anton", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  /* the strike through "Zero Queue", drawn in lime. Ported from the app's
+     .g-strike: a bar at 52% height, tilted 2.4deg, with a white core so the
+     stroke reads against the heavy letters. */
+  .gh-strike { position: relative; display: inline-block; white-space: nowrap; }
+  .gh-strike::after {
+    content: "";
+    position: absolute; left: -3%; right: -3%; top: 52%; height: 0.08em;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #8DB600 0%, #A3E635 55%, #8DB600 100%);
+    box-shadow: 0 0 18px rgba(163, 230, 53, .6), 0 0 2px rgba(255, 255, 255, .8);
+    transform: scaleX(0) rotate(-2.4deg); transform-origin: left center;
+    animation: ghStrike .9s cubic-bezier(.16, .9, .18, 1) .5s both;
+  }
+  .gh-strike::before {
+    /* a thin white core so the stroke reads at any size */
+    content: "";
+    position: absolute; left: -2%; right: -2%; top: calc(52% + 0.02em); height: 0.022em;
+    border-radius: 2px; background: rgba(255, 255, 255, .9);
+    transform: scaleX(0) rotate(-2.4deg); transform-origin: left center;
+    animation: ghStrike .9s cubic-bezier(.16, .9, .18, 1) .56s both;
+  }
+  @keyframes ghStrike {
+    0%   { transform: scaleX(0) rotate(-3.4deg); }
+    68%  { transform: scaleX(1.05) rotate(-2deg); }
+    100% { transform: scaleX(1) rotate(-2.4deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gh-strike::after, .gh-strike::before { animation: none; transform: scaleX(1) rotate(-2.4deg); }
+  }
+
+  input, select, button, textarea { font: inherit; }
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: .55; cursor: pointer; }
+
+  /* the one scrollbar we style, kept quiet */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 99px; border: 3px solid #fff; }
+  ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+}
+
+@layer components {
+  /* ── field: 46px, softly round, leading icon, focus ring in lime ─────────
+     Sized so the type seats properly inside: at 54px the 14.5px text floated in
+     empty space and the longer labels crowded their icons. */
+  .gh-field {
+    @apply relative flex h-[46px] w-full items-stretch gap-2.5 rounded-xl border bg-white px-3.5
+           transition-all duration-200;
+  }
+  /* the leading icon and any trailing control stay vertically centred now that
+     the row stretches its children */
+  .gh-field > svg, .gh-field > .gh-field-ic { align-self: center; flex: 0 0 auto; }
+  .gh-field:hover { @apply border-neutral-300; }
+  .gh-field:focus-within {
+    border-color: #8DB600;
+    box-shadow: 0 0 0 4px rgba(141, 182, 0, .14);
+  }
+  .gh-field > input, .gh-field > select {
+    @apply h-full w-full min-w-0 border-0 bg-transparent font-semibold
+           text-ink outline-none placeholder:font-medium placeholder:text-neutral-400;
+    text-overflow: ellipsis;
+    /* 16px on a phone: anything smaller makes iOS Safari zoom the whole page
+       when the field is tapped. The desktop size is set below, outside this
+       layer, because a media query nested in @layer components gets dropped by
+       the build. */
+    font-size: 16px;
+  }
+  .gh-field > select { @apply cursor-pointer appearance-none; }
+
+  /* label above a field, mono and tracked, like a boarding pass */
+  .gh-lab {
+    @apply mb-1.5 block text-[10px] font-bold uppercase tracking-[.13em] text-neutral-500;
+  }
+
+  /* ── button: slightly round, never a pill, 2px-ish radius on the small ones */
+  .gh-btn {
+    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-xl px-5
+           text-[13.5px] font-bold transition-all duration-200 active:scale-[.985]
+           disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .gh-btn-ink { @apply bg-ink text-white hover:bg-ink-soft; }
+  .gh-btn-lime { @apply bg-lime text-ink hover:bg-lime-deep hover:text-white shadow-glow; }
+  .gh-btn-ghost { @apply border bg-white text-ink hover:border-neutral-400 hover:bg-neutral-50; }
+
+  /* a segmented control: equal widths, animated indicator, no borders on the
+     items. The selected side is a solid lime panel with ink text, which is the
+     GOGO accent at its strongest contrast against the white card. */
+  .gh-seg { @apply relative grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1; }
+  .gh-seg-btn {
+    @apply relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-lg
+           text-[12.5px] font-bold text-neutral-600 transition-colors duration-200;
+  }
+  .gh-seg-btn[data-on="true"] { @apply text-ink; }
+  .gh-seg-pill {
+    @apply absolute inset-y-1 left-1 w-[calc(50%-0.375rem)] rounded-lg bg-lime shadow-sm;
+    will-change: transform;
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .gh-card { @apply rounded-2xl border bg-white shadow-soft; }
+  .gh-hairline { @apply h-px w-full bg-neutral-200/70; }
+
+  /* the two CTAs that ride over the map on phones */
+  .gh-btn-cta {
+    @apply inline-flex h-10 items-center gap-1.5 rounded-lg bg-ink px-3.5 text-[12.5px]
+           font-bold text-white shadow-lift transition-all active:scale-[.97];
+  }
+  .gh-btn-cta-ghost {
+    @apply inline-flex h-10 items-center gap-1.5 rounded-lg border bg-white/90 px-3.5
+           text-[12.5px] font-bold text-ink shadow-soft backdrop-blur transition-all active:scale-[.97];
+  }
+}
+
+@layer utilities {
+  .gh-glass {
+    background: rgba(255, 255, 255, .78);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+  }
+  .gh-grain {
+    background-image: radial-gradient(rgba(11,11,11,.045) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+  .gh-mask-b { mask-image: linear-gradient(to bottom, #000 62%, transparent); }
+  .no-sb::-webkit-scrollbar { display: none; }
+  .no-sb { scrollbar-width: none; }
+}
+
+/* ── field type size, outside the component layer ───────────────────────────
+   Kept here deliberately: a media query nested inside @layer components is
+   dropped by the Tailwind build, so the desktop override never shipped.
+   Phones stay at 16px to stop iOS Safari zooming on tap; from tablet up the
+   text sits smaller so it seats properly in the field. */
+@media (min-width: 768px) {
+  .gh-field > input,
+  .gh-field > select { font-size: 13.5px; }
+  .gh-addr-manual input { font-size: 13px; }
+}
+
+/* The address module wraps its input in a .g-addr div, so the input is no
+   longer a DIRECT child of .gh-field and the rule above stops matching it.
+   These cover the wrapped case. */
+.gh-field .g-addr { flex: 1 1 auto; min-width: 0; }
+.gh-field .g-addr > input,
+.gh-field .g-addr-anchor > input {
+  height: 100%; width: 100%; min-width: 0; flex: 1 1 auto;
+  border: 0; background: transparent;
+  font-weight: 600; color: #232328; outline: none;
+  text-overflow: ellipsis;
+  font-size: 16px;                    /* phones: stops iOS zooming on tap */
+}
+.gh-field .g-addr > input::placeholder { font-weight: 500; color: #a3a3a3; }
+@media (min-width: 768px) {
+  .gh-field .g-addr > input { font-size: 13.5px; }
+}
+
+/* ── address suggestions: plain CSS, on purpose ─────────────────────────────
+   These were written with @apply inside @layer components and Tailwind purged
+   them, so the list rendered as unpositioned static markup and the form's
+   buttons painted over it. Written out longhand here, where nothing strips
+   them. The wrapper needs position:relative and the list needs a real stacking
+   context so it floats above the rest of the card. */
+.gh-field.gh-addr { position: relative; overflow: visible; }
+/* The address module nests two wrappers inside the field:
+     .gh-field > .g-addr > .g-addr-anchor > input
+   Both must fill the field's height or the input renders as a stubby shorter
+   box inside the taller field. They are plain stretch rows — NOT a column,
+   which would make the child stretch sideways instead of down.
+   .g-addr-anchor is also the dropdown's positioning context, so it keeps
+   position: relative. */
+/* The anchor lives INSIDE the field and holds only the input. The manual
+   button and manual form live outside the field, in .g-addr, so the field is
+   never stretched by them and there is never a second box inside it. */
+.gh-field > .g-addr-anchor {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: stretch;
+}
+.gh-field > .g-addr-anchor > input {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  color: #232328;
+  outline: none;
+  text-overflow: ellipsis;
+  font-size: 16px;
+}
+.gh-field > .g-addr-anchor > input::placeholder { font-weight: 500; color: #a3a3a3; }
+
+.g-addr-list {
+  position: absolute;
+  /* anchored to the FIELD, not the wrapper (which also holds the accordion
+     row) so the panel always opens directly below the input */
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  z-index: 300;
+  max-height: 15.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* glassmorphism: translucent so the map reads through, with a heavy blur
+     and a bright inner edge */
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 13px;
+  box-shadow:
+    0 16px 40px -14px rgba(23, 23, 23, .3),
+    0 2px 8px rgba(23, 23, 23, .06),
+    inset 0 1px 0 rgba(255, 255, 255, .85);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+/* the rows sit on the glass, so they stay cheap to paint */
+.g-addr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 13px;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+.g-addr-row + .g-addr-row { border-top: 1px solid #f5f5f5; }
+.g-addr-row:hover, .g-addr-row.on { background: rgba(163, 230, 53, .14); }
+
+.g-addr-ic { flex: 0 0 auto; font-size: 13px; line-height: 1.4; }
+.g-addr-txt { display: grid; gap: 1px; min-width: 0; }
+.g-addr-txt b {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #232328;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-addr-txt span {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #737373;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-addr-self { background: #fafafa; }
+.g-addr-empty {
+  padding: 10px 13px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #737373;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* ── Suburb and City: the same weight and finish as the search field ────────
+   They sit under the address field and must read as one family with it, so a
+   rider never sees "the nice field" and "the plain fields". Same height, same
+   radius, same glass, same focus ring.
+   The grid is minmax(0,1fr) not 1fr: a plain 1fr still has an automatic
+   minimum based on its content, which let the two fields push past the card and
+   overlap it. minmax(0,...) removes that floor so they can never overflow. */
+.g-addr-manual {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  min-width: 0;
+  border-top: 1px solid rgba(38, 38, 43, .07);
+}
+.g-addr-manual-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+}
+/* a narrow phone cannot hold two of these side by side */
+@media (max-width: 420px) {
+  .g-addr-manual-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.g-addr-fld {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  min-width: 0;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, .62);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.g-addr-fld:focus-within {
+  border-color: #8DB600;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .16);
+}
+.g-addr-fld > span {
+  flex: 0 0 auto;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+}
+.g-addr-fld > input {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-size: 16px;              /* phones: stops iOS zooming on tap */
+  font-weight: 600;
+  color: #232328;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.g-addr-fld > input::placeholder { font-weight: 500; color: #b8b8b8; }
+
+@media (min-width: 768px) {
+  .g-addr-fld > input { font-size: 13.5px; }
+}
+
+/* ── bottom nav: glass items, no panel behind them ──────────────────────────
+   There is no bar under the nav — the live map runs underneath and reads
+   straight through. Each item is its own piece of glass, and the current page
+   gets a lime rim so it is obvious where you are.
+   Kept at the end of the file, outside any @layer, because Tailwind's purge
+   drops rules it does not see referenced and these are applied dynamically. */
+.gh-dock {
+  background: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.gh-dock a {
+  position: relative;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(16px) saturate(1.9);
+  backdrop-filter: blur(16px) saturate(1.9);
+  border: 1px solid rgba(255, 255, 255, .6);
+  box-shadow:
+    0 8px 20px -10px rgba(20, 20, 25, .38),
+    inset 0 1px 0 rgba(255, 255, 255, .9);
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease,
+              transform .2s ease;
+}
+
+/* the bright top edge that makes it read as glass catching light */
+.gh-dock a::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 52%;
+  border-radius: 16px 16px 60% 60%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.gh-dock a:hover {
+  background: rgba(255, 255, 255, .82);
+  border-color: rgba(255, 255, 255, .95);
+  box-shadow:
+    0 12px 26px -10px rgba(20, 20, 25, .44),
+    inset 0 1px 0 #fff;
+  transform: translateY(-2px);
+}
+.gh-dock a:active { transform: translateY(0) scale(.97); }
+
+/* the page you are on: a lime rim with the glass kept underneath */
+.gh-dock a.on,
+.gh-dock a[aria-current="page"] {
+  background: rgba(255, 255, 255, .78);
+  border-color: rgba(141, 182, 0, .85);
+  box-shadow:
+    0 10px 24px -10px rgba(141, 182, 0, .6),
+    0 0 0 1px rgba(141, 182, 0, .45),
+    inset 0 1px 0 #fff;
+}
+
+/* ── the card's fields: one box each, text always centred ───────────────────
+   Every field is a 46px row holding an icon, some text and sometimes a control.
+   The rule is that nothing inside draws its own bordered box, and every piece
+   of text sits on the row's centre line. Anything that shrinks the text is a
+   bug, not a style choice. */
+
+/* .gh-field centres its children already; make sure text cannot be squeezed */
+.gh-field { min-width: 0; }
+.gh-field > * { min-width: 0; }
+.gh-field > span,
+.gh-field > select,
+.gh-field > input {
+  align-self: center;
+  line-height: 1.25;
+}
+
+/* destination: the label was too bright and sat off centre */
+.gh-dest { align-items: center; }
+.gh-dest-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #232328;
+  text-align: left;
+}
+.gh-dest-txt.is-empty { font-weight: 500; color: #a3a3a3; }
+
+/* seats: icon, label, stepper — one box, label never squeezed */
+.gh-seat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.gh-seat-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #232328;
+}
+.gh-stepper {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+}
+.gh-stepper > button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  flex: 0 0 auto;
+}
+
+/* selects fill their row and line up with the text beside them */
+.gh-field > select {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #232328;
+  outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADDRESS FIELD — MOBILE COLLAPSE
+
+   A phone has one job here: get the rider's street. So Suburb and City stay
+   folded away until the rider taps the address field, then they appear.
+
+   There is no extra button and no extra label — the field is the switch.
+
+   On a wide screen there is room for everything, so the fields are simply
+   open and nothing ever collapses. The collapse is a phone affordance, not a
+   behaviour imposed on every size.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* closed until the rider taps the field */
+.g-addr-extra { display: none; }
+.g-addr-manual.is-open .g-addr-extra { display: block; }
+
+@media (max-width: 860px) {
+  .g-addr-extra { display: none; }
+  .g-addr-manual.is-open .g-addr-extra { display: block; }
+  .g-addr-extra .g-addr-manual-grid { margin-top: 8px; }
+}
+
+/* wide screens: everything visible from the start, nothing to tap */
+@media (min-width: 861px) {
+  .g-addr-extra { display: block; }
+}
+
+/* ── the account button: Login when signed out, avatar when signed in ─────
+   Same footprint in both states so the top bar never shifts. */
+.gh-account {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  backdrop-filter: blur(14px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, .7);
+  box-shadow: 0 6px 18px -10px rgba(20, 20, 25, .4);
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.gh-account:hover { background: #fff; border-color: rgba(141, 182, 0, .55); }
+.gh-account:active { transform: scale(.97); }
+
+/* the disc: ink fill, lime initials, matching the app's avatar */
+.gh-account-av {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #232328;
+  color: #8DB600;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.gh-account-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #232328;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the mobile button is just the disc, so it must not stretch */
+.gh-account:not(.gh-btn) {
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── the top bar stays put ────────────────────────────────────────────────
+   It was `relative`, so it scrolled away with the page and the logo and the
+   account button vanished as soon as the rider moved. Pinned instead, with a
+   soft frosted backing so content passing underneath stays legible. */
+.gh-topbar {
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  backdrop-filter: blur(14px) saturate(1.6);
+  border-bottom: 1px solid rgba(10, 25, 47, .07);
+}
+
+
+/* ── the pickup field: a plain box, like Suburb and City ──────────────────
+   It was a geocoder field with a suggestion dropdown. Now it is an ordinary
+   text input, so nothing competes with what the rider types. */
+.g-pickup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.g-pickup:focus-within {
+  border-color: #8DB600;
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+.g-pickup-in {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 16px;              /* 16px keeps iOS Safari from zooming on focus */
+  font-weight: 600;
+  color: inherit;
+}
+.g-pickup-in::placeholder { font-weight: 500; color: rgba(11, 11, 11, .38); }
+
+/* ── Suburb and the province-and-city picker, under the pickup ────────────
+   Two columns, same shape as the street field above them. minmax(0,1fr) so a
+   long value cannot widen the pair past the card. */
+.gh-pickup-sub {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.gh-sub-lab {
+  display: block;
+  margin: 0 0 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .5);
+  white-space: nowrap;
+}
+.gh-sub-in {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: inherit;
+  outline: 0;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.gh-sub-in:focus {
+  border-color: #8DB600;
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+@media (max-width: 400px) { .gh-pickup-sub { grid-template-columns: minmax(0, 1fr); } }

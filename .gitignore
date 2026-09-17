@@ -1,0 +1,45 @@
+# ── never commit these ──────────────────────────────────────────────────────
+
+# real bookings, accounts, password hashes, sessions, audit trail.
+# This is live customer data. The pepper makes a stolen copy useless, but it
+# still must never leave the machine.
+data/
+*.json
+!package.json
+!package-lock.json
+!manifest.webmanifest
+!tsconfig*.json
+!vercel.json
+
+# the pepper file, if one was generated locally
+.gogo-pepper
+*.pepper
+
+# build output — regenerated from source by the Vite build
+gogohermes/_build/
+gogohermes/node_modules/
+node_modules/
+_app/
+
+# local machine state
+wslip.txt
+*.log
+server.log
+
+# scratch and probes: my debugging tools, not part of the product
+probe-*.js
+t.js
+t2.js
+t3.js
+db-check.js
+pgtest.js
+pooltest.js
+re-check.js
+test-booking.js
+
+# editor / OS noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

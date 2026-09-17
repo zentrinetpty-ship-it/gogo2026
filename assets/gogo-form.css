@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   JOIN FORM — the request-to-join card
+   ═══════════════════════════════════════════════════════════════════════════
+
+   The rule this follows, everywhere:
+
+     THE LABEL SITS ABOVE THE CONTROL, OUTSIDE THE BOX.
+
+   The old form put the label inside the bordered row, so every field read as
+   two stacked lines of text inside a box — a small grey caption crammed on top
+   of the value it described. That is the "double line" problem. Here the label
+   is a separate line above the input, in its own space, and the input is a
+   single clean box holding one thing: the value.
+
+   Spacing is deliberate rather than uniform:
+     - 6px between a label and its own control (they belong together)
+     - 20px between one field and the next (clear separation)
+   The gap inside a group must always be visibly smaller than the gap between
+   groups, which is what makes the grouping read without any extra chrome.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* the list of fields */
+.g-form .g-field {
+  display: block;
+  position: relative;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0 0 20px;          /* the gap between fields */
+}
+.g-form .g-field:last-of-type { margin-bottom: 0; }
+
+/* the label: its own line, outside the box, one line only */
+.g-form .g-f-k {
+  display: block;             /* never inline, never wrapping beside the input */
+  margin: 0 0 6px;            /* sits close to its own control */
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .5);
+  line-height: 1.2;
+  white-space: nowrap;        /* the caption must never break onto two lines */
+}
+
+/* the control: one box, one value, nothing else inside it */
+.g-form .g-input,
+.g-form input.g-input,
+.g-form select.g-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;            /* 16px keeps iOS Safari from zooming on focus */
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  outline: 0;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.g-form .g-input::placeholder { color: rgba(11, 11, 11, .34); font-weight: 500; }
+.g-form .g-input:focus {
+  border-color: var(--lime, #8DB600);
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+/* a select needs its own chevron now that it is a plain box */
+.g-form select.g-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357534E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  padding-right: 38px;
+  cursor: pointer;
+}
+
+/* ── a field the app fills in for you ────────────────────────────────────
+   Read-only, greyed, and clearly not yours to type in. */
+.g-form .g-input[readonly] {
+  background: #F4F6FB;
+  color: rgba(11, 11, 11, .62);
+  cursor: default;
+}
+
+/* ── two fields side by side ─────────────────────────────────────────────
+   minmax(0,1fr) and not 1fr: a grid track keeps a content-based minimum
+   otherwise, and a long option name would push the pair wider than the card. */
+.g-form .g-2col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.g-form .g-2col .g-field { margin-bottom: 0; }
+@media (max-width: 420px) { .g-form .g-2col { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── the address field keeps its own icon inside the box ─────────────────
+   The geocoder puts a pin inside the input and wraps it. That is the one
+   control allowed a decoration, because it says what the field is for. */
+.g-form .g-addr-anchor { display: flex; align-items: center; gap: 8px; }
+.g-form .g-addr-anchor .g-addr-ic { flex: 0 0 auto; color: rgba(11, 11, 11, .45); }
+.g-form .g-addr-anchor input { border: 0; padding: 0; height: auto; background: none; }
+
+/* the Suburb and City pair the address module adds, under the pickup field */
+.g-form .g-addr-extra .g-addr-manual-grid { margin-top: 10px; }
+.g-form .g-addr-fld { display: block; }
+.g-form .g-addr-fld span {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .5);
+}
+.g-form .g-addr-u,
+.g-form .g-addr-t {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  outline: 0;
+}
+.g-form .g-addr-u:focus,
+.g-form .g-addr-t:focus {
+  border-color: var(--lime, #8DB600);
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+
+/* ── section headings inside the form ────────────────────────────────────
+   A quiet rule and a small caption. It separates one idea from the next
+   without a card inside a card. */
+.g-form .g-form-sec {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 0 16px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .45);
+}
+.g-form .g-form-sec::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(11, 11, 11, .1);
+}
+
+/* ── the summary block ───────────────────────────────────────────────────
+   What you are paying and when. Set apart from the fields by a rule, not a
+   second border, so the form does not become a stack of boxes. */
+.g-form .g-sum { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(11, 11, 11, .1); }
+
+/* the submit, with real breathing room above it */
+.g-form .g-btn-block { margin-top: 22px; }
+
+/* ── Suburb and City under the pickup field ──────────────────────────────
+   Two plain fields side by side, matching each other and matching the pickup
+   above them. minmax(0,1fr) rather than 1fr: a grid track keeps a
+   content-based minimum otherwise and a long value widens the pair. */
+.g-bk-subrow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.g-bk-subrow .g-bk-fld { margin: 0; min-width: 0; }
+.g-bk-subrow .g-bk-lab { font-size: 10.5px; }
+@media (max-width: 380px) { .g-bk-subrow { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── the province-and-city picker ────────────────────────────────────────
+   A native select grouped by province. One control, one choice, and the
+   optgroups give the province separation without a second field. Sized to
+   match the inputs beside it. */
+#fromArea {
+  width: 100%;
+  height: 46px;
+  padding: 0 34px 0 12px;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 8px;
+  background-color: #fff;
+  /* the native chevron is suppressed so the box matches the text inputs */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357534E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 15px 15px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  outline: 0;
+  text-overflow: ellipsis;
+}
+#fromArea:focus {
+  border-color: var(--lime, #8DB600);
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+/* the placeholder row reads as a prompt, not a value */
+#fromArea:invalid { color: rgba(11, 11, 11, .42); font-weight: 500; }
+/* province headings inside the menu */
+#fromArea optgroup { font-weight: 800; font-size: 13px; color: rgba(11, 11, 11, .55); }
+#fromArea option { font-weight: 600; color: var(--ink); }

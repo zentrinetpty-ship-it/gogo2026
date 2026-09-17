@@ -1,0 +1,1338 @@
+/* =========================================================================
+   GOGO — LIVE LAYER
+   Colour, emoji and motion on top of the Cleanic light theme. shadcn-style
+   primitives built in plain CSS: badges, separators, icon squircles,
+   progress, pulse, shimmer and a full button variant set.
+   ========================================================================= */
+
+/* ── primitives ───────────────────────────────────────────────────────── */
+.g-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 20px; padding: 0 7px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .02em;
+  border: 1px solid var(--line); background: var(--card-3); color: var(--ink);
+  white-space: nowrap;
+}
+.g-badge-lime { background: var(--lime-bright); border-color: var(--lime); color: var(--ink); }
+.g-badge-soft { background: var(--lime-wash); border-color: rgba(141, 182, 0, .45); color: var(--ink); }
+.g-badge-dark { background: var(--black); border-color: var(--black); color: var(--on-black); }
+.g-badge-amber { background: rgba(240, 180, 41, .18); border-color: rgba(214, 152, 18, .45); color: var(--ink); }
+
+.g-sep { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: var(--ink-mute); font-size: 11px; font-weight: 700; }
+.g-sep::before, .g-sep::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+
+/* tinted icon squircle, the shadcn look */
+.g-ic-sq {
+  width: 26px; height: 26px; flex: 0 0 auto; border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--card-3); border: 1px solid var(--line-soft); color: var(--ink);
+}
+.g-ic-sq svg { width: 14px; height: 14px; }
+.g-ic-sq.lime { background: var(--lime-wash); border-color: rgba(141, 182, 0, .45); }
+.g-ic-sq.amber { background: rgba(240, 180, 41, .18); border-color: rgba(214, 152, 18, .42); }
+.g-ic-sq.dark { background: var(--black); border-color: var(--black); color: var(--on-black); }
+.g-ic-sq.lime svg { color: #4F6600; }
+
+/* progress */
+.g-prog { height: 6px; border-radius: 3px; background: var(--card-3); overflow: hidden; }
+.g-prog i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--lime), var(--lime-bright)); }
+
+/* the live dot */
+.g-pulse { position: relative; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--lime); }
+.g-pulse::after {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 2px solid rgba(163, 230, 53, .75); animation: gPulse 2s ease-out infinite;
+}
+@keyframes gPulse { 0% { transform: scale(.55); opacity: .9; } 70% { transform: scale(1.25); opacity: 0; } 100% { opacity: 0; } }
+
+/* shimmer sweep for the primary action */
+.g-shimmer { position: relative; overflow: hidden; }
+.g-shimmer::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, .55), transparent);
+  transform: skewX(-14deg); animation: gShimmer 5.5s ease-in-out infinite;
+}
+@keyframes gShimmer { 0%, 62% { left: -60%; } 82%, 100% { left: 130%; } }
+
+/* a soft glow that breathes, for the one hero action */
+.g-glow { animation: gGlow 3.6s ease-in-out infinite; }
+@keyframes gGlow {
+  0%, 100% { box-shadow: 0 1px 2px rgba(108, 140, 0, .3), 0 10px 22px -18px rgba(108, 140, 0, .5); }
+  50% { box-shadow: 0 2px 4px rgba(108, 140, 0, .3), 0 16px 30px -16px rgba(141, 182, 0, .65); }
+}
+
+/* a pop when a detail chip changes */
+@keyframes gPop { 0% { transform: scale(1); } 40% { transform: scale(1.045); } 100% { transform: scale(1); } }
+.g-pop { animation: gPop .28s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .g-pulse::after, .g-shimmer::after, .g-glow, .g-pop { animation: none !important; }
+}
+
+/* ── button variants ──────────────────────────────────────────────────── */
+.g-btn-soft {
+  background: var(--lime-wash);
+  border-color: rgba(141, 182, 0, .5);
+  color: var(--ink);
+  background-image: none;
+}
+.g-btn-soft:hover { background: rgba(163, 230, 53, .28); }
+.g-btn-ink .g-bk-ic, .g-btn-ink svg { color: var(--lime-bright); }
+
+/* ── hero: colour in the calls to action and the stats ────────────────── */
+.g-hero-ctas .g-btn { font-weight: 800; }
+.g-wordmark { display: inline-flex; align-items: center; gap: 6px; }
+.g-wm-ic { font-size: 13px; line-height: 1; }
+.g-wordmark b { font-variant-numeric: tabular-nums; }
+
+/* ── the booking card: alive ──────────────────────────────────────────── */
+.g-book { position: relative; overflow: visible; }
+.g-book::before {
+  /* a lime edge that draws itself in */
+  content: ""; position: absolute; top: -1px; left: -1px; right: -1px; height: 3px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(90deg, var(--lime), var(--lime-bright), var(--lime));
+  transform-origin: left; animation: gEdge .7s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes gEdge { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.g-bk-live {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 2px 0 18px; padding: 9px 11px;
+  border-radius: 14px; border: 1px solid rgba(141, 182, 0, .34);
+  background: linear-gradient(96deg, rgba(163, 230, 53, .18), rgba(163, 230, 53, .05));
+  font-size: 12px; font-weight: 700; color: var(--ink);
+}
+.g-bk-live b { font-weight: 900; }
+.g-bk-live .g-badge-lime { margin-left: auto; }
+
+.g-bk-h { display: flex; align-items: center; gap: 7px; }
+.g-bk-h span[aria-hidden] { font-size: 14px; line-height: 1; }
+
+/* leading icon chips inside the two fields */
+.g-bk-inwrap .g-bk-ic {
+  left: 8px; width: 26px; height: 26px; border-radius: 14px;
+  z-index: 2;                        /* the field has a backdrop-filter, so it needs lifting over it */
+  display: grid; place-items: center;
+  background: var(--lime-wash); border: 1px solid rgba(141, 182, 0, .40);
+}
+.g-bk-inwrap:nth-of-type(2) .g-bk-ic { background: rgba(240, 180, 41, .20); border-color: rgba(214, 152, 18, .42); }
+.g-bk-in { padding-left: 43px; }
+.g-book .g-swap button { background: var(--lime-bright); border-color: var(--lime); }
+.g-book .g-swap button:hover { background: var(--lime); }
+
+/* detail buttons carry a tinted chip and breathe on hover.
+   The type is deliberately small: these sit three-across in a narrow card, so
+   the default size crowded the chip and truncated the longer labels like
+   "Hand luggage". */
+.g-bk-info {
+  padding: 0 11px; gap: 7px;
+  font-size: 12.5px; font-weight: 700; letter-spacing: -.01em;
+  min-width: 0;
+}
+.g-bk-info > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-bk-info:hover { border-color: rgba(141, 182, 0, .55); }
+.g-bk-info .g-ic-sq { margin-left: -1px; }
+
+/* the segment reads like shadcn tabs */
+.g-seg { background: var(--card-3); border: 1px solid var(--line-soft); padding: 3px; border-radius: 999px; }
+.g-seg button { border-radius: 999px; font-weight: 700; font-size: 12.5px; padding: 7px 12px; }
+.g-seg button.on { background: var(--lime-bright); color: var(--ink); box-shadow: 0 1px 2px rgba(38, 38, 43, .08); }
+
+/* the card's own headings, kept in proportion with the fields below them */
+.g-bk-h { font-size: 12.5px; font-weight: 800; letter-spacing: .02em; }
+.g-bk-h span[aria-hidden] { font-size: 13px; }
+.g-bk-lab { font-size: 10.5px; letter-spacing: .05em; }
+.g-bk-lab .g-ic-sq { width: 20px; height: 20px; border-radius: 10px; }
+.g-bk-lab .g-ic-sq svg { width: 11px; height: 11px; }
+.g-bk-fee { font-size: 11px; line-height: 1.5; }
+
+@media (max-width: 430px) {
+  .g-bk-info { padding: 0 9px; gap: 6px; font-size: 12px; }
+  .g-seg button { padding: 7px 10px; font-size: 12px; }
+}
+
+.g-bk-submit { font-weight: 900; gap: 8px; }
+.g-bk-submit svg { width: 17px; height: 17px; flex: 0 0 auto; }   /* without this the bare SVG blows up */
+.g-book svg { flex: 0 0 auto; }
+.g-bk-fee { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+/* ── a livelier section header for the routes ─────────────────────────── */
+.g-live-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+  color: #4F6600;
+}
+
+@media (max-width: 900px) {
+  /* the landing gets the colour first on a phone */
+  .g-bk-live { font-size: 11.5px; }
+  .g-hero-ctas .g-btn { flex: 1; justify-content: center; }
+
+  /* clear the phone hero of everything that is not the message */
+  .g-hero-ctas, .g-wordmarks, .g-hero-credit { display: none !important; }
+
+  /* the hero must not paint over the basemap, or nothing shows through */
+  .g-hero { background: transparent; border-bottom: 0; }
+  .g-body-map { overflow: hidden; background: var(--paper); }
+  /* a light breath of white so the tiles never fight the form text */
+  .g-body-map::before {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, .16) 52%, rgba(255, 255, 255, .34) 100%);
+  }
+  /* the corridor reads as background, not as content */
+  .g-body-map .g-map-car, .g-body-map .g-map-poi, .g-body-map .g-map-pin { opacity: .88; }
+  .g-body-map::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 130px; z-index: 2;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), #FFFFFF 92%);
+    pointer-events: none;
+  }
+
+  /* the map is the surface now, so it has to be legible, not washed out */
+  .g-hero-scrim {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .86) 0%, rgba(255, 255, 255, .42) 26%, rgba(255, 255, 255, .06) 46%, rgba(255, 255, 255, .04) 82%, rgba(255, 255, 255, .16) 100%);
+  }
+  .g-body-map .g-map-stage { filter: saturate(1.32) contrast(1.08) brightness(.92); }
+
+  /* no card surface on a phone: the booking form sits straight on the map */
+  .g-book {
+    background: transparent;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .g-book::before { display: none; }            /* the lime edge needs a surface */
+  .g-book { padding-left: 0; padding-right: 0; }
+
+  /* everything that floats on the map gets a white halo so it stays readable */
+  .g-bk-h, .g-hint, .g-bk-fee, .g-bk-note {
+    text-shadow: 0 1px 2px rgba(255, 255, 255, .98), 0 0 10px rgba(255, 255, 255, .9), 0 0 2px rgba(255, 255, 255, 1);
+  }
+  /* the readable bits keep a surface of their own, just a lighter one */
+  .g-bk-in { background: rgba(255, 255, 255, .82); }
+  .g-bk-info { background: rgba(255, 255, 255, .88); }
+  .g-bk-live { background: linear-gradient(96deg, rgba(255, 255, 255, .92), rgba(163, 230, 53, .3)); }
+  .g-seg { background: rgba(255, 255, 255, .8); }
+
+  /* keep the primary action clear of the fixed dock */
+  .g-bk-submit { scroll-margin-bottom: 104px; }
+  .g-book { padding-bottom: 4px; }
+  .g-bk-fee { margin-bottom: 0; }
+}
+
+/* the field itself sits a layer down, and its chip a layer up */
+.g-bk-in { position: relative; z-index: 1; }
+.g-bk-inwrap .g-bk-ic svg { width: 14px; height: 14px; color: #4F6600; }
+.g-bk-inwrap:nth-of-type(2) .g-bk-ic svg { color: #8A5B00; }
+
+
+/* =========================================================================
+   NAVY CHROME + A MODERN BOTTOM NAV
+   Dark navy bars, lime actions, colour-heavy components.
+   Contrast: white on navy 15.2:1 · lime on navy 10.4:1 · ink on lime 10:1
+   ========================================================================= */
+
+/* ── the top bar ──────────────────────────────────────────────────────── */
+.g-nav {
+  background: rgba(255, 255, 255, .88);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid rgba(38, 38, 43, .08);
+  box-shadow: 0 10px 30px -24px rgba(35, 35, 40, .5);
+}
+.g-nav a { color: var(--ink-mute); }
+.g-nav a:hover { color: var(--ink); }
+.g-nav-links a:hover { background: rgba(38, 38, 43, .05); color: var(--ink); }
+.g-nav-links a.on { background: var(--lime-bright); color: var(--ink); box-shadow: none; }
+
+
+.g-nav .g-brand-car svg { fill: #FFFFFF; }
+.g-nav .g-btn-outline { color: #FFFFFF; border-color: rgba(255, 255, 255, .4); }
+.g-nav .g-btn-outline:hover { background: rgba(255, 255, 255, .13); color: #FFFFFF; }
+.g-nav .g-btn-ink,
+.g-nav #acct { background: var(--lime-bright); border-color: var(--lime); color: var(--ink); }
+.g-nav .g-btn-ink:hover { background: var(--lime); }
+.g-nav .g-btn-ink .g-van, .g-nav .g-btn-ink svg { fill: var(--ink); }
+.g-nav #acct .g-avatar { background: #232328; color: var(--lime-bright); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOTTOM NAV
+
+   Measured against the landing page's nav so the two are the same object:
+   same row height, same item padding, same radius, same bottom offset. The
+   values below are the landing's computed ones, not approximations.
+
+     row height    62px          item height     51px
+     item padding  6px 16px      item radius     16px
+     row padding   0 8px         row gap         10px
+     bottom        24px          item bg         white .55 / .78 when active
+
+   The row itself draws no panel — the page body reads straight through and
+   each item is its own rounded rectangle with a hairline border.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.g-dock {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  max-width: calc(100vw - 20px);
+
+  /* the landing's row height, with the items centred inside it */
+  height: 62px;
+  padding: 0 8px;                   /* the landing's inner px-2 */
+
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* each item: its own rectangle, sized exactly like the landing's */
+.g-dock a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  height: 51px;                     /* the landing's item height */
+  padding: 6px 16px;                /* the landing's px-4 */
+  border-radius: 16px;              /* the landing's radius */
+
+  background: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(16px) saturate(1.9);
+  backdrop-filter: blur(16px) saturate(1.9);
+  border: 1px solid rgba(255, 255, 255, .6);
+  box-shadow: 0 8px 20px -10px rgba(20, 20, 25, .38), inset 0 1px 0 rgba(255, 255, 255, .9);
+
+  color: var(--ink-mute);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: .01em;
+  text-decoration: none;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.g-dock a::before { content: none; }
+.g-dock a span { font-size: 21px; line-height: 1; position: relative; z-index: 1; }
+
+.g-dock a:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, .82);
+  border-color: rgba(255, 255, 255, .95);
+  transform: translateY(-2px);
+}
+.g-dock a:active { transform: translateY(0) scale(.97); }
+
+/* the current page: a brighter fill and a lime rim, as on the landing */
+.g-dock a.on {
+  color: var(--ink);
+  background: rgba(255, 255, 255, .78);
+  border-color: rgba(141, 182, 0, .85);
+  box-shadow: 0 8px 20px -10px rgba(20, 20, 25, .38), inset 0 1px 0 #fff;
+}
+
+/* ── phones: the same shape, tightened so four items still fit ─────────── */
+@media (max-width: 480px) {
+  .g-dock { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); height: 58px; gap: 6px; padding: 0 4px; }
+  .g-dock a { height: 48px; padding: 6px 10px; border-radius: 14px; font-size: 11px; }
+  .g-dock a span { font-size: 20px; }
+}
+.g-dock .g-van { fill: currentColor; }
+
+/* five items have to fit a narrow phone, so tighten before they wrap */
+@media (max-width: 430px) {
+  .g-dock { gap: 5px; padding: 0; }
+  .g-dock a { padding: 7px 8px; font-size: 9.5px; }
+  .g-dock a span { font-size: 18px; }
+}
+@media (max-width: 340px) {
+  .g-dock a { padding: 6px 4px; font-size: 9px; letter-spacing: 0; }
+  .g-dock a span { font-size: 16px; }
+}
+
+@media (max-width: 400px) {
+  .g-dock { gap: 2px; padding: 7px 8px; }
+  .g-dock a { padding: 7px 10px; font-size: 10px; }
+  .g-dock a span { font-size: 19px; }
+}
+
+/* ── colour across the components ─────────────────────────────────────── */
+.g-stamp-open { background: rgba(163, 230, 53, .2); border-color: rgba(141, 182, 0, .5); color: #29380A; }
+.g-stamp-ink { background: #232328; border-color: #232328; color: #FFFFFF; }
+.g-stamp-lime { background: var(--lime-bright); border-color: var(--lime); color: var(--ink); }
+.g-badge-navy { background: #232328; border-color: #232328; color: #FFFFFF; }
+.g-badge-amber { background: rgba(240, 180, 41, .2); border-color: rgba(214, 152, 18, .5); color: #4A3105; }
+.g-chip:hover { border-color: var(--lime); background: rgba(163, 230, 53, .12); }
+.g-ic-sq.navy { background: #232328; border-color: #232328; color: var(--lime-bright); }
+
+/* ── the strike through "Zero Queue", drawn in lime ───────────────────── */
+.g-strike { position: relative; display: inline-block; white-space: nowrap; }
+.g-strike::after {
+  content: ""; position: absolute; left: -3%; right: -3%; top: 52%; height: 7px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--lime) 0%, var(--lime-bright) 55%, var(--lime) 100%);
+  box-shadow: 0 0 18px rgba(163, 230, 53, .6), 0 0 2px rgba(255, 255, 255, .8);
+  transform: scaleX(0) rotate(-2.4deg); transform-origin: left center;
+  animation: gStrike .9s cubic-bezier(.16, .9, .18, 1) .5s both;
+}
+.g-strike::before {
+  /* a thin white core so the stroke reads at any size */
+  content: ""; position: absolute; left: -2%; right: -2%; top: calc(52% + 2px); height: 2px;
+  border-radius: 2px; background: rgba(255, 255, 255, .9);
+  transform: scaleX(0) rotate(-2.4deg); transform-origin: left center;
+  animation: gStrike .9s cubic-bezier(.16, .9, .18, 1) .56s both;
+}
+@keyframes gStrike {
+  0%   { transform: scaleX(0) rotate(-3.4deg); }
+  68%  { transform: scaleX(1.05) rotate(-2deg); }
+  100% { transform: scaleX(1) rotate(-2.4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-strike::after, .g-strike::before { animation: none; transform: scaleX(1) rotate(-2.4deg); }
+}
+
+/* ── the swap control sits between pickup and destination ─────────────── */
+.g-bk-pair { position: relative; display: grid; gap: 8px; }
+.g-bk-pair .g-bk-inwrap:last-of-type .g-bk-in { padding-right: 50px; }
+.g-bk-swap {
+  position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+  z-index: 3; width: 32px; height: 32px; border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--lime-bright); border: 1px solid var(--lime); color: var(--ink);
+  font-size: 15px; font-weight: 900; line-height: 1; cursor: pointer;
+  box-shadow: 0 2px 8px -3px rgba(38, 38, 43, .35);
+  transition: background .18s ease, transform .12s ease;
+}
+.g-bk-swap:hover { background: var(--lime); }
+.g-bk-swap:active { transform: translateY(-50%) scale(.93); }
+.g-bk-swap:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* the footer clears the floating bar */
+.g-dock-body { padding-bottom: 106px; }
+
+
+/* ── the address block: a labelled row per field, glass so the map blends in ── */
+.g-bk-fld { display: grid; gap: 6px; }
+.g-bk-lab {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11.5px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink); cursor: pointer;
+}
+.g-bk-lab .g-ic-sq { width: 22px; height: 22px; border-radius: 11px; }
+.g-bk-lab .g-ic-sq svg { width: 12px; height: 12px; }
+.g-bk-inwrap { position: relative; }
+input.g-bk-in {
+  width: 100%; height: 46px;
+  background: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+  border: 1px solid rgba(255, 255, 255, .65);
+  box-shadow: 0 1px 2px rgba(35, 35, 40, .06), inset 0 1px 0 rgba(255, 255, 255, .6);
+  /* a size that fits the field: the browser default was making the text
+     collide with the icon and the swap button */
+  color: var(--ink); padding: 0 14px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; letter-spacing: -.005em;
+  line-height: 1.2; text-overflow: ellipsis;
+}
+input.g-bk-in::placeholder { color: var(--ink-mute); font-size: 13.5px; font-weight: 500; }
+input.g-bk-in:focus {
+  background: rgba(255, 255, 255, .78);
+  border-color: var(--lime);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .28);
+  outline: none;
+}
+/* no surface to fall back on, so glass is safe: browsers without blur get more white */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  input.g-bk-in { background: rgba(255, 255, 255, .88); }
+}
+.g-bk-pair { align-items: start; }
+/* each field is label + input, so the gap between the two INPUTS sits half a
+   label below the pair centre (22px label => +14px) */
+.g-bk-swap { top: 50%; }
+
+@media (max-width: 900px) {
+  /* a clean map: no vans, no route lines, no pins behind the form */
+  .g-body-map .g-map-car,
+  .g-body-map .g-map-route,
+  .g-body-map .g-map-poi,
+  .g-body-map .g-map-pin,
+  .g-hero-map-route,
+  .g-map-credit { display: none !important; }
+
+  /* glass fields blur the map instead of hiding it */
+  input.g-bk-in {
+    background: rgba(255, 255, 255, .48);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+    border-color: rgba(255, 255, 255, .6);
+  }
+  .g-bk-info { background: rgba(255, 255, 255, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .g-hint, .g-bk-fee { text-shadow: 0 1px 2px rgba(255, 255, 255, .95), 0 0 8px rgba(255, 255, 255, .85); }
+}
+
+
+/* ── the destination reads as a picker, not a text box ────────────────── */
+input.g-bk-in[readonly] {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2326262B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 13px;
+  padding-right: 40px;
+}
+input.g-bk-in[readonly]:focus { border-color: var(--lime); }
+
+
+/* =========================================================================
+   THE LOGO — go-go.cab
+   Lowercase, heavy, tight. A short lime dash between the words, and the car
+   badge on the right as a lime app-icon tile.
+   ========================================================================= */
+.g-brand {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif;
+  font-weight: 900; font-size: 22px; letter-spacing: -.045em; text-transform: uppercase;
+  line-height: 1; text-decoration: none; white-space: nowrap;
+}
+.g-brand-txt { display: inline-flex; align-items: center; }
+
+
+.g-brand-dot {
+  /* a real full stop: a glyph on the baseline, never a boxed disc */
+  display: inline; width: auto; height: auto; min-width: 0; min-height: 0;
+  background: none !important; box-shadow: none !important; border: 0 !important;
+  border-radius: 0; padding: 0; margin: 0 -0.02em 0 -0.03em;
+  color: var(--lime-deep); font-weight: 900; line-height: 1;
+}
+.g-brand-car { display: inline-flex; align-items: center; margin-right: 0; }
+
+.g-brand .g-lamp { fill: var(--lime-deep); }
+.g-nav .g-brand .g-lamp { fill: var(--lime-bright); }
+
+
+.g-brand:hover .g-car { transform: translateX(1px); }
+
+/* on the dark bar */
+
+
+
+/* in the footer */
+
+
+
+
+@media (max-width: 900px) {
+  .g-brand { font-size: 20px; gap: 7px; }
+  .g-brand-car .g-car { width: 26px; height: 12px; }
+}
+
+
+/* =========================================================================
+   SHARP EDGES + DESKTOP CHROME
+   Every navigation element and body button squares off. The bottom bar is a
+   phone affordance only.
+   ========================================================================= */
+
+/* The bottom bar is for every screen. It was phone-only above 901px, which
+   meant the desktop view had no bottom navigation at all. */
+.g-dock { display: flex !important; }
+
+/* top nav */
+.g-nav-links a { border-radius: 999px; }
+.g-nav-links a.on { border-radius: 999px; }
+.g-nav .g-btn { border-radius: 999px; }
+.g-nav #acct { border-radius: 999px; }
+/* radius is set once, on the bar, in the block above */
+
+/* buttons and fields take the rounded shape the cards use */
+.g-btn, .g-btn-sm, .g-btn-lg, .g-btn-ink, .g-btn-lime, .g-btn-yellow,
+.g-btn-ghost, .g-btn-outline, .g-btn-soft, .g-btn-glass, .g-btn-link { border-radius: 999px; }
+input[type="text"], input[type="tel"], input[type="email"], input[type="search"],
+input[type="number"], select, textarea, summary { border-radius: 14px; }
+button { border-radius: 999px; }
+
+/* surfaces: soft 14-20px, matching the ride cards */
+.g-card, .g-book, .g-req, .g-bubble, .g-sheet-card, .g-why, .g-faq, .g-ac,
+.g-person, .g-map-chip, .g-seg, .g-track-card, .g-panel, .g-side, .g-modal,
+.g-toast, .g-tile, .g-field, .g-input, .g-select,
+.g-bk-in, .g-chip, .g-badge, .g-stamp, .g-pill, .g-tag,
+.g-ops-card, .g-auth-card, .g-price, .g-stat, .g-note, .g-callout { border-radius: 16px; }
+.g-avatar, .g-cover, .g-ic-lg { border-radius: 14px; }
+.g-ic, .g-ic-sm { border-radius: 11px; }
+.g-seg button { border-radius: 12px; }
+.g-ac-prow, .g-ac-cbtn, .g-ac-item, .g-ac, .g-ac-any, .g-ac-empty { border-radius: 14px; }
+.g-badge, .g-badge-lime, .g-badge-soft, .g-badge-dark, .g-badge-navy, .g-badge-amber { border-radius: 999px; }
+.g-ic-sq { border-radius: 14px; }
+.g-car { border-radius: 0; }
+/* keep true circles round */
+.g-pulse, .g-map-badge, .g-avatar-round, .g-dot, .g-spin, .g-ring,
+.g-steps i, .g-timeline i { border-radius: 50%; }
+
+
+/* ── .g-glow::after is a 210px white corner blob meant for big cards. On a
+      small button it covers the whole control and fades its label, so it is
+      limited to cards here and kept inside their bounds. ─────────────────── */
+.g-btn.g-glow::after { display: none; }
+.g-card.g-glow { position: relative; overflow: hidden; }
+.g-card.g-glow::after { right: 0; top: 0; width: 170px; height: 170px; }
+
+
+/* icons inside a button take the button's own colour, not the muted field tone */
+.g-btn .g-bk-ic, .g-btn .g-bk-ic svg, .g-btn svg.g-van { color: inherit; fill: currentColor; }
+.g-bk-submit .g-bk-ic, .g-bk-submit svg { color: var(--ink); fill: var(--ink); }
+
+
+/* =========================================================================
+   THE PICKUP FIELD
+   1. A surface that reads as a field, not as the map: brighter fill, a real
+      ink border, an inner highlight and a soft drop.
+   2. A lime dotted line marching around the field.
+   3. "Enter your pickup address" as its label, with a lime pulse.
+   ========================================================================= */
+input.g-bk-in {
+  background: rgba(255, 255, 255, .82);
+  border: 1.5px solid rgba(38, 38, 43, .34);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 8px 20px -14px rgba(35, 35, 40, .5);
+  font-weight: 600;
+}
+input.g-bk-in:hover { border-color: rgba(38, 38, 43, .5); }
+input.g-bk-in:focus {
+  background: #FFFFFF;
+  border-color: var(--lime);
+  box-shadow: 0 0 0 3.5px rgba(163, 230, 53, .3), 0 8px 22px -16px rgba(35, 35, 40, .55);
+}
+input.g-bk-in::placeholder { color: rgba(38, 38, 43, .5); font-weight: 500; }
+
+.g-bk-fld-pick .g-bk-inwrap { position: relative; }
+
+
+
+/* =========================================================================
+   THEME COMPLETENESS + SMALL-SCREEN HARDENING
+   ========================================================================= */
+/* controls inherit the app font (buttons already did; fields and selects did not) */
+button, input, select, textarea, optgroup, .g-btn { font-family: inherit; }
+
+/* nothing may ever poke past the viewport */
+img, svg, video, canvas, iframe, table { max-width: 100%; }
+.g-grid > *, .g-row > *, .g-between > *, .g-card, .g-tile, .g-req { min-width: 0; }
+
+/* small phones (320-360): tighter gutters and everything allowed to shrink */
+@media (max-width: 380px) {
+  .g-wrap { padding-left: 14px !important; padding-right: 14px !important; }
+  .g-card { padding: 14px; }
+  .g-seats { flex-wrap: wrap; }
+  .g-card *, .g-tile * { min-width: 0; }
+  .g-bk-in { font-size: 15px; }
+  .g-bk-h, .g-label { letter-spacing: 0; }
+  .g-dock a { font-size: 10px; }
+  .g-impact { font-size: clamp(2.2rem, 13vw, 3rem); }
+}
+
+
+/* 16px keeps iOS from zooming when the pickup field is tapped, and iOS gives
+   address autofill a larger, easier target in the process. */
+@media (max-width: 900px) {
+  input.g-bk-in { font-size: 16px; }
+}
+
+
+/* ── auth: the log in / create account switch, and the password meter ──── */
+.g-tabs {
+  display: flex; gap: 6px; padding: 4px; margin-bottom: 16px;
+  background: var(--wash); border: 1px solid var(--line); border-radius: 16px;
+}
+.g-tab {
+  flex: 1; padding: 9px 10px; border: 0; border-radius: 12px; background: transparent;
+  font: inherit; font-size: 13px; font-weight: 800; color: var(--ink-mute);
+  cursor: pointer; transition: background .18s ease, color .18s ease;
+}
+.g-tab:hover { color: var(--ink); background: rgba(38, 38, 43, .06); }
+.g-tab.on { background: var(--ink); color: #FFFFFF; }
+.g-tab.on:hover { background: var(--ink); color: #FFFFFF; }
+
+.g-meter { height: 5px; border-radius: 999px; background: var(--wash); overflow: hidden; }
+.g-meter i { display: block; height: 100%; width: 0; background: var(--lime); transition: width .25s ease, background .25s ease; }
+.g-kv { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.g-kv span { font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); }
+.g-kv b { font-size: 14px; font-weight: 800; color: var(--ink); }
+.g-hr { height: 1px; background: var(--line); }
+
+/* the emoji chips read stronger on a form */
+.g-card .g-ic { background: var(--wash); border: 1px solid var(--line); }
+
+
+/* =========================================================================
+   PHONE LANDING — lean
+   Why GOGO and How-it-works are desktop depth: on a phone the page goes
+   straight from the booking card to what people came for, the hikes.
+   ========================================================================= */
+.g-foot-mini { display: none; }
+
+@media (max-width: 900px) {
+  #whyBand,
+  #howBand { display: none !important; }
+
+  /* popular hikes: a 2 x 2 grid */
+  #popRoutes { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  #popRoutes > * { grid-column: auto !important; }
+  #popRoutes .g-card { padding: 13px; min-width: 0; }
+  #popRoutes .g-t { font-size: 13.5px; line-height: 1.35; }
+  #popRoutes .g-kpi-val { font-size: 17px; }
+  #popRoutes .g-btn { padding: 7px 11px; font-size: 12px; }
+  #popRoutes .g-ic { width: 30px; height: 30px; font-size: 15px; }
+
+  /* a short footer: the brand, then the links that matter */
+  .g-foot-cols { grid-template-columns: 1fr !important; gap: 16px; }
+  .g-foot-col { display: none; }
+  .g-foot-cols > div:first-child p:nth-of-type(2) { display: none; }
+  .g-foot-cols > div:first-child p { max-width: none; }
+  .g-foot-mini {
+    display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px;
+    padding-top: 14px; border-top: 1px solid var(--line);
+  }
+  .g-foot-mini a { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .g-foot .g-between { flex-direction: column; gap: 4px; }
+  .g-foot .g-between p:nth-of-type(2) { display: none; }
+}
+
+
+/* =========================================================================
+   THE FOOTER
+   Centred mark, a link row with a hover pill, social tiles, an animated
+   striped band, and one legal line. Ported from the reference component:
+   the framer-motion stagger is an IntersectionObserver toggle, the hover
+   spring is a CSS transition, and the stripe sweep is a keyframe.
+   ========================================================================= */
+.g-foot {
+  padding: 0;
+  background: transparent;
+  border-top: 0;
+}
+/* ── footer: one compact block ───────────────────────────────────────────────
+   Logo and tagline on top, the links as a single wrapped row, socials and the
+   legal line underneath. Tighter than before — 22px padding instead of 46px —
+   and the lime rule above it separates it from the page without a heavy band. */
+.g-f1 {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 26px 22px 24px;
+  max-width: 780px;
+  border-top: 1px solid var(--line);
+}
+.g-f1-top { display: grid; justify-items: center; gap: 5px; }
+/* The wordmark carries its own font-size, so setting the parent does nothing.
+   The size has to be aimed at .g-brand-word directly. */
+.g-f1 .g-brand,
+.g-f1 .g-brand .g-brand-word { font-size: 22px; line-height: 1; }
+.g-f1-tag {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  text-align: center;
+}
+.g-f1-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 4px;
+}
+.g-f1-link {
+  position: relative;
+  padding: 5px 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform .2s ease, color .2s ease;
+}
+.g-f1-link span { position: relative; z-index: 1; }
+/* the lime wipe that grows out from the middle on hover */
+.g-f1-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(141, 182, 0, .18);
+  transform: scale(.4);
+  opacity: 0;
+  transition: transform .3s cubic-bezier(.2, .9, .2, 1), opacity .2s ease;
+}
+.g-f1-link:hover::before { transform: scale(1); opacity: 1; }
+.g-f1-link:hover { transform: scale(1.06); }
+.g-f1-link:active { transform: scale(.95); }
+
+.g-f1-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 16px;
+}
+.g-f1-social { display: flex; gap: 8px; }
+.g-f1-soc {
+  width: 34px; height: 34px; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 999px; color: var(--ink);
+  background: rgba(255, 255, 255, .6);
+  transition: transform .22s cubic-bezier(.2, .9, .2, 1), border-color .22s ease,
+              background .22s ease, color .22s ease;
+}
+.g-f1-soc:hover {
+  transform: translateY(-2px) scale(1.06);
+  border-color: rgba(141, 182, 0, .55);
+  background: rgba(141, 182, 0, .14);
+}
+.g-f1-soc:active { transform: scale(.94); }
+.g-f1-soc svg { width: 16px; height: 16px; }
+
+.g-f1-legal { margin: 0; font-size: 11.5px; font-weight: 600; color: var(--ink-mute); }
+.g-f1-legal a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+.g-f1-legal a:hover { color: #4A5D00; }
+
+@media (max-width: 400px) {
+  .g-f1 { padding: 22px 16px 20px; gap: 12px; }
+  .g-f1-link { font-size: 12px; padding: 5px 8px; }
+  .g-f1-legal { text-align: center; }
+}
+
+
+/* the destination fallback: pick from the list, or type it yourself */
+.g-bk-labrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* phones: a little air between the nav bar and the hero headline */
+@media (max-width: 900px) {
+  .g-hero { padding-top: 22px; }
+}
+
+/* ── mobile: shorter, tighter booking card ─────────────────────────────────
+   Phones only. Nothing here touches desktop. The input keeps its 16px text
+   so iOS still refuses to zoom on focus; everything around it shrinks.
+   Selectors deliberately match the specificity of the rules they beat. */
+@media (max-width: 900px) {
+  .g-bk-sec { margin-bottom: 13px; }
+  .g-bk-sec:last-of-type { margin-bottom: 11px; }
+  .g-bk-h { margin: 0 0 6px; font-size: 13px; }
+  .g-bk-fld { gap: 4px; }
+  .g-bk-lab { margin: 0; font-size: 10px; gap: 6px; }
+  .g-bk-lab .g-ic-sq { width: 18px; height: 18px; }
+  .g-bk-lab .g-ic-sq svg { width: 10px; height: 10px; }
+  .g-bk-labrow { gap: 6px; }
+  .g-bk-inwrap { margin-bottom: 5px; }
+  input.g-bk-in { height: 40px; padding: 0 40px 0 34px; }
+  .g-bk-ic { left: 11px; width: 16px; height: 16px; }
+  .g-bk-ic svg { width: 16px; height: 16px; }
+  .g-bk-info { height: 42px; padding-left: 38px; padding-right: 32px; }
+  .g-bk-row { gap: 6px; margin-bottom: 6px; }
+  .g-bk-submit { height: 44px; font-size: 14.5px; }
+  #swap, .g-bk-swap { width: 28px; height: 28px; }
+  /* recalibrated for the shorter fields so it still lands dead centre of the gap */
+  .g-bk-swap { top: calc(50% - 2px); }
+  .g-bk-fee { margin: 8px 0 0; font-size: 11px; }
+  .g-seg button { height: 36px; }
+  .g-bk-inwrap .g-swap { right: 5px; }
+}
+
+
+/* =========================================================================
+   MODERN PASS — address block, ride cards, and an app-like touch feel.
+   No dotted or dashed borders anywhere: hairlines and soft tints instead.
+   ========================================================================= */
+
+/* the pickup list must paint over the destination field below it. The list is
+   anchored inside the pickup field, so lift that whole subtree above its
+   sibling rather than trying to out-z-index from inside it. */
+.g-bk-pair .g-bk-fld-pick { position: relative; z-index: 3; }
+.g-bk-pair > .g-bk-fld:not(.g-bk-fld-pick) { position: relative; z-index: 2; }
+.g-bk-inwrap { z-index: 31; }
+.g-ac { z-index: 120; }
+
+/* the swap control is gone: the field can use its whole width again */
+input.g-bk-in { padding: 0 14px; border-radius: 14px; }
+.g-bk-swap, #swap { display: none !important; }
+
+/* address field: brighter surface, hairline, and a lift on focus */
+input.g-bk-in {
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(38, 38, 43, .17);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 6px 16px -14px rgba(35, 35, 40, .5);
+  transition: border-color .18s ease, box-shadow .2s ease, background .18s ease, transform .18s ease;
+}
+input.g-bk-in:hover { border-color: rgba(38, 38, 43, .32); }
+input.g-bk-in:focus {
+  background: #FFFFFF; border-color: var(--lime);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .26), 0 10px 24px -18px rgba(35, 35, 40, .6);
+  transform: translateY(-1px);
+}
+.g-bk-lab .g-ic-sq {
+  width: 21px; height: 21px; border-radius: 5px; font-size: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(163, 230, 53, .2); border: 1px solid rgba(141, 182, 0, .42);
+}
+.g-bk-lab .g-ic-sq.amber { background: rgba(38, 38, 43, .05); border-color: rgba(38, 38, 43, .14); }
+.g-bk-alt {
+  border: 1px solid rgba(141, 182, 0, .45); background: rgba(163, 230, 53, .15); color: #29380A;
+  border-radius: 999px; padding: 3px 9px; font-size: 10.5px; font-weight: 800; text-decoration: none;
+  transition: background .16s ease, transform .16s ease, color .16s ease;
+}
+.g-bk-alt:hover { background: rgba(163, 230, 53, .3); }
+.g-bk-alt:active { transform: scale(.94); }
+.g-bk-alt[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+
+/* the section prompt: softer than a border, no dashes */
+.g-hint { border-top: 0; padding-top: 0; }
+
+/* ride cards ───────────────────────────────────────────────────────────── */
+.g-rc {
+  position: relative; display: grid; gap: 10px; padding: 14px;
+  background: #FFFFFF; border: 1px solid rgba(38, 38, 43, .13); border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(35, 35, 40, .04);
+  transition: transform .18s ease, box-shadow .22s ease, border-color .18s ease;
+  overflow: hidden;
+}
+/* the lime line along the top of every ride card: always there, so the card
+   carries the brand even at rest. On hover it sweeps, which is the only bit
+   that moves. */
+.g-rc::after {
+  content: ""; position: absolute; inset: 0 0 auto; height: 3px;
+  background: linear-gradient(90deg, var(--lime) 0%, var(--lime-bright) 50%, var(--lime) 100%);
+  opacity: 1;
+}
+.g-rc::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85), transparent);
+  transform: translateX(-100%); opacity: 0;
+}
+.g-rc:hover { border-color: rgba(141, 182, 0, .45); box-shadow: 0 16px 32px -20px rgba(35, 35, 40, .5); transform: translateY(-2px); }
+.g-rc:hover::before { opacity: 1; animation: gRcSweep .9s ease forwards; }
+.g-rc:hover .g-rc-go span { transform: translateX(3px); }
+.g-rc:active { transform: scale(.988); }
+@keyframes gRcSweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* ── the ride card ───────────────────────────────────────────────────────
+   Light, rounded and quiet. The route reads left to right like a boarding
+   pass: town code big, full name under it, the vehicle crossing between.
+   Nothing dark, nothing boxy, and the fill state is a bar rather than a row
+   of seat emoji. */
+.g-rc {
+  position: relative; overflow: hidden;
+  display: grid; gap: 14px; padding: 18px;
+  background: #FFFFFF; border: 1px solid rgba(38, 38, 43, .10);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(35, 35, 40, .04), 0 12px 28px -22px rgba(35, 35, 40, .5);
+}
+.g-rc:hover { border-color: rgba(141, 182, 0, .42); transform: translateY(-2px); }
+.g-rc-full { opacity: .72; }
+
+/* header: badge, vehicle, departure */
+.g-rc-top { display: flex; align-items: center; gap: 11px; }
+.g-rc-badge {
+  flex: 0 0 auto; display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 13px;
+  background: rgba(163, 230, 53, .16); color: var(--lime-deep);
+  border: 1px solid rgba(141, 182, 0, .3);
+}
+.g-rc-badge svg { width: 21px; height: 21px; }
+.g-rc-head { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.g-rc-veh {
+  font-size: 14.5px; font-weight: 800; letter-spacing: -.02em; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.g-rc-driver { font-size: 11.5px; font-weight: 600; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-rc-when { flex: 0 0 auto; text-align: right; display: grid; gap: 1px; }
+.g-rc-when b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+.g-rc-when span { font-size: 10.5px; font-weight: 700; color: var(--ink-mute); }
+
+/* the route */
+.g-rc-route {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  padding: 14px 0 2px;
+}
+.g-rc-end { display: grid; gap: 1px; min-width: 0; }
+.g-rc-end-to { text-align: right; }
+.g-rc-code {
+  font-family: "Anton", "Poppins", sans-serif;
+  font-size: 34px; font-weight: 400; line-height: .95; letter-spacing: -.01em; color: var(--ink);
+}
+.g-rc-town {
+  font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 11ch;
+}
+.g-rc-mid { display: grid; gap: 3px; justify-items: center; min-width: 0; }
+.g-rc-line { display: flex; align-items: center; gap: 6px; width: 100%; }
+.g-rc-line i { flex: 1 1 auto; height: 1px; background: rgba(38, 38, 43, .16); }
+.g-rc-van { display: grid; place-items: center; color: var(--lime-deep); }
+.g-rc-van svg { width: 18px; height: 18px; }
+.g-rc-dur { font-size: 11px; font-weight: 800; letter-spacing: .03em; color: var(--ink); }
+.g-rc-stops-n { font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-mute); }
+
+/* stops on the way */
+.g-rc-stops { display: flex; flex-wrap: wrap; gap: 6px; }
+.g-rc-stop {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgba(38, 38, 43, .045);
+  font-size: 11px; font-weight: 600; color: var(--ink-mute);
+}
+.g-rc-stop b { font-size: 11px; font-weight: 800; color: var(--ink); }
+
+/* the boarding-pass perforation */
+.g-rc-dash {
+  height: 1px;
+  background-image: linear-gradient(90deg, rgba(38,38,43,.22) 0 5px, transparent 5px 10px);
+  background-size: 10px 1px;
+}
+
+/* footer: fill state, price, action */
+.g-rc-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.g-rc-seats { flex: 1 1 auto; min-width: 110px; display: grid; gap: 5px; }
+.g-rc-seats-n { font-size: 11px; font-weight: 600; color: var(--ink-mute); }
+.g-rc-seats-n b { font-weight: 800; color: var(--ink); }
+.g-rc-bar { display: block; height: 4px; border-radius: 999px; background: rgba(38, 38, 43, .09); overflow: hidden; }
+.g-rc-bar i { display: block; height: 100%; border-radius: 999px; background: var(--lime); }
+.g-rc-price { flex: 0 0 auto; text-align: right; display: grid; gap: 0; }
+.g-rc-price b { font-size: 19px; font-weight: 900; letter-spacing: -.035em; color: var(--ink); line-height: 1.05; }
+.g-rc-price span { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); }
+.g-rc-go { flex: 0 0 auto; border-radius: 999px; }
+
+@media (max-width: 380px) {
+  .g-rc { padding: 15px; gap: 12px; border-radius: 18px; }
+  .g-rc-code { font-size: 29px; }
+  .g-rc-price b { font-size: 17px; }
+}
+.g-rc-name { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; letter-spacing: -.015em; color: var(--ink); }
+.g-rc-meta { font-size: 11px; font-weight: 600; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-rc-price { flex: 0 0 auto; text-align: right; }
+.g-rc-price b { display: block; font-size: 19px; font-weight: 900; letter-spacing: -.035em; line-height: 1.05; color: var(--ink); }
+.g-rc-price span { font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); }
+
+.g-rc-route { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.g-rc-city { font-size: 14px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+.g-rc-arrow { color: var(--lime-deep); font-weight: 900; }
+.g-rc-open { background: rgba(163, 230, 53, .22); border-color: rgba(141, 182, 0, .5); color: #29380A; }
+
+.g-rc-rail { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 0; margin: 0; padding: 0; list-style: none; }
+.g-rc-node { position: relative; display: flex; align-items: center; gap: 6px; padding: 0 11px 0 0;
+  font-size: 10.5px; font-weight: 700; color: var(--ink-mute); }
+.g-rc-node::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgba(141, 182, 0, .5); flex: 0 0 auto; }
+.g-rc-node:not(:last-child)::after { content: ""; position: absolute; right: 3px; top: 50%; width: 6px; height: 1px; background: rgba(38, 38, 43, .18); }
+.g-rc-first::before, .g-rc-last::before { background: var(--lime-bright); box-shadow: 0 0 0 3px rgba(163, 230, 53, .22); }
+.g-rc-first, .g-rc-last { color: var(--ink); font-weight: 800; }
+
+.g-rc-stops { display: flex; flex-wrap: wrap; gap: 5px; }
+.g-rc-stop { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
+  color: #29380A; background: rgba(163, 230, 53, .16); border: 1px solid rgba(141, 182, 0, .36);
+  border-radius: 999px; padding: 3px 7px; }
+.g-rc-stop b { font-weight: 900; }
+
+.g-rc-foot { display: flex; flex-wrap: wrap; gap: 5px; }
+.g-rc-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
+  color: var(--ink); background: #F4F4F6; border: 1px solid rgba(38, 38, 43, .1); border-radius: 999px; padding: 4px 8px; }
+
+.g-rc-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.g-rc-go { display: inline-flex; align-items: center; gap: 6px; font-weight: 900;
+  background: var(--lime-bright); border: 1px solid var(--lime-deep); color: var(--ink); }
+.g-rc-go span { transition: transform .18s ease; }
+.g-rc-go:hover { background: var(--lime); }
+.g-rc-go:active { transform: scale(.95); }
+
+/* dashed → solid (the route chips, the checkout breakdown, the audit rows) */
+.g-stop { border-style: solid; border-color: rgba(141, 182, 0, .36); background: rgba(163, 230, 53, .14); color: #29380A; }
+.g-breakdown { border-style: solid; border-color: rgba(38, 38, 43, .12); background: rgba(163, 230, 53, .06); }
+.g-audit-row { border-top-style: solid; border-top-color: rgba(38, 38, 43, .1); }
+.g-locked { border-style: solid; }
+.g-stops .g-stop { border-radius: 999px; }
+
+/* ── app-like touch feel: no blue flash, no text selection on chrome ────── */
+* { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+html { -webkit-text-size-adjust: 100%; }
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overscroll-behavior-x: none; }
+a, button, .g-btn, [role="button"], label, .g-rc, .g-bk-info, .g-pay, .g-seg button,
+.g-dock a, .g-nav a, .g-f1-link, .g-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea, select { -webkit-user-select: text; user-select: text; }
+a, button, .g-btn, [role="button"] { touch-action: manipulation; }
+::selection { background: rgba(163, 230, 53, .35); color: var(--ink); }
+a:focus:not(:focus-visible), button:focus:not(:focus-visible) { outline: none; }
+.g-btn:active, .g-dock a:active, .g-nav a:active, .g-f1-link:active { transform: scale(.97); }
+.g-rail, .g-rc-rail, .g-scroll-x { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+@media (max-width: 900px) {
+  /* the floating pill carries its own padding; only lift it off the home bar */
+  .g-dock { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .g-rc { padding: 12px; gap: 9px; }
+  .g-rc-price b { font-size: 18px; }
+  .g-rc-city { font-size: 13.5px; }
+  .g-rc-go { min-height: 38px; padding: 0 12px; font-size: 13px; }
+}
+
+
+/* =========================================================================
+   CLEAN PASS — stops without boxes, 💺 seats, the slot sheet, the badge.
+   ========================================================================= */
+
+/* stops read as text: an emoji, a town, a fare. No fill, no border. */
+.g-rc-stop, .g-stops .g-stop, .g-stop {
+  background: none; border: 0; padding: 0; border-radius: 0;
+  font-size: 11px; font-weight: 700; color: var(--ink); gap: 5px;
+}
+.g-rc-stops { gap: 4px 14px; }
+.g-rc-stop b, .g-stop b { color: var(--lime-deep); font-weight: 900; }
+.g-rc-stop + .g-rc-stop::before { content: ""; }
+
+/* a seat chair per seat: the open ones read bright, the taken ones fade */
+.g-seats { display: inline-flex; align-items: center; gap: 3px; }
+.g-seat {
+  font-size: 12px; line-height: 1; font-style: normal; opacity: 1;
+  filter: none; transition: opacity .2s ease, transform .2s ease;
+}
+.g-seat.taken { opacity: .22; }
+
+/* the slot sheet */
+.g-slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.g-slot {
+  font: inherit; font-size: 13px; font-weight: 800; color: var(--ink);
+  background: #FFFFFF; border: 1px solid rgba(38, 38, 43, .14); border-radius: 18px;
+  padding: 12px 8px; cursor: pointer; text-align: center;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.g-slot:hover { border-color: rgba(141, 182, 0, .5); background: rgba(163, 230, 53, .1); }
+.g-slot:active { transform: scale(.97); }
+.g-slot.on { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+
+/* the unread counter on the account chip */
+.g-badge {
+  min-width: 17px; height: 17px; padding: 0 4px; margin-left: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--lime-bright); color: var(--ink);
+  font-size: 10px; font-weight: 900; border-radius: 999px;
+}
+
+/* ride updates on Chats */
+.g-updates { display: grid; gap: 8px; }
+.g-update {
+  display: flex; align-items: flex-start; gap: 9px; padding: 10px 11px;
+  background: #FFFFFF; border: 1px solid rgba(38, 38, 43, .12); border-radius: 5px;
+}
+.g-update.unread { border-color: rgba(141, 182, 0, .45); }
+.g-update-ic { font-size: 15px; line-height: 1.2; }
+.g-update-t { font-size: 12.5px; font-weight: 800; color: var(--ink); }
+.g-update-s { font-size: 11px; font-weight: 700; color: var(--lime-deep); }
+.g-update-w { font-size: 10px; font-weight: 600; color: var(--ink-mute); margin-left: auto; white-space: nowrap; }
+
+/* the calm pass: one hairline weight, softer lifts, quieter tints */
+.g-rc, .g-update, .g-slot { box-shadow: 0 1px 2px rgba(35, 35, 40, .035); }
+.g-rc:hover { box-shadow: 0 18px 34px -22px rgba(35, 35, 40, .48); }
+.g-rc-stops, .g-rc-foot { row-gap: 6px; }
+
+
+/* ── the car mark: legible at a glance, and it leans when you touch it ─── */
+.g-brand { gap: 8px; }
+.g-brand .g-brand-car { margin-left: 1px; }
+.g-brand:active .g-car { transform: translateX(2px); }
+@media (max-width: 900px) {
+  .g-brand-car .g-car { width: 34px; height: 16px; }
+  .g-brand { gap: 7px; }
+}
+
+/* ── touch screens get the sweep too: no hover to trigger it there ─────── */
+@media (hover: none), (pointer: coarse) {
+  .g-rc.in::after { opacity: 1; animation: gRcSweep 1s ease .08s both; }
+  .g-rc:active { transform: scale(.985); border-color: rgba(141, 182, 0, .45); }
+  .g-rc-go:active { background: var(--lime); }
+  .g-slot:active { background: rgba(163, 230, 53, .18); }
+}
+
+
+/* ── the logo: tyres for the o's, a half car out front, two colours only ── */
+.g-brand { gap: 8px; align-items: flex-end; }
+.g-brand .g-brand-txt { display: inline-flex; align-items: baseline; }
+.g-brand .g-tyre {
+  width: .70em; height: .70em; display: block;   /* matched to the cap height of the G */
+  margin: 0 .012em 0 .02em;
+  transform: translateY(.037em);           /* sit the rubber on the baseline */
+  overflow: visible;
+  color: inherit;                          /* the wheels take their pair's colour */
+  transition: transform .5s cubic-bezier(.2,.8,.2,1);
+}
+
+
+
+
+
+
+
+
+
+.g-brand:hover .g-car { transform: translateX(2px); }
+.g-brand:active .g-car { transform: translateX(3px); }
+
+@media (max-width: 900px) {
+  .g-brand { gap: 7px; font-size: 21px; }
+  .g-brand .g-tyre { width: .72em; height: .72em; margin: 0 .008em 0 .014em; }
+  
+}
+
+
+/* ── the wordmark: GO GO, Anton, first half ink and second half lime ──
+   The same lockup the landing's header uses. No tyre marks. */
+.g-brand .g-brand-word {
+  display: inline-flex; align-items: baseline; gap: 0;
+  font-family: "Anton", "Poppins", sans-serif; font-weight: 400;
+  font-size: 26px; line-height: 1; letter-spacing: -.01em;
+}
+.g-brand .g-brand-a { color: var(--ink); }
+.g-brand .g-brand-b { color: #8DB600; }
+.g-brand-foot .g-brand-a { color: var(--ink); }
+.g-brand-foot .g-brand-b { color: #8DB600; }
+
+/* legacy classes kept so any older markup still colours correctly */
+.g-brand .g-brand-p1, .g-brand .g-brand-p2 { display: inline-flex; align-items: baseline; }
+.g-brand .g-brand-p1 .g-brand-a { color: inherit; }
+.g-brand .g-brand-p1 { color: var(--ink); }
+.g-brand .g-brand-p2 { color: #8DB600; }
+.g-brand .g-brand-dot { color: #8DB600; }
+.g-nav .g-brand .g-brand-p1 { color: #FFFFFF; }
+.g-nav .g-brand .g-brand-p2 { color: var(--lime-bright); }
+.g-nav .g-brand .g-brand-dot { color: var(--lime-bright); }
+.g-brand-foot .g-brand .g-brand-p2 { color: #8DB600; }
+.g-brand-foot .g-brand .g-brand-dot { color: #8DB600; }
+.g-brand-foot .g-brand .g-brand-p1 { color: var(--ink); }
+
+@media (max-width: 400px) {
+  .g-brand .g-brand-word { font-size: 22px; }
+}
+
+.g-brand:hover .g-tyre { transform: translateY(.032em) rotate(-14deg); }
+.g-brand .g-brand-dot { font-size: .92em; }
+
+
+/* ── bigger lockup, with room for the wheels ────────────────────────────── */
+.g-nav .g-brand { font-size: 26px; gap: 9px; }
+@media (max-width: 900px) {
+  .g-nav .g-brand { font-size: 24px; gap: 8px; }
+}
+/* the nav bar grows with it, and never clips the mark */
+.g-nav { min-height: 60px; }
+.g-nav .g-brand, .g-brand-foot { overflow: visible; }
+.g-nav .g-brand-txt, .g-brand-foot .g-brand-txt { overflow: visible; }
+
+
+/* ── mobile search: a real gutter, and compact controls ─────────────────────
+   Nothing touches the screen edge, and the four details sit as a 2x2 grid
+   instead of three full-width rows. */
+@media (max-width: 900px) {
+  .g-book, #bookForm { padding-left: 18px !important; padding-right: 18px !important; }
+
+  .g-bk-sec { margin-bottom: 12px; }
+  .g-bk-h { font-size: 12.5px; margin-bottom: 7px; }
+
+  /* two columns, and minmax(0,1fr) so a long label can never push past the edge */
+  .g-bk-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 7px;
+    margin-bottom: 7px;
+  }
+  .g-bk-row:last-child { margin-bottom: 0; }
+  .g-bk-info {
+    height: 38px; min-width: 0; padding: 0 8px 0 7px; gap: 7px; font-size: 12.5px;
+  }
+  .g-bk-info .g-ic-sq { width: 19px; height: 19px; font-size: 11px; flex: 0 0 auto; }
+  .g-bk-info > span:last-child {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+
+  /* fields: keep them inset and give the right-hand dead space back to the text */
+  #from, #to, input.g-bk-in { height: 42px; padding-left: 13px; padding-right: 32px; }
+  .g-bk-fld-pick .g-bk-lab, .g-bk-labrow { margin-bottom: 3px; }
+  .g-bk-pair { gap: 7px; }
+  .g-bk-inwrap { min-width: 0; }
+  .g-hint { display: none; }               /* the field placeholder already says it */
+  .g-bk-fee { font-size: 11px; margin-top: 7px; }
+  .g-bk-submit { height: 44px; font-size: 14.5px; }
+}
+@media (max-width: 380px) {
+  .g-book, #bookForm { padding-left: 14px !important; padding-right: 14px !important; }
+  .g-bk-info { font-size: 12px; padding: 0 6px 0 6px; gap: 6px; }
+  .g-bk-info .g-ic-sq { width: 18px; height: 18px; }
+}
+
+
+/* ── the app footer must always show ─────────────────────────────────────────
+   gogo-sheet.css hides .g-foot for `body.g2`, a class left over from the
+   abandoned map-first layout that app.html still carries. That rule was
+   silently removing the whole footer on the app page. This wins it back.
+   If gogo-sheet.css is ever retired, delete this block too. */
+body.g2 .g-foot { display: block !important; }
+
+/* ── the install bar: sits above the bottom nav, quiet by default ───────── */
+.g-install {
+  position: fixed;
+  left: 50%;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 12px);
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100vw - 24px);
+  padding: 9px 10px 9px 13px;
+
+  background: rgba(255, 255, 255, .86);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 999px;
+  box-shadow: 0 10px 26px -14px rgba(11, 11, 11, .5);
+
+  opacity: 0;
+  transition: opacity .3s ease, transform .3s cubic-bezier(.2, .9, .2, 1);
+}
+.g-install.in { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 860px) { .g-install { bottom: 22px; } }
+
+.g-install-ic { flex: 0 0 auto; font-size: 15px; line-height: 1; }
+.g-install-t {
+  flex: 1 1 auto; min-width: 0;
+  font-size: 11.5px; font-weight: 700; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.g-install-go {
+  flex: 0 0 auto;
+  height: 30px; padding: 0 14px;
+  background: #0A192F; color: #fff;
+  border: 0; border-radius: 999px; cursor: pointer;
+  font-family: inherit; font-size: 11.5px; font-weight: 800;
+  transition: transform .2s ease, background .2s ease;
+}
+.g-install-go:hover { background: #14274a; transform: translateY(-1px); }
+.g-install-go:active { transform: scale(.95); }
+.g-install-x {
+  flex: 0 0 auto;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  background: none; border: 0; border-radius: 999px; cursor: pointer;
+  font-size: 12px; color: var(--ink-mute);
+  transition: background .2s ease, color .2s ease;
+}
+.g-install-x:hover { background: rgba(11, 11, 11, .07); color: var(--ink); }
+
+@media (max-width: 400px) {
+  .g-install-t { font-size: 11px; }
+  .g-install-go { padding: 0 11px; font-size: 11px; }
+}

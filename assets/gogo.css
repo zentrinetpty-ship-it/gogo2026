@@ -1,0 +1,734 @@
+/* =========================================================================
+   GOGO — smart hike platform for South African commuters
+   Palette: black · taxi yellow · Cleanic lime. Poppins. White app canvas.
+   Motion is CSS-only so it survives old Android WebViews.
+   ========================================================================= */
+
+:root {
+  --ink: #0B0B0B;
+  --ink-2: #1A1A1A;
+  --ink-soft: rgba(11, 11, 11, .62);
+  --ink-faint: rgba(11, 11, 11, .09);
+  --yellow: #8DB600;
+  --yellow-deep: #F2B800;
+  --yellow-wash: rgba(141, 182, 0, .14);
+  --lime: #8DB600;
+  --lime-bright: #A3E635;
+  --lime-wash: rgba(141, 182, 0, .12);
+  --danger: #C0392B;
+  --radius: 12px;
+  --radius-sm: 7px;
+  --btn-radius: 9px;
+  --shadow-lift: 0 22px 44px -30px rgba(11, 11, 11, .45);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+
+/* ── top nav (black bar, yellow dot) ──────────────────────────────────── */
+.g-nav {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; align-items: center; gap: 18px;
+  padding: 13px 20px;
+  background: var(--yellow); color: var(--ink);
+  border-bottom: 1px solid rgba(11,11,11,.14);
+}
+.g-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; letter-spacing: -.02em; font-size: 19px; }
+.g-brand i { width: 11px; height: 11px; border-radius: 2px; background: var(--ink); display: block; }
+.g-brand span { color: rgba(11,11,11,.62); }
+.g-nav-links { display: none; gap: 4px; margin-left: 10px; }
+.g-nav-links a {
+  padding: 8px 12px; border-radius: 4px; font-size: 13px; font-weight: 700;
+  color: rgba(11,11,11,.72); transition: background .25s ease, color .25s ease;
+}
+.g-nav-links a:hover { background: rgba(11,11,11,.09); color: var(--ink); }
+.g-nav-links a.on { background: linear-gradient(180deg,#2b2b2b,#000); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }
+.g-nav-right { margin-left: auto; display: flex; align-items: center; gap: 9px; }
+@media (min-width: 860px) { .g-nav { padding: 14px 28px; } .g-nav-links { display: flex; } }
+
+/* ── buttons ──────────────────────────────────────────────────────────── */
+.g-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--btn-radius); padding: 12px 19px;
+  border: 1px solid rgba(11, 11, 11, .22);
+  font-size: 13.5px; font-weight: 800; letter-spacing: -.01em; cursor: pointer;
+  white-space: nowrap; text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .55),
+    inset 0 -1px 0 rgba(0, 0, 0, .10),
+    0 2px 0 rgba(11, 11, 11, .22),
+    0 7px 14px -9px rgba(11, 11, 11, .5);
+  transition: transform .12s cubic-bezier(.2,.8,.2,1), box-shadow .12s ease, filter .18s ease;
+}
+.g-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .6),
+    inset 0 -1px 0 rgba(0, 0, 0, .10),
+    0 3px 0 rgba(11, 11, 11, .22),
+    0 11px 20px -12px rgba(11, 11, 11, .55);
+}
+.g-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .28), 0 1px 0 rgba(11, 11, 11, .18);
+}
+.g-btn:focus-visible { outline: 3px solid rgba(141, 182, 0, .55); outline-offset: 2px; }
+
+.g-btn-yellow { background: linear-gradient(180deg, #FFE066 0%, #8DB600 52%, #EFB400 100%); color: var(--ink); border-color: #CF9B00; }
+.g-btn-ink { background: linear-gradient(180deg, #333 0%, #131313 55%, #000 100%); color: #fff; border-color: #000; box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 2px 0 rgba(0,0,0,.35), 0 7px 14px -9px rgba(0,0,0,.6); }
+.g-btn-ink:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 3px 0 rgba(0,0,0,.35), 0 11px 20px -12px rgba(0,0,0,.65); }
+.g-btn-lime { background: linear-gradient(180deg, #CBFF6B 0%, #A3E635 55%, #86AC1F 100%); color: #16210a; border-color: #6F8F14; }
+.g-btn-ghost { background: linear-gradient(180deg, #fff 0%, #F4F4F4 100%); color: var(--ink); border-color: rgba(11,11,11,.16); }
+.g-btn-ghost:hover { border-color: rgba(11,11,11,.28); }
+.g-btn-glass {
+  background: rgba(255,255,255,.13); color: #fff; border-color: rgba(255,255,255,.32);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 0 rgba(0,0,0,.3), 0 7px 14px -10px rgba(0,0,0,.5);
+}
+.g-btn-glass:hover { background: rgba(255,255,255,.19); border-color: var(--yellow); }
+.g-btn-outline {
+  background: transparent; color: var(--ink); border: 1.5px solid rgba(11,11,11,.55);
+  box-shadow: 0 2px 0 rgba(11,11,11,.16);
+}
+.g-btn-outline:hover { background: rgba(11,11,11,.07); border-color: var(--ink); }
+.g-stamp-ink { background: var(--ink); color: #fff; border-color: #000; }
+
+.g-btn-sm { padding: 9px 14px; font-size: 12.5px; border-radius: 4px; }
+.g-btn-block { width: 100%; }
+.g-btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 0 rgba(11,11,11,.15); }
+
+/* ── layout ───────────────────────────────────────────────────────────── */
+.g-wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 18px; }
+.g-wrap-tight { max-width: 900px; }
+.g-section { padding-top: 30px; padding-bottom: 30px; }
+.g-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+/* the ride results: one column on a phone, two on a laptop.
+   Deliberately its own class rather than .g-grid, which is a 12-column page
+   grid — a card dropped in there collapses to a single 75px column. */
+.g-hikes { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 720px) { .g-hikes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1180px) { .g-hikes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ── the ride page: route on the left, booking on the right ─────────────── */
+.g-trip { display: grid; grid-template-columns: 1fr; gap: 18px; }
+@media (min-width: 940px) {
+  .g-trip { grid-template-columns: minmax(0, 1.55fr) minmax(340px, 1fr); gap: 22px; align-items: start; }
+}
+.g-trip-main { display: grid; gap: 16px; min-width: 0; }
+.g-trip-side { min-width: 0; }
+.g-trip-card { padding-bottom: 16px; }
+.g-trip-lug {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; color: var(--ink-mute);
+}
+
+/* the stop-by-stop timeline */
+.g-trip-stops { padding: 18px; }
+.g-timeline { margin: 12px 0 0; padding: 0; list-style: none; }
+.g-tl-item { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.g-tl-rail { display: grid; justify-items: center; gap: 2px; }
+.g-tl-dot {
+  width: 10px; height: 10px; border-radius: 50%; margin-top: 5px;
+  background: #FFFFFF; border: 2px solid rgba(141, 182, 0, .55);
+}
+.g-tl-first { background: var(--lime-bright); border-color: var(--lime); box-shadow: 0 0 0 3px rgba(163, 230, 53, .22); }
+.g-tl-line { width: 2px; min-height: 26px; background: rgba(38, 38, 43, .1); }
+.g-tl-body { display: grid; gap: 1px; padding-bottom: 14px; min-width: 0; }
+.g-tl-city { font-size: 11.5px; font-weight: 700; color: var(--ink); }
+.g-tl-city b {
+  font-family: "Anton", "Poppins", sans-serif; font-weight: 400; font-size: 13px;
+  letter-spacing: .01em; color: var(--lime-deep); margin-right: 5px;
+}
+.g-tl-meta { font-size: 10px; font-weight: 600; color: var(--ink-mute); }
+.g-tl-fare { font-size: 14px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); padding-top: 3px; }
+
+.g-trip-hop {
+  display: flex; align-items: flex-start; gap: 9px; margin-top: 4px;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(163, 230, 53, .12); border: 1px solid rgba(141, 182, 0, .28);
+  font-size: 12.5px; line-height: 1.5; color: var(--ink-soft, #4A4A50);
+}
+.g-trip-hop b { color: var(--ink); }
+
+/* ── the More page ──────────────────────────────────────────────────────── */
+.g-more-head { max-width: 46rem; }
+/* the heading sits on the same left edge as the cards below it */
+.g-more-head .g-label,
+.g-more-head .g-h2,
+.g-more-head > p { margin-left: 0; }
+.g-more-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 22px; }
+@media (min-width: 940px) {
+  .g-more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+}
+.g-more-sec { padding: 18px; }
+.g-more-sec-h { display: flex; align-items: center; gap: 11px; }
+.g-more-sec-ic {
+  flex: 0 0 auto; display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 13px; font-size: 19px;
+  background: rgba(163, 230, 53, .16); border: 1px solid rgba(141, 182, 0, .3);
+}
+.g-more-sec-t { display: grid; gap: 2px; min-width: 0; }
+.g-more-sec-t b { font-size: 15px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+.g-more-sec-t span { font-size: 10px; font-weight: 600; color: var(--ink-mute); }
+
+/* ── the section cards ─────────────────────────────────────────────────────
+   The card is the alignment reference: its 18px padding sets where the icon
+   sits, and the 40px badge plus the 11px gap sets where the title starts —
+   69px from the card's outer edge. The accordions are indented by that same
+   69px so every line of text in the card lines up on one left edge, instead
+   of the questions starting under the icon while the title starts past it. */
+.g-more-sec { padding: 18px; }
+.g-more-sec .g-faq {
+  gap: 0;
+  /* gogo-why.css gives .g-faq its own white card with a border and radius —
+     correct standalone on the Why page, wrong here, where it would draw a
+     second box inside the section card. Strip it back to a plain list. */
+  background: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  /* The card has a 1px border plus 18px padding, so its content box starts at
+     19px. The title starts a further 40px (the badge) + 11px (the gap) in, so
+     the questions need 51px to land on exactly the same left edge. */
+  padding-left: 51px;
+}
+.g-more-sec .g-faq-item + .g-faq-item { border-top: 1px solid rgba(38, 38, 43, .07); }
+.g-more-sec .g-faq-item summary { padding: 12px 0; font-size: 13.5px; }
+.g-more-sec .g-faq-item .g-s { padding: 0 0 13px; font-size: 13px; line-height: 1.62; }
+/* a narrow phone cannot spare 51px of indent — the badge sits above instead */
+@media (max-width: 560px) {
+  .g-more-sec .g-faq { padding-left: 0; }
+}
+.g-more-sec .g-faq-item .g-s p { margin: 0 0 9px; }
+.g-more-sec .g-faq-item .g-s p:last-child { margin-bottom: 0; }
+.g-more-sec .g-faq-item .g-s a:not(.g-btn) { color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.g-more-sec .g-faq-item .g-btn { margin-top: 2px; }
+
+/* ── the address field: suggestions plus the manual fallback ────────────── */
+.g-addr { position: relative; }
+.g-addr-anchor { position: relative; }
+.g-addr-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 5px); z-index: 300;
+  max-height: 15.5rem; overflow-x: hidden; overflow-y: auto;
+  /* glassmorphism: translucent with a heavy blur so the map reads through */
+  background: rgba(255, 255, 255, .72);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .75);
+  border-radius: 13px;
+  box-shadow: 0 16px 40px -14px rgba(23, 23, 23, .3), 0 2px 8px rgba(23, 23, 23, .06),
+              inset 0 1px 0 rgba(255, 255, 255, .85);
+  overscroll-behavior: contain;
+}
+.g-addr-row {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%;
+  padding: 11px 14px; text-align: left; background: none; border: 0;
+  border-radius: 0; cursor: pointer;
+}
+.g-addr-row + .g-addr-row { border-top: 1px solid rgba(38, 38, 43, .06); }
+.g-addr-row:hover, .g-addr-row.on { background: rgba(163, 230, 53, .13); }
+.g-addr-ic { flex: 0 0 auto; font-size: 15px; line-height: 1.35; }
+.g-addr-txt { display: grid; gap: 1px; min-width: 0; }
+.g-addr-txt b {
+  font-size: 11.5px; font-weight: 700; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.g-addr-txt span {
+  font-size: 10px; font-weight: 600; color: var(--ink-mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.g-addr-self { background: rgba(38, 38, 43, .03); }
+.g-addr-self .g-addr-txt b { color: var(--ink); }
+.g-addr-empty {
+  padding: 12px 14px; font-size: 12px; font-weight: 600; line-height: 1.5;
+  color: var(--ink-mute); background: rgba(38, 38, 43, .02);
+  border-bottom: 1px solid rgba(38, 38, 43, .06);
+}
+
+.g-addr-manual {
+  display: grid; gap: 8px; margin-top: 8px; padding-top: 8px; min-width: 0;
+  border-top: 1px solid rgba(38, 38, 43, .07);
+}
+/* minmax(0,1fr), not 1fr — a plain 1fr keeps an automatic content-based
+   minimum, which let the two fields push past the card edge and overlap it */
+.g-addr-manual-grid {
+  display: grid; gap: 8px; min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+@media (max-width: 420px) { .g-addr-manual-grid { grid-template-columns: minmax(0, 1fr); } }
+.g-addr-fld {
+  /* The label and the input were sharing one bordered box, so each field read
+     as a single box split in two. Now the label is a line ABOVE the field and
+     the input is its own box, exactly like every other field on the form. */
+  display: block;
+  height: auto;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.g-addr-fld > span {
+  display: block;
+  margin: 0 0 6px;
+  max-width: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .5);
+  white-space: nowrap;
+}
+.g-addr-fld > input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  margin: 0;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.g-addr-fld > input:focus {
+  outline: none;
+  border-color: var(--lime, #8DB600);
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+.g-addr-fld > input:focus { outline: none; }
+.g-addr-fld > input::placeholder { font-weight: 500; color: var(--ink-mute); opacity: .55; }
+
+.g-addr-manual-grid { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+@media (max-width: 400px) { .g-addr-manual-grid { grid-template-columns: 1fr; } }
+.g-addr-fld {
+  /* The label and the input were sharing one bordered box, so each field read
+     as a single box split in two. Now the label is a line ABOVE the field and
+     the input is its own box, exactly like every other field on the form. */
+  display: block;
+  height: auto;
+  min-width: 0;
+  padding: 0;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.g-addr-fld > span {
+  display: block;
+  margin: 0 0 6px;
+  max-width: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(11, 11, 11, .5);
+  white-space: nowrap;
+}
+.g-addr-fld > input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  margin: 0;
+  border: 1px solid rgba(11, 11, 11, .16);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.g-addr-fld > input:focus {
+  outline: none;
+  border-color: var(--lime, #8DB600);
+  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+}
+.g-addr-fld > input:focus { outline: none; }
+.g-addr-fld > input::placeholder { font-weight: 500; color: var(--ink-mute); opacity: .55; }
+
+.g-addr-manual-grid { display: grid; gap: 7px; }
+.g-addr-manual label { display: grid; gap: 2px; }
+.g-addr-manual label > span {
+  font-size: 9px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink-mute);
+}
+.g-addr-manual input {
+  width: 100%; height: 34px; padding: 0 10px;
+  font-size: 16px; font-weight: 600; color: var(--ink);
+  background: rgba(255, 255, 255, .82);
+  border: 1px solid rgba(38, 38, 43, .12); border-radius: 9px;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.g-addr-manual input:focus {
+  outline: none; border-color: var(--lime); background: #fff;
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .22);
+}
+.g-addr-manual input::placeholder { font-weight: 500; color: var(--ink-mute); opacity: .62; }
+.g-addr-manual-a { display: flex; gap: 6px; margin-top: 1px; }
+.g-addr-manual-a button {
+  flex: 1 1 auto; height: 32px; font-size: 11.5px; font-weight: 800;
+  border-radius: 9px; cursor: pointer; border: 1px solid transparent;
+}
+.g-addr-use { color: #fff; background: var(--ink); border-color: var(--ink); }
+.g-addr-cancel { color: var(--ink); background: #fff; border-color: rgba(38, 38, 43, .14); }
+
+@media (max-width: 430px) {
+  .g-addr-list { max-height: 15rem; }
+  .g-addr-row { padding: 10px 12px; }
+}
+@media (min-width: 900px) {
+  .g-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+  .g-12 { grid-column: span 12; } .g-8 { grid-column: span 8; }
+  .g-7 { grid-column: span 7; } .g-6 { grid-column: span 6; }
+  .g-5 { grid-column: span 5; } .g-4 { grid-column: span 4; }
+}
+.g-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.g-between { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.g-mt { margin-top: 14px; } .g-mt-sm { margin-top: 8px; } .g-mt-lg { margin-top: 24px; }
+
+/* ── text ─────────────────────────────────────────────────────────────── */
+.g-label { display: block; font-size: 11px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; color: rgba(11,11,11,.42); }
+.g-label-y { color: var(--yellow-deep); }
+.g-label-l { color: var(--lime); }
+.g-h1 { margin: 0; font-size: clamp(28px, 5vw, 54px); font-weight: 900; letter-spacing: -.04em; line-height: 1.04; }
+.g-h2 { margin: 0; font-size: clamp(20px, 2.6vw, 30px); font-weight: 900; letter-spacing: -.03em; line-height: 1.14; }
+.g-h3 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+.g-t { font-size: 13px; font-weight: 800; }
+.g-s { font-size: 12.5px; font-weight: 500; color: var(--ink-soft); line-height: 1.6; }
+.g-s-sm { font-size: 11.5px; font-weight: 600; color: rgba(11,11,11,.45); }
+.g-money { font-variant-numeric: tabular-nums; }
+
+/* ── cards ────────────────────────────────────────────────────────────── */
+.g-card {
+  position: relative; background: var(--card); border: 1px solid rgba(11,11,11,.12);
+  border-radius: var(--radius); padding: 18px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(11,11,11,.06);
+  transition: transform .32s cubic-bezier(.2,.8,.2,1), box-shadow .32s ease, border-color .32s ease;
+}
+.g-card-hover:hover { transform: translateY(-3px); box-shadow: 0 18px 34px -26px rgba(11,11,11,.5); border-color: rgba(141, 182, 0, .6); }
+.g-card-dark { background: var(--yellow); border-color: #E4B400; color: var(--ink); }
+.g-card-dark .g-s, .g-card-dark .g-s-sm { color: rgba(11,11,11,.72); }
+.g-card-dark .g-label { color: rgba(11,11,11,.58); }
+.g-tile { background: rgba(11,11,11,.05); border: 1px solid rgba(11,11,11,.13); border-radius: 4px; padding: 12px; }
+.g-card-yellow { background: var(--yellow); border-color: var(--yellow); }
+.g-card-lime { background: var(--lime-wash); border-color: rgba(141,182,0,.4); }
+.g-glow::after {
+  content: ""; position: absolute; right: -60px; top: -70px; width: 210px; height: 210px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.6), transparent 70%); pointer-events: none;
+}
+.g-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+
+/* ── emoji squircle ───────────────────────────────────────────────────── */
+.g-ic {
+  display: grid; place-items: center; flex: 0 0 auto;
+  width: 38px; height: 38px; border-radius: 4px; font-size: 19px; line-height: 1;
+  background: var(--yellow-wash); border: 1px solid rgba(141, 182, 0, .45);
+  transition: transform .32s cubic-bezier(.2,.8,.2,1), background .32s ease;
+}
+.g-card-hover:hover .g-ic { transform: scale(1.08) rotate(-3deg); }
+.g-ic-sm { width: 30px; height: 30px; border-radius: 4px; font-size: 15px; }
+.g-ic-lg { width: 48px; height: 48px; border-radius: 4px; font-size: 24px; }
+.g-ic-lime { background: var(--lime-wash); border-color: rgba(141,182,0,.45); }
+.g-ic-ink { background: var(--ink); border-color: var(--ink); }
+.g-ic-glass { background: rgba(11,11,11,.07); border-color: rgba(11,11,11,.18); }
+
+/* ── landing hero (Uber-style booking) ────────────────────────────────── */
+.g-hero { background: var(--yellow); color: var(--ink); position: relative; overflow: hidden; }
+.g-hero::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(11,11,11,.06) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(11,11,11,.06) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.35) 78%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.35) 78%);
+  pointer-events: none;
+}
+.g-hero-inner { position: relative; display: grid; grid-template-columns: 1fr; gap: 24px; padding-top: 34px; padding-bottom: 42px; }
+@media (min-width: 980px) {
+  .g-hero-inner { grid-template-columns: 1.02fr .98fr; gap: 40px; padding-top: 54px; padding-bottom: 64px; align-items: center; }
+}
+.g-hero h1 { color: var(--ink); }
+.g-hero .g-s { color: rgba(11,11,11,.74); }
+.g-hero-kicker {
+  display: block; font-size: 11.5px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(11,11,11,.6);
+}
+
+/* booking card */
+.g-book {
+  background: var(--card); color: var(--ink); border-radius: 4px; padding: 18px;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 34px 70px -40px rgba(0,0,0,.85);
+}
+.g-field { position: relative; display: flex; align-items: center; gap: 11px; border: 1px solid rgba(11,11,11,.14); border-radius: 4px; padding: 11px 13px; margin-bottom: 10px; background: linear-gradient(180deg,#fff,#FAFAFA); transition: border-color .25s ease, box-shadow .25s ease; }
+.g-field:focus-within { border-color: var(--yellow-deep); box-shadow: 0 0 0 4px rgba(141, 182, 0, .16); }
+.g-field input, .g-field select {
+  border: 0; outline: 0; width: 100%; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: transparent;
+}
+.g-field input::placeholder { color: rgba(11,11,11,.35); font-weight: 600; }
+.g-field .g-f-k { font-size: 10.5px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: rgba(11,11,11,.4); display: block; }
+.g-swap { position: absolute; right: 12px; top: -14px; }
+.g-swap button {
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--ink-faint); background: var(--card-2);
+  cursor: pointer; font-size: 15px; box-shadow: 0 6px 16px -10px rgba(0,0,0,.6);
+}
+.g-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.g-seg { display: flex; gap: 6px; background: rgba(11,11,11,.06); border-radius: 4px; padding: 5px; }
+.g-seg button {
+  flex: 1; border: 0; background: transparent; border-radius: 4px; padding: 9px 10px;
+  font-size: 12.5px; font-weight: 800; color: var(--ink-soft); cursor: pointer; transition: background .25s ease, color .25s ease;
+}
+.g-seg button.on { background: linear-gradient(180deg,#fff,#F2F2F2); color: var(--ink); box-shadow: inset 0 1px 0 #fff, 0 1px 0 rgba(11,11,11,.18); }
+
+/* ── ride cards / search results ──────────────────────────────────────── */
+.g-ride { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.g-ride-top { display: flex; align-items: flex-start; gap: 13px; }
+.g-ride-route { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+.g-ride-route em { font-style: normal; color: rgba(11,11,11,.3); }
+.g-stops { display: flex; flex-wrap: wrap; gap: 6px; }
+.g-stop {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700;
+  border: 1px dashed rgba(141, 182, 0, .7); background: var(--yellow-wash); color: #7a5a00;
+  border-radius: 4px; padding: 5px 9px;
+}
+.g-stops-line { display: flex; align-items: center; gap: 7px; font-size: 11.5px; font-weight: 700; color: rgba(11,11,11,.5); flex-wrap: wrap; }
+.g-stops-line i { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow-deep); display: block; }
+
+/* seat meter */
+.g-seats { display: flex; align-items: center; gap: 5px; }
+.g-seat { width: 13px; height: 13px; border-radius: 2px; background: rgba(11,11,11,.10); }
+.g-seat.taken { background: var(--ink); }
+.g-seat.mine { background: var(--lime); }
+
+/* driver chip */
+.g-driver { display: flex; align-items: center; gap: 10px; }
+.g-avatar {
+  width: 42px; height: 42px; border-radius: 4px; display: grid; place-items: center;
+  background: var(--yellow); color: var(--ink); font-weight: 900; font-size: 15px; flex: 0 0 auto;
+}
+.g-stars { color: var(--yellow-deep); font-size: 12px; font-weight: 800; }
+
+/* ── route timeline ───────────────────────────────────────────────────── */
+.g-route { position: relative; padding-left: 4px; }
+.g-route-item { display: flex; gap: 13px; padding-bottom: 16px; position: relative; }
+.g-route-rail { display: flex; flex-direction: column; align-items: center; }
+.g-route-dot {
+  width: 30px; height: 30px; border-radius: 4px; display: grid; place-items: center; font-size: 14px;
+  background: var(--card-2); border: 1px solid var(--ink-faint); z-index: 1;
+}
+.g-route-line { width: 3px; flex: 1; background: var(--ink-faint); border-radius: 3px; margin: 4px 0 -16px; }
+.g-route-item.done .g-route-dot { background: var(--lime-wash); border-color: rgba(141,182,0,.5); }
+.g-route-item.done .g-route-line { background: rgba(141,182,0,.55); }
+.g-route-item.now .g-route-dot { background: var(--ink); border-color: var(--ink); animation: g-halo 2s ease-out infinite; }
+.g-route-item:last-child .g-route-line { display: none; }
+@keyframes g-halo { 0% { box-shadow: 0 0 0 0 rgba(11,11,11,.32); } 70% { box-shadow: 0 0 0 11px rgba(11,11,11,0); } 100% { box-shadow: 0 0 0 0 rgba(11,11,11,0); } }
+
+/* ── bars / meters ────────────────────────────────────────────────────── */
+.g-bar { height: 8px; border-radius: 2px; background: rgba(11,11,11,.08); overflow: hidden; }
+.g-bar i { display: block; height: 8px; width: 0; border-radius: 2px; background: linear-gradient(90deg, var(--yellow), var(--yellow-deep)); transition: width 1s cubic-bezier(.2,.8,.2,1); }
+.g-bar-lime i { background: linear-gradient(90deg, var(--lime), var(--lime-bright)); }
+.g-spark { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: 34px; }
+.g-spark i { flex: 0 0 6px; border-radius: 2px; background: linear-gradient(180deg, var(--yellow), rgba(141, 182, 0, .4)); height: 0; transition: height .85s cubic-bezier(.2,.8,.2,1); }
+
+/* ── KPI tiles ────────────────────────────────────────────────────────── */
+.g-kpi { display: flex; flex-direction: column; gap: 11px; }
+.g-kpi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.g-kpi-val { font-size: clamp(23px, 2.5vw, 30px); font-weight: 900; letter-spacing: -.035em; line-height: 1; font-variant-numeric: tabular-nums; }
+.g-kpi-val small { font-size: 13px; font-weight: 700; color: rgba(11,11,11,.4); margin-left: 3px; }
+.g-up { color: #6b5200; font-size: 12px; font-weight: 800; }
+.g-down { color: #8a3a3a; font-size: 12px; font-weight: 800; }
+
+/* ── rows / lists ─────────────────────────────────────────────────────── */
+.g-list-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--ink-faint); }
+.g-list-row:first-of-type { border-top: 0; }
+.g-list-t { font-size: 13px; font-weight: 800; }
+.g-list-s { font-size: 11.5px; font-weight: 600; color: rgba(11,11,11,.45); }
+.g-list-r { margin-left: auto; text-align: right; }
+
+/* ── request cards (driver side) ──────────────────────────────────────── */
+.g-req { border: 1px solid rgba(11,11,11,.12); border-radius: 4px; padding: 14px; background: var(--card); }
+.g-req.pending { border-color: rgba(141, 182, 0, .6); background: rgba(141, 182, 0, .05); }
+.g-req.accepted { border-color: rgba(141,182,0,.5); background: var(--lime-wash); }
+.g-req.declined { opacity: .5; }
+
+/* ── chips ────────────────────────────────────────────────────────────── */
+.g-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.g-chip {
+  border: 1px solid rgba(11,11,11,.16); background: linear-gradient(180deg,#fff,#F5F5F5); border-radius: 4px; padding: 8px 13px;
+  box-shadow: 0 1px 0 rgba(11,11,11,.12);
+  font-size: 12px; font-weight: 700; color: var(--ink-soft); cursor: pointer;
+  transition: border-color .22s ease, color .22s ease, transform .22s ease, background .22s ease;
+}
+.g-chip:hover { border-color: var(--yellow-deep); color: var(--ink); transform: translateY(-1px); box-shadow: 0 2px 0 rgba(11,11,11,.14); }
+.g-chip.on { background: linear-gradient(180deg,#2b2b2b,#0b0b0b); border-color: #000; color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }
+.g-chip-lime { border-color: rgba(141,182,0,.5); background: var(--lime-wash); color: #3f5200; }
+
+/* ── stamp / status ───────────────────────────────────────────────────── */
+.g-stamp {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 900;
+  letter-spacing: .11em; text-transform: uppercase; border-radius: 4px; padding: 5px 9px;
+  border: 1px solid rgba(11,11,11,.12);
+}
+.g-stamp-open { background: var(--yellow); color: var(--ink); }
+.g-stamp-full { background: var(--lime); color: #fff; }
+.g-stamp-live { background: rgba(255,255,255,.14); color: #fff; }
+.g-stamp-idle { background: rgba(11,11,11,.07); color: rgba(11,11,11,.6); }
+
+/* ── timeline feed ────────────────────────────────────────────────────── */
+.g-feed { position: relative; padding-left: 4px; }
+.g-feed::before { content: ""; position: absolute; left: 20px; top: 22px; bottom: 22px; width: 2px; background: var(--ink-faint); }
+.g-feed-item { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+.g-feed-ic { position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 4px; background: var(--yellow-wash); border: 1px solid rgba(141, 182, 0, .45); font-size: 15px; }
+
+/* ── empty + toast ────────────────────────────────────────────────────── */
+.g-empty { text-align: center; padding: 34px 20px; }
+.g-empty .g-ic { margin: 0 auto 12px; }
+.g-toast {
+  position: fixed; left: 50%; bottom: 88px; transform: translate(-50%, 20px);
+  background: var(--ink); color: #fff; border-radius: 4px; padding: 13px 18px;
+  font-size: 13px; font-weight: 700; z-index: 200; opacity: 0; pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease; max-width: 92vw;
+}
+.g-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.g-toast b { color: var(--yellow); }
+
+/* ── mobile bottom nav ──────────────────────────────────────────────────
+   Positioning only; the look lives in gogo-live.css so the landing and the
+   app share one nav. */
+/* The bottom nav's geometry lives in gogo-live.css, where it is one rounded
+   bar matching the landing page. This file only reserves the space it needs. */
+/* The nav floats over the content on every screen, so the body always needs
+   room beneath the last element for it to clear. Same on desktop as on a
+   phone — the nav is the same size either way. */
+.g-dock-body { padding-bottom: 96px; }
+@media (max-width: 480px) { .g-dock-body { padding-bottom: 92px; } }
+
+/* ── footer ───────────────────────────────────────────────────────────── */
+.g-foot { border-top: 1px solid var(--ink-faint); padding: 24px 0 34px; }
+.g-foot-links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.g-foot-links a:hover { color: var(--ink); }
+
+/* ── entrance animation ───────────────────────────────────────────────── */
+.g-anim { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+.g-anim.in { opacity: 1; transform: none; }
+
+
+/* ── mobile spacing + crowding pass ───────────────────────────────────── */
+@media (max-width: 640px) {
+  .g-wrap { padding: 0 22px; }
+  .g-nav { padding: 13px 22px; gap: 12px; }
+  .g-nav-right .g-btn:first-child { display: none; }      /* one CTA only on phones */
+  .g-nav-links { display: none; }
+  .g-section { padding-top: 34px; padding-bottom: 34px; }
+  .g-card { padding: 19px; border-radius: 4px; }
+  .g-book { padding: 20px; }
+  .g-hero-inner { padding-top: 30px; padding-bottom: 36px; }
+  .g-list-row { padding: 13px 0; }
+  .g-foot { padding: 26px 0 46px; }
+  .g-dock-body { padding-bottom: 128px; }                 /* clear the dock properly */
+  .g-foot-links { gap: 12px 16px; }
+
+  /* ride card: bottom bar stacks so the seat meter never crowds the button */
+  .g-ride-foot { flex-direction: column; align-items: stretch; gap: 13px; }
+  .g-ride-cta { justify-content: space-between; gap: 10px; }
+  .g-ride-cta .g-btn { flex: 1 1 auto; }
+  .g-seats { flex-wrap: wrap; }
+  .g-ride-route { font-size: 15px; word-break: break-word; }
+  .g-stops .g-stop { font-size: 11px; }
+  .g-kpi-val { font-size: 26px; }
+}
+@media (max-width: 380px) {
+  .g-wrap { padding: 0 16px; }
+  .g-nav { padding: 12px 16px; }
+  .g-brand { font-size: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-anim { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .g-anim *, .g-anim *::after { animation: none !important; transition: none !important; }
+}
+html.no-anim .g-anim { opacity: 1 !important; transform: none !important; }
+html.no-anim .g-bar i, html.no-anim .g-spark i { width: auto; }
+
+/* ── vehicle badge (real minivan silhouette, scales with the icon slot) ── */
+.g-van { display: block; width: 62%; height: auto; fill: currentColor; }
+.g-ic .g-van { width: 68%; }
+.g-btn .g-van { width: 20px; }
+.g-btn-sm .g-van { width: 16px; }
+.g-map-car-body .g-van { width: 62%; fill: #0B0B0B; }
+.g-map-badge .g-van { width: 70%; fill: currentColor; }
+.g-brand .g-van { width: 22px; }
+.g-dock .g-van { width: 22px; fill: currentColor; }
+.g-nav-right .g-btn .g-van { width: 16px; }
+.g-ic .g-van { fill: currentColor; }
+.g-ic-lime .g-van, .g-ic-ink .g-van { fill: currentColor; }
+
+/* ── logo styling lives in the theme (see gogo-live.css) ──────────────── */
+.g-brand { gap: 3px; font-size: 20px; }
+.g-brand-car { display: flex; align-items: center; }
+.g-brand-car .g-van { width: 29px; height: auto; }
+.g-brand:focus-visible .g-brand-car .g-car { outline: none; }
+
+/* ── mobile: the basemap lives on the body, the route lives in the hero ─ */
+.g-body-map { display: none; }
+@media (max-width: 900px) {
+  .g-body-map {
+    display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100vh;
+    overflow: hidden; z-index: 0; pointer-events: none;
+    background: linear-gradient(180deg, #FFFDF4 0%, #F4F7EF 100%);
+  }
+  .g-body-map .g-map-stage { position: absolute; left: 0; top: 0; filter: saturate(1.15) contrast(1.04) brightness(.99); }
+  .g-body-map .g-map-ready .g-map-tile { opacity: 1; }
+  /* the hero becomes a window onto the map so the corridor lines show clearly */
+  .g-hero { background: transparent; z-index: 1; }
+  .g-hero::before { display: none; }
+  .g-hero-map-route { background: none; }
+  .g-hero-map { z-index: 0; }
+  .g-hero-inner { z-index: 5; }
+}
+
+/* `hidden` must win over any display value set by a class. */
+.g-field[hidden], .g-bk-fld[hidden],
+.g-addr-manual-btn[hidden], .g-addr-manual[hidden] { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADDRESS FIELD — MOBILE COLLAPSE
+
+   A phone has one job here: get the rider's street. So Suburb and City stay
+   folded away until the rider taps the address field, then they appear.
+
+   There is no extra button and no extra label — the field is the switch.
+
+   On a wide screen there is room for everything, so the fields are simply
+   open and nothing ever collapses. The collapse is a phone affordance, not a
+   behaviour imposed on every size.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* closed until the rider taps the field */
+.g-addr-extra { display: none; }
+.g-addr-manual.is-open .g-addr-extra { display: block; }
+
+@media (max-width: 860px) {
+  .g-addr-extra { display: none; }
+  .g-addr-manual.is-open .g-addr-extra { display: block; }
+  .g-addr-extra .g-addr-manual-grid { margin-top: 8px; }
+}
+
+/* wide screens: everything visible from the start, nothing to tap */
+@media (min-width: 861px) {
+  .g-addr-extra { display: block; }
+}
