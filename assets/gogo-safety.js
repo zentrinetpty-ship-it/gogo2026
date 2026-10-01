@@ -36,13 +36,9 @@ const GOGOSafety = (() => {
     sheet.className = "g-sheet";
     sheet.innerHTML = `
       <div class="g-sheet-card" role="dialog" aria-modal="true" aria-label="Safety selfie">
-        <div class="g-between" style="margin-bottom:12px">
-          <div>
-            <span class="g-label">Safety check</span>
-            <div class="g-t g-mt-sm">${role === "driver" ? "Driver" : "Passenger"} selfie required</div>
-            <div class="g-s-sm g-mt-sm">One photo, for security. It is the record of who was on this ride, so if anything goes wrong on the trip we know who was on board. Shown only to the person you travel with, deleted ${RETENTION_H}h after the trip.</div>
-          </div>
-          <span class="g-stamp g-stamp-ink">${RETENTION_H}h retention</span>
+        <div class="g-cam-head">
+          <span class="g-t">${role === "driver" ? "Driver" : "Passenger"} selfie</span>
+          <span class="g-cam-exp">Deleted ${RETENTION_H}h after the trip</span>
         </div>
 
         <div class="g-cam" id="camBox">
@@ -54,7 +50,7 @@ const GOGOSafety = (() => {
 
         <div class="g-consent">
           <input type="checkbox" id="consentBox">
-          <label for="consentBox">I agree GOGO may store this photo for the duration of this ride. It is the security record of who was on board, so if anything goes wrong on the trip we know who was in the car. It is shared only with the other person on the ride, and <b>auto-deleted ${RETENTION_H} hours after the trip ends</b> and I tap "I am safe". I can also delete it myself at any time.</label>
+          <label for="consentBox">I agree to GOGO storing this photo for this ride. Shared with my ride only, <b>auto-deleted ${RETENTION_H}h after</b>. <a href="safety" target="_blank">Details</a></label>
         </div>
 
         <div class="g-row g-mt" id="camBtns">
@@ -64,7 +60,7 @@ const GOGOSafety = (() => {
           <button class="g-btn g-btn-ghost" id="cancelBtn" type="button">Cancel</button>
         </div>
         <input type="file" id="camFile" accept="image/*" capture="user" style="display:none">
-        <p class="g-s-sm g-mt-sm" id="camNote">Photos are never shown publicly and never used for marketing.</p>
+        <p class="g-s-sm g-mt-sm" id="camNote"></p>
       </div>`;
     document.body.appendChild(sheet);
 
@@ -203,13 +199,35 @@ const GOGOSafety = (() => {
 
   const rideRefOf = r => (r && (r.id || r.rideId)) || "ride";
 
+  /* ── the retention sweep ─────────────────────────────────────────────────
+     Runs on load and every minute while the app is open.
+
+     It handles two cases, because a selfie can reach its expiry in two ways:
+
+       1. it already carries a purgeAt — the trip closed and the timer was
+          started then
+       2. it does not, but its ride HAS closed — the rider may have been
+          offline when the trip ended, so nothing ever wrote the timer
+
+     Case 2 is the one that used to be missed: a selfie on a finished ride
+     could sit in the vault forever if the app was not open at the moment the
+     ride closed. The clock is now derived from the ride itself, so a photo
+     always has a deadline whether or not one was ever written down.
+     Anything whose ride has not closed has no clock and is kept. */
   function purgeDue() {
     const now = Date.now();
     let removed = 0;
     const st = safety();
+
+    st.selfies.forEach(s => {
+      if (s.purgeAt) return;
+      const at = ridePurgeAt(s.rideRef);
+      if (at) { s.purgeAt = at; }        /* backfill the missing deadline */
+    });
+
     st.selfies = st.selfies.filter(s => {
       if (s.purgeAt && new Date(s.purgeAt).getTime() <= now) {
-        audit(`Deleted · ${s.role} ${s.name}'s selfie · ${s.rideRef} · retention period ended`);
+        audit(`Auto-deleted · ${s.role} selfie · ${s.rideRef} · ${RETENTION_H}h after the ride`);
         removed++;
         return false;
       }
@@ -219,13 +237,78 @@ const GOGOSafety = (() => {
     return removed;
   }
 
-  function purgeNow(id) {
+  /* ── deleting a selfie ────────────────────────────────────────────────────
+     This is the record of who was on the ride, so it is not the rider's to
+     remove while the ride still matters. The rules:
+
+       • only YOUR OWN selfie — never the other person's
+       • only ONCE THE TRIP IS OVER and the safety window has closed
+       • before that, the selfie stays, because it is the security record of
+         a ride that may still be in progress or under dispute
+
+     The server enforces the same rule on its copy; this is the client half.
+     Returns { ok, reason } so the caller can say why rather than failing
+     silently. */
+  function canDelete(id) {
     const st = safety();
     const s = st.selfies.find(x => x.id === id);
-    if (!s) return;
+    if (!s) return { ok: false, reason: "That photo is already gone" };
+    const me = String((st.me && st.me.phone) || "").replace(/[^\d+]/g, "");
+    const owner = String(s.phone || "").replace(/[^\d+]/g, "");
+    /* ownership: only the person in the photo may remove it */
+    if (owner && me && owner !== me) {
+      return { ok: false, reason: "That is not your photo to delete" };
+    }
+    /* timing: the ride must be finished */
+    const r = (S.rides || []).find(x => x.id === s.rideRef);
+    const done = r && (r.status === "completed" || r.status === "ended");
+    if (!done) {
+      return { ok: false, reason: "You can delete this once your ride is finished" };
+    }
+    return { ok: true, selfie: s };
+  }
+
+  function purgeNow(id) {
+    const v = canDelete(id);
+    if (!v.ok) return v;
+    const st = safety();
+    const s = v.selfie;
     st.selfies = st.selfies.filter(x => x.id !== id);
     audit(`Deleted by user · ${s.role} ${s.name}'s selfie · ${s.rideRef}`);
     save();
+    return { ok: true };
+  }
+
+  /* ── the automatic deletion ───────────────────────────────────────────────
+     Every ride's selfies go on their own clock when the ride closes. This
+     runs on every page load, so the vault is pruned even if the app was
+     closed when the timer expired. */
+  const RETENTION_MS = RETENTION_H * HOUR;
+
+  function ridePurgeAt(rideId) {
+    const r = (S.rides || []).find(x => x.id === rideId);
+    if (!r) return null;
+    const closed = r.purgeAt || (r.status === "completed" || r.status === "ended" ? r.completedAt : null);
+    if (!closed) return null;
+    return new Date(new Date(closed).getTime() + RETENTION_MS).toISOString();
+  }
+
+  function sweepExpired() {
+    const st = safety();
+    const before = st.selfies.length;
+    if (!before) return { removed: 0 };
+    const now = Date.now();
+    st.selfies = st.selfies.filter(s => {
+      const at = s.purgeAt ? new Date(s.purgeAt).getTime() : null;
+      /* no clock on it yet means the ride has not closed — keep it */
+      if (!at) return true;
+      if (at > now) return true;
+      audit(`Auto-deleted · ${s.role} selfie · ${s.rideRef} · ${RETENTION_H}h after the ride`);
+      return false;
+    });
+    const removed = before - st.selfies.length;
+    if (removed) save();
+    return { removed };
   }
 
   const countdown = iso => {
@@ -257,7 +340,7 @@ const GOGOSafety = (() => {
     return n;
   }
 
-  return { capture, schedulePurge, purgeDue, purgeNow, countdown, forRide, markSafe, boot, audit,
+  return { capture, schedulePurge, purgeDue, purgeNow, canDelete, sweepExpired, ridePurgeAt, countdown, forRide, markSafe, boot, audit,
            auditLog: () => safety().log, RETENTION_H, ESCALATE_H, rideRefOf, fmt };
 })();
 

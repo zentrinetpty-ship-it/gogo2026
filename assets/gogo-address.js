@@ -15,6 +15,11 @@
    ========================================================================= */
 
 const GOGOAddress = (() => {
+  /* One Autocomplete session token, reused. Google bills per session rather
+     than per keystroke, so it must survive across a single address instead of
+     being recreated on every lookup. */
+  let session = null;
+
   /* Our own proxy, not Nominatim directly. Calling the map service from the
      browser gets rate-limited (429) and is blocked on some SA networks; going
      through our domain means one honest server-side identity, a shared cache,
@@ -74,6 +79,31 @@ const GOGOAddress = (() => {
     const key = town ? q + " | " + town : q;
     if (q.length < MIN_CHARS) return [];
     if (cache.has(key)) return cache.get(key);
+
+    /* ── Google Places first ────────────────────────────────────────────────
+       Replaces the OpenStreetMap route. Reasons this is better here, not just
+       different:
+
+         • Nominatim's policy forbids browser calls, so a proxy had to exist on
+           :3040 — one more service that can be down while the app is up.
+         • That proxy is throttled to about one request a second, so a fast typist
+           was told "no match" for an address that exists.
+         • Some SA mobile networks and DNS resolvers block the host outright.
+         • Google has far better South African street coverage.
+
+       The result SHAPE is unchanged — display, raw, parts{street,suburb,town,
+       house,postcode}, lat, lon — so the suggestion list, the manual fallback
+       and every page that consumes this keep working exactly as they did. That
+       is the whole point of putting it here rather than in the UI.
+
+       If Google is unavailable — no key, blocked, quota — this returns null and
+       the caller falls through to the old path, so the field degrades instead of
+       dying. */
+    try {
+      const g = await askGoogle(q, town);
+      if (g && g.length) { cache.set(key, g); return g; }
+      if (g && g.length === 0) { cache.set(key, []); return []; }
+    } catch (e) { /* fall through to the old route */ }
 
     /* A renamed place must be findable by BOTH names. The map data answers to
        the new name (KuGompo City) while riders still type the old one (East
@@ -168,6 +198,80 @@ const GOGOAddress = (() => {
   }
 
   /* ── the manual fallback: street, suburb, town ─────────────────────────── */
+  /* ── Google Places lookup ─────────────────────────────────────────────
+     Returns the SAME row shape search() already produces, so nothing
+     downstream needs to know which provider answered. */
+  async function askGoogle(q, town) {
+    if (!window.GOGOPlacesGoogle) return null;
+    await window.GOGOPlacesGoogle.load();
+    const w = window;
+    const P = w.google && w.google.maps && w.google.maps.places;
+    if (!P) return null;
+
+    const token = session || (session = new P.AutocompleteSessionToken());
+    const req = {
+      input: town && q.toLowerCase().indexOf(String(town).toLowerCase()) === -1
+        ? q + " " + town
+        : q,
+      sessionToken: token,
+      includedRegionCodes: ["za"],
+    };
+
+    /* fetchAutocompleteSuggestions is STATIC on the class. Calling it on
+       `new AutocompleteSuggestion()` throws "not a function" — and a swallowed
+       throw is indistinguishable from "no results". Hence the plain await. */
+    const res = await P.AutocompleteSuggestion.fetchAutocompleteSuggestions(req);
+    const preds = (res && res.suggestions || [])
+      .filter(function (s) { return s.placePrediction; })
+      .map(function (s) { return s.placePrediction; });
+    if (!preds.length) return [];
+
+    /* Resolve each prediction to its address parts. This is a second call per
+       suggestion, so they run together and a failure on one does not lose the
+       rest. */
+    const rows = await Promise.all(preds.slice(0, 6).map(async function (pred) {
+      try {
+        const place = new P.Place({ id: pred.placeId });
+        await place.fetchFields({
+          fields: ["addressComponents", "formattedAddress", "location"],
+        });
+        const c = place.addressComponents || [];
+        const get = function (t, short) {
+          const hit = c.find(function (x) { return (x.types || []).indexOf(t) !== -1; });
+          if (!hit) return "";
+          return (short ? hit.shortText || hit.short_name : hit.longText || hit.long_name) || "";
+        };
+        const house = get("street_number");
+        const road = get("route") || get("premise") || get("neighborhood");
+        const street = [house, road].filter(Boolean).join(" ") || pred.mainText.text || "";
+        /* "KuGompo City" -> "East London", the same mapping the OSM path used,
+           so a suggestion reads the way the rider expects. */
+        const rawTown = get("locality") || get("postal_town") || get("administrative_area_level_2") || "";
+        const townName = w.GOGORenames && GOGORenames.townOf ? GOGORenames.townOf(rawTown) : rawTown;
+        const rawSuburb = get("sublocality_level_1") || get("sublocality") || get("neighborhood") || "";
+        const suburb = w.GOGORenames && GOGORenames.cleanSuburb
+          ? GOGORenames.cleanSuburb(rawSuburb) : rawSuburb;
+        const loc = place.location;
+        return {
+          display: pred.secondaryText && pred.secondaryText.text
+            ? (pred.mainText.text || "") + ", " + pred.secondaryText.text
+            : (place.formattedAddress || pred.mainText.text || ""),
+          raw: place.formattedAddress || pred.mainText.text || "",
+          parts: {
+            street: street,
+            suburb: suburb,
+            town: townName,
+            house: house,
+            postcode: get("postal_code"),
+          },
+          lat: loc ? loc.lat() : null,
+          lon: loc ? loc.lng() : null,
+        };
+      } catch (e) { return null; }
+    }));
+    return rows.filter(Boolean);
+  }
+
   function compose(street, suburb, town) {
     return [street, suburb, town]
       .map(s => String(s || "").trim())

@@ -136,3 +136,100 @@
   .g-msg { max-width: 86%; }
   .g-sheet-card { padding: 15px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SELFIE DIALOG — compact
+
+   It used to be a ~900px column: a full square camera (aspect-ratio 1/1, so
+   ~370px in a 430px dialog), two paragraphs of legal copy, a long consent
+   block, four buttons and a footnote. On a laptop or a phone the action
+   buttons were below the fold and the card could not be scrolled to reach
+   them, so the rider was stuck.
+
+   Now: a wide 4:3 camera instead of square, the copy cut to the point, and the
+   whole card holds a max height so it always fits the screen with the buttons
+   in reach.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* the card never grows past the viewport; the camera takes the slack */
+.g-sheet-card[aria-label="Safety selfie"] {
+  max-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+/* the header: one line, title left, retention right */
+.g-cam-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.g-cam-head .g-t { font-size: 15px; font-weight: 800; }
+.g-cam-exp {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+
+/* the camera: square, because that is the shape of a face and the shape the
+   circle inside it wants. Sized from BOTH directions so it stays square on
+   any screen: width-limited on a tall phone, height-limited on a short
+   laptop. `aspect-ratio` with `max-height` alone lets it go lopsided, so the
+   square is taken from the smaller of the two. */
+.g-cam {
+  width: min(100%, 30vh);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+  flex: 0 1 auto;
+  border-radius: 12px;
+}
+.g-cam-frame { inset: 10%; }        /* a circle in a square, as before */
+
+/* the copy */
+.g-sheet-card[aria-label="Safety selfie"] .g-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  flex: 0 0 auto;
+}
+.g-sheet-card[aria-label="Safety selfie"] .g-consent input { margin-top: 2px; flex: 0 0 auto; }
+.g-sheet-card[aria-label="Safety selfie"] .g-consent label { margin: 0; cursor: pointer; }
+.g-sheet-card[aria-label="Safety selfie"] .g-consent a { color: #4A5D00; font-weight: 700; }
+
+/* the buttons: always the last thing, never pushed off */
+.g-sheet-card[aria-label="Safety selfie"] #camBtns {
+  flex: 0 0 auto;
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+}
+.g-sheet-card[aria-label="Safety selfie"] #camBtns .g-btn { height: 44px; }
+.g-sheet-card[aria-label="Safety selfie"] #camBtns #shotBtn { grid-column: 1; }
+.g-sheet-card[aria-label="Safety selfie"] #camBtns #retakeBtn { grid-column: 2; }
+.g-sheet-card[aria-label="Safety selfie"] #camBtns #fileBtn { grid-column: 2; grid-row: 1; }
+.g-sheet-card[aria-label="Safety selfie"] #camBtns #cancelBtn { grid-column: 3; }
+/* when Retake is showing, Use a photo sits beside it */
+.g-sheet-card[aria-label="Safety selfie"] #camBtns #retakeBtn:not([style*="display:none"]) ~ #fileBtn { display: none; }
+
+/* the footnote only renders when it has content */
+.g-sheet-card[aria-label="Safety selfie"] #camNote:empty { display: none; }
+
+/* on a short screen, trim further rather than scroll */
+@media (max-height: 700px) {
+  .g-cam { width: min(100%, 26vh); }
+  .g-sheet-card[aria-label="Safety selfie"] { gap: 8px; padding: 12px; }
+}
+@media (max-height: 560px) {
+  .g-cam { width: min(100%, 22vh); }
+}

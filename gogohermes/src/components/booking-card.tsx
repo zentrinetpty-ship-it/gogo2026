@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { CityPicker } from "@/components/city-picker";
 import { cn } from "@/lib/utils";
+import { PickupAddress } from "@/components/pickup-address";
 
 /* ── the real GOGO numbers, one source of truth ─────────────────────────── */
 export const FEE = { pickup: 19.99, platform: 9.99, parcelBooking: 19.99 };
@@ -44,6 +45,11 @@ export type Draft = {
   weightKg: string;
   size: string;
   description: string;
+  /* the coordinates of the picked pickup address. The ride search and the
+     driver's navigation both use them, and they arrive free with the same
+     lookup that produced the address. */
+  lat?: number | null;
+  lng?: number | null;
 };
 
 const EMPTY: Draft = {
@@ -206,42 +212,41 @@ export function BookingCard({
       {/* ── the pickup field sits right under the title, always visible.
              Focusing it is what opens the rest of the form.
 
-             A plain text field, deliberately: whatever the rider types is the
-             address, and nothing pops up to compete with it or overwrite it. ── */}
-      <div className="g-pickup mt-3.5">
-        <MapPin className="h-4 w-4 shrink-0 text-lime" aria-hidden />
-        <input
-          id="pickup"
-          type="text"
-          name="pickup"
-          className="g-pickup-in"
-          value={d.pickup}
-          onChange={(e) => set("pickup", e.target.value)}
-          onFocus={() => setOpen(true)}
-          placeholder={isParcel ? "Enter collection address" : "Enter pickup address"}
-          autoComplete="street-address"
-          enterKeyHint="next"
-          required
-        />
-      </div>
+             One line with Google Places suggestions. Picking a suggestion fills
+             city and province too, because the ride search needs a town to match
+             on and a street name alone does not say which town. ── */}
+      <PickupAddress
+        value={d.pickup}
+        placeholder={isParcel ? "Enter collection address" : "Enter pickup address"}
+        near={d.city}
+        onFocus={() => setOpen(true)}
+        onType={(t) => set("pickup", t)}
+        onClear={() => setD((p) => ({ ...p, suburb: "", city: "" }))}
+        onPick={(a) => setD((p) => ({
+          ...p,
+          pickup: a.line,
+          suburb: a.suburb || "",
+          city: a.city || a.province || "",
+          lat: a.lat,
+          lng: a.lng,
+        }))}
+      />
 
-      {/* ── Suburb and the province-and-city picker, under the street field.
+      {/* ── the rest of the form. It collapses under the address field and
+             opens upward-into-view by pushing the content below it down. ── */}
+      <div
+        className={cn(
+          "grid transition-all duration-300 md:!grid-rows-[1fr] md:!opacity-100",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-3">
+            {/* ── Suburb and the province-and-city picker, under the street field.
              The city anchors the ride search, so it is its own field rather
              than something guessed from the street text. One control holds
              both province and city, grouped by province. ── */}
-      <div className="gh-pickup-sub mt-2.5">
-        <div className="min-w-0">
-          <label className="gh-sub-lab" htmlFor="pickupSuburb">Suburb</label>
-          <input
-            id="pickupSuburb"
-            type="text"
-            name="suburb"
-            className="gh-sub-in"
-            value={d.suburb}
-            onChange={(e) => set("suburb", e.target.value)}
-            autoComplete="address-level3"
-          />
-        </div>
+      <div className="gh-pickup-sub mt-2.5" style={{ gridTemplateColumns: "1fr" }}>
         <div className="min-w-0">
           <span className="gh-sub-lab" id="pickupCityLabel">Province and city</span>
           <CityPicker
@@ -254,16 +259,7 @@ export function BookingCard({
         </div>
       </div>
 
-      {/* ── the rest of the form. It collapses under the address field and
-             opens upward-into-view by pushing the content below it down. ── */}
-      <div
-        className={cn(
-          "grid transition-all duration-300 md:!grid-rows-[1fr] md:!opacity-100",
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="pt-3">
+
             {/* passenger / parcel switch — a lime panel slides under the
                 selected side, so the state is obvious at a glance */}
             <div className="gh-seg mb-4" role="tablist" aria-label="What are you sending">

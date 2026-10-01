@@ -262,61 +262,70 @@ function myAcceptedSeat(r) {
 }
 
 function rideCard(r) {
-    const t = new Date(r.depart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    const d = new Date(r.depart).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
-    const left = seatsOpen(r), full = left === 0, taken = seatsHeld(r);
-    const dur = tripDuration(r);
-    const dep = townCodeOf(r.from), arr = townCodeOf(r.to);
-    const pct = Math.round((taken / Math.max(1, r.seatsTotal)) * 100);
-    return `
-    <article class="g-rc${full ? " g-rc-full" : ""}" data-ride="${r.id}">
-      <!-- quiet header: the badge, the vehicle, and how it is filling up -->
-      <header class="g-rc-top">
-        <span class="g-rc-badge" aria-hidden>${VAN_SVG}</span>
-        <span class="g-rc-head">
-          <b class="g-rc-veh">${esc(r.vehicle)}</b>
-          <span class="g-rc-driver">${esc(r.driver)} · ★ ${r.rating} · ${r.trips} trips</span>
-        </span>
-        <span class="g-rc-when">
-          <b>${t}</b>
-          <span>${d}</span>
-        </span>
-      </header>
+  /* ── one ride, as a boarding pass ──────────────────────────────────────────
+     The shape follows the flight-card pattern: the big town codes sit on the
+     two ends with times above them, the journey runs through the middle, a
+     dashed rule carries the date and separates the journey from the facts, and
+     who is driving / how full / what it costs sit underneath as three centred
+     columns. Everything is centred rather than pushed to the edges, so a card
+     in a wide column still reads as one object. */
+  const t = new Date(r.depart);
+  const timeTxt = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const dateTxt = t.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  const left = seatsOpen(r), full = left === 0, taken = seatsHeld(r);
+  const dur = tripDuration(r);
+  const dep = townCodeOf(r.from), arr = townCodeOf(r.to);
+  const pct = Math.round((taken / Math.max(1, r.seatsTotal)) * 100);
 
-      <!-- the route, read left to right like a boarding pass -->
-      <div class="g-rc-route">
-        <span class="g-rc-end">
+  return `
+    <article class="g-rc${full ? " g-rc-full" : ""}" data-ride="${r.id}">
+
+      <div class="g-rc-journey">
+        <div class="g-rc-end">
+          <span class="g-rc-time">${timeTxt}</span>
           <b class="g-rc-code">${esc(dep.code)}</b>
           <span class="g-rc-town">${esc(dep.name)}</span>
-        </span>
+        </div>
 
-        <span class="g-rc-mid">
+        <div class="g-rc-mid">
+          <span class="g-rc-veh">${esc(r.vehicle)}</span>
           <span class="g-rc-line" aria-hidden><i></i><span class="g-rc-van">${VAN_SVG}</span><i></i></span>
           <span class="g-rc-dur">${dur}</span>
-          <span class="g-rc-stops-n">${r.stops.length ? `${r.stops.length} stop${r.stops.length === 1 ? "" : "s"}` : "Direct"}</span>
-        </span>
+        </div>
 
-        <span class="g-rc-end g-rc-end-to">
+        <div class="g-rc-end">
+          <span class="g-rc-time">${etaOf(r)}</span>
           <b class="g-rc-code">${esc(arr.code)}</b>
           <span class="g-rc-town">${esc(arr.name)}</span>
+        </div>
+      </div>
+
+      <div class="g-rc-dash" aria-hidden><span>${dateTxt}</span></div>
+
+      <div class="g-rc-facts">
+        <span class="g-rc-fact">
+          <span class="g-rc-fact-l">Driver</span>
+          <span class="g-rc-fact-v">${esc(r.driver)}</span>
+          <span class="g-rc-fact-s">★ ${r.rating} · ${r.trips} trips</span>
+        </span>
+        <span class="g-rc-fact">
+          <span class="g-rc-fact-l">Seats</span>
+          <span class="g-rc-fact-v">${left} left</span>
+          <span class="g-rc-bar" aria-hidden><i style="width:${pct}%"></i></span>
+        </span>
+        <span class="g-rc-fact">
+          <span class="g-rc-fact-l">Per seat</span>
+          <span class="g-rc-fact-v g-money">${money(r.fare)}</span>
+          <span class="g-rc-fact-s">${r.luggage === "boot" ? "Boot space" : "Hand luggage"}</span>
         </span>
       </div>
 
       ${r.stops.length ? `<div class="g-rc-stops">${r.stops.map(s => `<span class="g-rc-stop">${esc(s.city)} <b>${money(s.fare)}</b></span>`).join("")}</div>` : ""}
 
-      <div class="g-rc-dash" aria-hidden></div>
-
-      <!-- how full it is, as a bar rather than a row of emoji -->
-      <footer class="g-rc-foot">
-        <span class="g-rc-seats">
-          <span class="g-rc-seats-n"><b>${taken}</b> of ${r.seatsTotal} seats taken</span>
-          <span class="g-rc-bar" aria-hidden><i style="width:${pct}%"></i></span>
-        </span>
-        <span class="g-rc-price"><b>${money(r.fare)}</b><span>per seat</span></span>
-        <a class="g-btn g-btn-sm g-rc-go" href="ride.html?id=${r.id}${rideQuery()}">${full ? "View ride" : "Join this ride"}</a>
-      </footer>
+      <a class="g-btn g-btn-sm g-rc-go" href="ride.html?id=${r.id}${rideQuery()}">${full ? "View ride" : "Join this ride"}</a>
     </article>`;
-  }
+}
+
 
 /* The search context travels with the ride link, so opening a ride from the
    results keeps the seats, day and pickup the user already chose. Nothing is
@@ -390,26 +399,22 @@ function pageHome() {
                 <span class="g-ic-sq lime" aria-hidden>&#128205;</span> <span id="fromLab">Pickup</span>
               </label>
               <div class="g-bk-inwrap">
-                <input id="from" class="g-bk-in" type="text" name="address" value="" placeholder="Street, town or landmark" autocomplete="off" enterkeyhint="next">
+                <input id="from" class="g-bk-in" type="text" name="address" value="" placeholder="Start typing your address" autocomplete="off" enterkeyhint="next" aria-autocomplete="list" aria-controls="fromList" aria-expanded="false">
+                  <!-- suggestions for #from. Google Places, national coverage: a
+                       ride can start anywhere in South Africa, so there is no
+                       location bias here, unlike the laundry app which only
+                       collects in one city. -->
+                  <div id="fromList" class="g-from-list" role="listbox" hidden></div>
               </div>
-              <div class="g-bk-subrow">
-                <div class="g-bk-fld">
-                  <label class="g-bk-lab" for="fromSuburb"><span id="subLab">Suburb</span></label>
-                  <div class="g-bk-inwrap">
-                    <input id="fromSuburb" class="g-bk-in" type="text" name="suburb" value="" placeholder="" autocomplete="address-level3" enterkeyhint="next">
-                  </div>
-                </div>
-                <div class="g-bk-fld">
-                  <label class="g-bk-lab" for="fromArea"><span id="areaLab">Province and city</span></label>
-                  <div class="g-bk-inwrap">
-                    <select id="fromArea" class="g-bk-in" name="area" required>
-                      <option value="">Choose your province and city</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="g-bk-fld">
+              <div class="g-bk-subrow" hidden aria-hidden="true" style="display:none">
+                  <!-- Suburb and Province+City used to be two manual fields here.
+                       The address search fills both now. They are hidden rather
+                       than deleted because the draft, the payload, the
+                       validation and the share URL all still read #fromSuburb
+                       and #fromArea — removing the elements breaks all four. -->
+                  <input id="fromSuburb" type="text" name="suburb" value="" tabindex="-1">
+                  <select id="fromArea" name="area" tabindex="-1"><option value=""></option></select>
+                </div><div class="g-bk-fld">
               <div class="g-bk-labrow">
               <label class="g-bk-lab" for="to">
                 <span class="g-ic-sq amber" aria-hidden>&#127937;</span> <span id="toLab">Destination</span>
@@ -850,7 +855,7 @@ function pageRides() {
             <div class="g-list-s">${seats} seat${seats === 1 ? "" : "s"} · ${q.when === "tomorrow" ? "tomorrow" : q.when === "any" ? "any day" : "today"}${q.slot ? ` · 🕕 ${String(q.slot).padStart(2, "0")}:00 – ${String(Number(q.slot) + 2).padStart(2, "0")}:00` : ""}${q.pickup ? ` · pickup ${esc(q.pickup)}` : ""}</div>
           </div>
         </div>
-        <a class="g-btn g-btn-ghost g-btn-sm" href="app">Edit search</a>
+        <a class="g-btn g-btn-ghost g-btn-sm" href="/gogo/">Edit search</a>
       </div>
 
       <div class="g-chips g-mt">
@@ -1235,6 +1240,136 @@ function pageRide() {
 }
 
 /* ── PAGE: rider dashboard ──────────────────────────────────────────────── */
+/* ── PAGE: the boarding pass ────────────────────────────────────────────────
+   The rider's ticket. It is reachable two ways: from My trips, or by opening
+   /ticket with the reference alone, which is how a ticket is meant to work —
+   the code is the credential.
+
+   The pass is drawn from the SERVER's copy of the booking, never from local
+   state, so what is printed here is what the driver will accept: the price,
+   the seat count and the released plate all come back from the API. */
+function pageTicket() {
+  const ref = String(parseQuery().ref || "").trim().toUpperCase();
+  const host = $('#main');
+
+  if (!ref) {
+    host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
+      <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🎫</span>
+        <h3 class="g-h3">Open your ticket</h3>
+        <p class="g-s g-mt-sm">Enter the six-character reference from your booking.</p>
+        <form id="refForm" class="g-mt" style="max-width:280px;margin-inline:auto;text-align:left">
+          <label class="g-f-k" for="refIn">Booking reference</label>
+          <input class="g-input" id="refIn" type="text" maxlength="8" placeholder="P3K9DL"
+                 autocapitalize="characters" autocomplete="off" spellcheck="false">
+          <button class="g-btn g-btn-ink g-btn-block g-mt" type="submit">Open ticket</button>
+        </form>
+      </div></div></div>`;
+    const f = $('#refForm');
+    if (f) f.onsubmit = ev => {
+      ev.preventDefault();
+      const v = ($('#refIn').value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      if (v.length < 5) { toast("<b>Enter the full reference</b>"); return; }
+      location.href = "ticket?ref=" + encodeURIComponent(v);
+    };
+    return;
+  }
+
+  host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
+    <p class="g-s" style="text-align:center">Looking up <b>${esc(ref)}</b>…</p></div></div>`;
+
+  fetch("/gogo/api/booking/" + encodeURIComponent(ref), {
+    headers: (window.GOGOAuth && GOGOAuth.token) ? { Authorization: "Bearer " + GOGOAuth.token() } : {},
+  })
+    .then(r => r.json().then(j => ({ status: r.status, body: j })))
+    .then(out => {
+      if (out.status !== 200 || !out.body.booking) {
+        host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
+          <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🔍</span>
+            <h3 class="g-h3">No ticket with that reference</h3>
+            <p class="g-s g-mt-sm">Check the code and try again. It is six characters, and the letters I, O, S, B and Z are never used.</p>
+            <a class="g-btn g-btn-ink g-mt" href="ticket">Try another code</a></div></div></div>`;
+        return;
+      }
+      const b = out.body.booking;
+      const accepted = b.status === "accepted" || b.status === "completed";
+      const dep = townCodeOf(b.from), arr = townCodeOf(b.to);
+
+      /* the bars encode the reference so it can be scanned at the rank:
+         each character becomes a bar whose height and width come from its
+         position in the alphabet, so the same code always draws the same way */
+      const bars = ref.split("").map(ch => {
+        const n = ch.charCodeAt(0);
+        return `<i style="height:${10 + (n % 9) * 2.5}px;width:${(n % 3) + 2}px"></i>`;
+      }).join("");
+
+      host.innerHTML = `
+      <div class="g-wrap g-section">
+        <div class="g-bp">
+          <div class="g-bp-top">
+            <span class="g-bp-brand">GO<i>GO</i> · BOARDING PASS</span>
+            <span class="g-bp-state ${accepted ? "is-ok" : ""}">${accepted ? "Confirmed" : "Pending"}</span>
+          </div>
+
+          <div class="g-bp-journey">
+            <div class="g-bp-end">
+              <span class="g-bp-time">${esc(b.depart || "")}</span>
+              <b class="g-bp-code">${esc(dep.code)}</b>
+              <span class="g-bp-town">${esc(dep.name)}</span>
+            </div>
+            <div class="g-bp-mid">
+              <span class="g-bp-veh">${esc(b.vehicle || "")}</span>
+              <span class="g-bp-arrow" aria-hidden><i></i><span>${VAN_SVG}</span><i></i></span>
+              <span class="g-bp-dur">${esc(b.stop || arr.name)}</span>
+            </div>
+            <div class="g-bp-end">
+              <span class="g-bp-time">arrival</span>
+              <b class="g-bp-code">${esc(arr.code)}</b>
+              <span class="g-bp-town">${esc(arr.name)}</span>
+            </div>
+          </div>
+
+          <div class="g-bp-facts">
+            <span class="g-bp-fact"><span class="g-bp-fact-l">Rider</span>
+              <span class="g-bp-fact-v">${esc((S.me && S.me.name) || "You")}</span></span>
+            <span class="g-bp-fact"><span class="g-bp-fact-l">Seats</span>
+              <span class="g-bp-fact-v">${b.seats}</span></span>
+            <span class="g-bp-fact"><span class="g-bp-fact-l">Total</span>
+              <span class="g-bp-fact-v g-money">${money((b.totalCents || 0) / 100)}</span>
+              <span class="g-bp-fact-s">${b.payMethod === "cash" ? "Cash on boarding" : "Card"}</span></span>
+          </div>
+
+          <div class="g-bp-tear"><span class="g-bp-notch l"></span><span class="g-bp-notch r"></span></div>
+
+          <div class="g-bp-stub">
+            <div class="g-bp-ref-l">Booking reference</div>
+            <div class="g-bp-ref">${esc(ref)}</div>
+            <div class="g-bp-bars" aria-hidden>${bars}</div>
+            <p class="g-bp-note">${accepted
+              ? `Seat confirmed. Show this code to ${esc(b.driver || "your driver")}. The plate is ${esc(b.plate || "released")}.`
+              : `Waiting for the driver to accept. Your seat is held while they decide.`}</p>
+            <div class="g-bp-acts">
+              <a class="g-btn g-btn-ghost g-btn-sm" href="rider">My trips</a>
+              <button class="g-btn g-btn-ink g-btn-sm" id="copyRef" type="button">Copy code</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      const c = $('#copyRef');
+      if (c) c.onclick = () => {
+        try { navigator.clipboard.writeText(ref); toast("<b>Copied</b> · " + ref); }
+        catch (e) { toast("<b>" + ref + "</b>"); }
+      };
+      reveal();
+    })
+    .catch(() => {
+      host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
+        <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>📡</span>
+          <h3 class="g-h3">Could not reach GOGO</h3>
+          <a class="g-btn g-btn-ink g-mt" href="ticket">Try again</a></div></div></div>`;
+    });
+}
+
 function pageRider() {
   const myReqs = [];
   S.rides.forEach(r => (r.requests || []).forEach(q => { if (q.phone === S.me.phone && q.status !== "declined") myReqs.push({ r, q }); }));
@@ -1242,97 +1377,100 @@ function pageRider() {
   const live = myReqs[0] && (myReqs[0].q.status === "accepted" || myReqs[0].q.status === "pending") ? myReqs[0] : null;
   const accepted = myReqs.filter(x => x.q.status === "accepted");
   const spend = accepted.reduce((n, x) => n + x.q.fare, 0);
-  const stage = !live ? 0 : live.q.status === "pending" ? 1 : live.r.status === "full" ? 3 : live.r.status === "started" ? 4 : 2;
-  const steps = [["🧾", "Request sent"], [VAN_SVG, "Driver accepted"], ["📍", "Picking up"], ["🛣️", "On the way"], ["🏁", "Arrived"]];
+  /* ── how far along the trip is ───────────────────────────────────────────
+     Derived from the request first, then the ride, in the order the journey
+     actually happens. "full" is deliberately NOT consulted: a ride being full
+     says nothing about whether this rider has been collected, and checking it
+     before "started" made a departed ride show the wrong step. */
+  const stage = !live ? 0
+    : live.q.status === "pending" ? 1                                          /* request sent */
+    : live.r.status === "completed" ? 5                                        /* arrived */
+    : live.r.status === "started" ? 4                                          /* on the way */
+    : live.q.pickedUp ? 3                                                      /* picking up */
+    : 2;                                                                       /* driver accepted */
+  const steps = [["🧾", "Sent"], [VAN_SVG, "Accepted"], ["📍", "Collected"], ["🛣️", "On the way"], ["🏁", "Arrived"]];
 
   $('#main').innerHTML = `
   <div class="g-wrap g-section">
     <div class="g-grid">
       <div class="g-12 g-anim">
-        <div class="g-card" style="border-color:rgba(242,184,0,.6)">
-          <div class="g-between">
-            <div class="g-row"><span class="g-ic g-ic-lg" aria-hidden>🧍</span>
-              <div><span class="g-label">Welcome back, ${esc(S.me.name)}</span>
-                <h1 class="g-h2 g-mt-sm">Where are you hiking today?</h1>
-                <p class="g-s">${live ? `${esc(live.r.from)} to ${esc(live.q.getOff)} · ${esc(live.r.driver)}` : "No active ride. Grab a seat on a route leaving your street."}</p></div>
-            </div>
-            <div class="g-row">
-              <a class="g-btn g-btn-ghost g-btn-sm" href="rides"><span aria-hidden>🔍</span> Find a hike</a>
-              <a class="g-btn g-btn-ink g-btn-sm" href="/gogo/"><span aria-hidden>🧭</span> Book a seat</a>
-            </div>
+        <div class="g-mt-head">
+          <div>
+            <span class="g-label">My trips</span>
+            <h1 class="g-h2 g-mt-sm">${esc(S.me.name)}</h1>
           </div>
+          <a class="g-btn g-btn-ink g-btn-sm" href="/gogo/"><span aria-hidden>🧭</span> Book a seat</a>
         </div>
       </div>
 
       <div class="g-8 g-anim">
         <div class="g-card">
           ${live ? `
-            <div class="g-head"><span class="g-label">Current ride</span>
-              <span class="g-stamp ${live.q.status === "accepted" ? "g-stamp-full" : "g-stamp-open"}">${live.q.status === "accepted" ? "seat confirmed" : "awaiting driver"}</span></div>
-            <div class="g-between">
-              <div class="g-ride-route" style="font-size:18px">${esc(live.r.from)} <em>→</em> ${esc(live.q.getOff)}</div>
-              <div class="g-kpi-val" style="font-size:22px">${money(live.q.fare)}</div>
+            <div class="g-trip-head">
+              <div class="g-trip-route">${esc(live.r.from)} <em>→</em> ${esc(live.q.getOff)}</div>
+              <span class="g-trip-state ${live.q.status === "accepted" ? "is-confirmed" : ""}">${live.q.status === "accepted" ? "Seat confirmed" : "Waiting for driver"}</span>
             </div>
-            <div class="g-grid g-mt" style="grid-template-columns:repeat(5,1fr);gap:6px">
+
+            <div class="g-rail" role="list">
               ${steps.map(([e, t], i) => `
-                <div style="text-align:center">
-                  <div class="g-route-dot" style="margin:0 auto 6px;${i < stage ? "background:var(--lime-wash);border-color:rgba(141,182,0,.5)" : i === stage ? "background:var(--ink);border-color:var(--ink)" : ""}">${e}</div>
-                  <div class="g-s-sm" style="font-size:10px;${i <= stage ? "color:var(--ink)" : ""}">${t}</div>
+                <div class="g-rail-step ${i < stage ? "is-done" : i === stage ? "is-now" : ""}" role="listitem">
+                  <span class="g-rail-dot" aria-hidden>${e}</span>
+                  <span class="g-rail-lab">${t}</span>
                 </div>`).join("")}
             </div>
-            <div class="g-list-row g-mt"><span class="g-ic g-ic-sm" aria-hidden>📍</span>
-              <div><div class="g-list-t">${esc(live.q.pickup)}</div><div class="g-list-s">Your pickup address · route order ${1 + live.r.stops.filter(s => s.city === live.q.getOff).length}</div></div></div>
-            <div class="g-list-row"><span class="g-avatar" style="width:32px;height:32px;font-size:11px;border-radius:4px">${esc(initials(live.r.driver))}</span>
-              <div><div class="g-list-t">${esc(live.r.driver)} · ${esc(live.r.vehicle)}</div><div class="g-list-s">${esc(live.r.plate)} · <span class="g-stars">★ ${live.r.rating}</span></div></div>
-              <div class="g-list-r"><a class="g-btn g-btn-ink g-btn-sm" href="#"><span aria-hidden>📞</span> Call</a></div></div>
-            <div class="g-row g-mt">
+
+            <dl class="g-facts">
+              <div><dt>Fare</dt><dd>${money(live.q.fare)}</dd></div>
+              <div><dt>Seats</dt><dd>${live.q.seats}</dd></div>
+              <div><dt>Departs</dt><dd>${esc(live.r.departLabel || "—")}</dd></div>
+              <div><dt>Pickup</dt><dd>${esc(live.q.pickup || "—")}</dd></div>
+            </dl>
+
+            <div class="g-driver-strip">
+              <span class="g-avatar" style="width:34px;height:34px;font-size:11px;border-radius:6px">${esc(initials(live.r.driver))}</span>
+              <div class="g-driver-txt">
+                <div class="g-list-t">${esc(live.r.driver)}</div>
+                <div class="g-list-s">${esc(live.r.vehicle)} · ${esc(live.r.plate)} · ★ ${live.r.rating}</div>
+              </div>
+              <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>💬</span> Message</a>
+            </div>
+
+            <div class="g-trip-acts">
               <a class="g-btn g-btn-ghost g-btn-sm" href="ride.html?id=${live.r.id}">Ride details</a>
+              ${live.q.ref ? `<a class="g-btn g-btn-ghost g-btn-sm" href="ticket?ref=${encodeURIComponent(live.q.ref)}">Boarding pass</a>` : ""}
               <button class="g-btn g-btn-ghost g-btn-sm" id="cancelReq" type="button">Cancel request</button>
             </div>` : `
             <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🧭</span>
-              <h3 class="g-h3">Nothing booked yet</h3>
-              <p class="g-s g-mt-sm">Pick a corridor and grab a seat. Drivers accept in minutes.</p>
+              <h3 class="g-h3">No active trip</h3>
+              <p class="g-s g-mt-sm">Grab a seat on a route leaving your street.</p>
               <a class="g-btn g-btn-ink g-mt" href="rides.html?from=East+London&to=Mthatha">See East London → Mthatha rides</a></div>`}
         </div>
 
+        ${myReqs.length > 1 ? `
         <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">My requests</span><span class="g-ic g-ic-sm" aria-hidden>📚</span></div>
-          ${myReqs.length ? myReqs.map(({ r, q }) => `
+          <div class="g-head"><span class="g-label">Other requests</span></div>
+          ${myReqs.slice(1, 5).map(({ r, q }) => `
             <div class="g-list-row">
-              <span class="g-ic g-ic-sm" aria-hidden>${q.status === "accepted" ? "✅" : "⏳"}</span>
               <div><div class="g-list-t">${esc(r.from)} → ${esc(q.getOff)}</div>
-                <div class="g-list-s">${esc(r.driver)} · ${q.seats} seat${q.seats === 1 ? "" : "s"} · ${new Date(r.depart).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" })}</div></div>
-              <div class="g-list-r"><div class="g-t g-money">${money(q.fare)}</div><span class="g-stamp ${q.status === "accepted" ? "g-stamp-full" : "g-stamp-open"}">${esc(q.status)}</span></div>
-            </div>`).join("") : `<p class="g-s">No requests yet.</p>`}
-        </div>
+                <div class="g-list-s">${esc(r.driver)} · ${new Date(r.depart).toLocaleDateString([], { day: "numeric", month: "short" })}</div></div>
+              <div class="g-list-r"><div class="g-t g-money">${money(q.fare)}</div>
+                <span class="g-list-s">${q.status === "accepted" ? "confirmed" : "pending"}</span></div>
+            </div>`).join("")}
+        </div>` : ""}
       </div>
 
       <div class="g-4 g-anim">
         <div class="g-card">
-          <div class="g-kpi"><div class="g-kpi-top"><span class="g-label">Trips taken</span><span class="g-ic g-ic-sm" aria-hidden>${van()}</span></div>
-            <div class="g-kpi-val" id="rTrips">0</div>
-            <div class="g-spark" aria-hidden>${[40, 65, 45, 80, 55, 95, 70].map(v => `<i data-h="${v}"></i>`).join("")}</div>
-            <span class="g-up">▲ 2 more than last month</span></div>
-        </div>
-        <div class="g-card g-mt">
-          <div class="g-kpi"><div class="g-kpi-top"><span class="g-label">Spent on hikes</span><span class="g-ic g-ic-sm" aria-hidden>💳</span></div>
-            <div class="g-kpi-val" id="rSpend">R0</div>
-            <div class="g-bar g-mt-sm"><i data-w="62"></i></div>
-            <p class="g-s-sm g-mt-sm">Against private shuttles you have saved about <b>R310</b> this month.</p></div>
-        </div>
-        <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">Activity</span><span class="g-ic g-ic-sm" aria-hidden>🔔</span></div>
-          <div class="g-feed">${S.activity.slice(0, 5).map(a => `
-            <div class="g-feed-item"><span class="g-feed-ic" aria-hidden>${a.e}</span>
-              <div style="flex:1"><div class="g-list-t">${esc(a.t)}</div><div class="g-list-s">${esc(a.s)}</div></div>
-              <span class="g-s-sm">${esc(a.when)}</span></div>`).join("")}</div>
+          <div class="g-facts g-facts-stack">
+            <div><dt>Trips taken</dt><dd id="rTrips">0</dd></div>
+            <div><dt>Spent on hikes</dt><dd id="rSpend">R0</dd></div>
+          </div>
         </div>
       </div>
     </div>
   </div>`;
 
-  countUp($('#rTrips'), accepted.length + 3);
-  countUp($('#rSpend'), spend || 480, "R");
+  countUp($('#rTrips'), accepted.length);  countUp($('#rSpend'), spend, "R");
   const c = $('#cancelReq');
   if (c) c.onclick = () => {
     const r = live.r; r.requests = r.requests.filter(q => q.phone !== S.me.phone);
@@ -1740,6 +1878,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "rides") pageRides();
   if (page === "ride") pageRide();
   if (page === "rider") pageRider();
+  if (page === "ticket") pageTicket();
   if (page === "driver") pageDriver();
   if (page === "parcel") pageParcel();
   if (page === "more" && typeof pageMore === "function") pageMore();
@@ -1809,3 +1948,184 @@ window.GOGO = { reveal: reveal, grow: grow, save: save, toast: toast, money: mon
 })();
 
 
+/* =========================================================================
+   #from — Google Places autocomplete
+
+   Replaces the manual Suburb + Province/City fields. The rider types one line
+   and picks; the house number and street fill the visible box, and the town and
+   province go into #fromSuburb / #fromArea, which the draft, the payload, the
+   validation and the share URL already read.
+
+   National coverage, no location bias: a GOGO ride can start anywhere in South
+   Africa. (The laundry app biases to one city because it only collects there.)
+
+   AutocompleteSuggestion.fetchAutocompleteSuggestions is STATIC on the class —
+   calling it on `new AutocompleteSuggestion()` throws "not a function", and a
+   swallowed throw is indistinguishable from "no results".
+   ========================================================================= */
+(function () {
+  /* EVENT DELEGATION, on purpose.
+
+     The booking form is re-rendered as the sheet opens and as steps change, so a
+     listener bound to #from at load time ends up on a node that is no longer on
+     the page — typing goes nowhere and no lookup ever fires. That is exactly the
+     failure this had on the first pass.
+
+     `document` is never replaced, so the handlers below always see the live
+     element. Nothing to re-bind, no observer, no ordering to get wrong. */
+  var session = null, timer = null, rows = [], inputEl = null;
+
+  function fromEl() { return document.getElementById("from"); }
+  function listEl() { return document.getElementById("fromList"); }
+
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+
+  function close() {
+    var l = listEl();
+    if (l) l.hidden = true;
+    var i = fromEl();
+    if (i) i.setAttribute("aria-expanded", "false");
+  }
+
+  function draw() {
+    var l = listEl();
+    if (!l) return;
+    if (!rows.length) return close();
+    l.innerHTML = rows.map(function (r, i) {
+      return '<button type="button" role="option" class="g-from-opt" data-i="' + i + '">' +
+             '<span class="g-from-pin" aria-hidden="true">&#128205;</span>' +
+             '<span class="g-from-txt"><b>' + esc(r.primary) + '</b>' +
+             (r.secondary ? '<small>' + esc(r.secondary) + '</small>' : '') + '</span></button>';
+    }).join("");
+    l.hidden = false;
+    var i2 = fromEl();
+    if (i2) i2.setAttribute("aria-expanded", "true");
+  }
+
+  function search(q) {
+    var G = window.GOGOPlacesGoogle;
+    var l = listEl();
+    if (!G) {
+      if (l) { l.innerHTML = '<div class="g-from-err">Address lookup is unavailable.</div>'; l.hidden = false; }
+      return;
+    }
+    G.load().then(function () {
+      var P = window.google && window.google.maps && window.google.maps.places;
+      if (!P) return;
+      if (!session) session = new P.AutocompleteSessionToken();
+      /* STATIC on the class: calling this on `new AutocompleteSuggestion()`
+         throws "not a function", and a swallowed throw is indistinguishable
+         from "no results". Hence the plain return, no empty catch. */
+      return P.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input: q, sessionToken: session, includedRegionCodes: ["za"]
+      }).then(function (res) {
+        rows = ((res && res.suggestions) || []).filter(function (x) { return x.placePrediction; })
+          .map(function (x) {
+            var pr = x.placePrediction;
+            return { placeId: pr.placeId,
+                     primary: (pr.mainText && pr.mainText.text) || "",
+                     secondary: (pr.secondaryText && pr.secondaryText.text) || "" };
+          });
+        draw();
+      }).catch(function (e) {
+        var le = listEl();
+        if (le) {
+          le.innerHTML = '<div class="g-from-err">Address lookup failed — ' + esc(e && e.message || e) + '</div>';
+          le.hidden = false;
+        }
+      });
+    }).catch(function (e) {
+      var le = listEl();
+      if (le) {
+        le.innerHTML = '<div class="g-from-err">Address lookup is unavailable — ' + esc(e && e.message || e) + '</div>';
+        le.hidden = false;
+      }
+    });
+  }
+
+  function apply(placeId, primary) {
+    var input = fromEl();
+    var P = window.google && window.google.maps && window.google.maps.places;
+    if (!P || !input) { if (input) input.value = primary; close(); return; }
+    var place = new P.Place({ id: placeId });
+    place.fetchFields({ fields: ["addressComponents", "formattedAddress", "location"] }).then(function () {
+      var c = place.addressComponents || [];
+      function get(t) {
+        for (var i = 0; i < c.length; i++) {
+          if ((c[i].types || []).indexOf(t) !== -1) return c[i].longText || c[i].long_name || "";
+        }
+        return "";
+      }
+      var line = [get("street_number"), get("route") || get("premise")].filter(Boolean).join(" ") || primary;
+      input.value = line;
+
+      var rawTown = get("locality") || get("postal_town") || get("administrative_area_level_2") || "";
+      var town = (window.GOGORenames && GOGORenames.townOf) ? GOGORenames.townOf(rawTown) : rawTown;
+      var rawSub = get("sublocality_level_1") || get("sublocality") || get("neighborhood") || "";
+      var sub = (window.GOGORenames && GOGORenames.cleanSuburb) ? GOGORenames.cleanSuburb(rawSub) : rawSub;
+
+      var subEl = document.getElementById("fromSuburb");
+      var areaEl = document.getElementById("fromArea");
+      if (subEl) subEl.value = sub;
+
+      /* #fromArea is a select of province-and-city options. If the town is in it,
+         select it. If it is not, ADD it — an address the rider picked from Google
+         must never be silently dropped because a list does not contain it. */
+      if (areaEl && town) {
+        var found = false;
+        for (var i = 0; i < areaEl.options.length; i++) {
+          var v = areaEl.options[i].value || "";
+          if (v && v.toLowerCase().indexOf(town.toLowerCase()) !== -1) { areaEl.selectedIndex = i; found = true; break; }
+        }
+        if (!found) {
+          var prov = get("administrative_area_level_1");
+          var label = prov ? (prov + " \u00b7 " + town) : town;
+          var opt = document.createElement("option");
+          opt.value = label; opt.text = label;
+          areaEl.add(opt); areaEl.value = label;
+        }
+      }
+      /* the form's own handlers must run, or the draft never sees any of this */
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      if (areaEl) areaEl.dispatchEvent(new Event("change", { bubbles: true }));
+      close();
+      session = null;
+    }).catch(function () {
+      input.value = primary;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      close();
+    });
+  }
+
+  /* ── the delegated handlers ───────────────────────────────────────────── */
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (!t || t.id !== "from") return;
+    var q = t.value;
+    if (timer) clearTimeout(timer);
+    if (q.trim().length < 3) { rows = []; return close(); }
+    timer = setTimeout(function () { search(q); }, 220);
+  }, true);
+
+  document.addEventListener("mousedown", function (e) {
+    var t = e.target;
+    var opt = t && t.closest ? t.closest(".g-from-opt") : null;
+    if (!opt) return;
+    e.preventDefault();
+    var r = rows[Number(opt.dataset.i)];
+    if (r) apply(r.placeId, r.primary);
+  }, true);
+
+  document.addEventListener("blur", function (e) {
+    if (e.target && e.target.id === "from") setTimeout(close, 160);
+  }, true);
+
+  document.addEventListener("keydown", function (e) {
+    if (e.target && e.target.id === "from" && e.key === "Escape") close();
+  }, true);
+})();

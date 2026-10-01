@@ -6,6 +6,7 @@
 <title>GOGO · Book a seat or send a parcel</title>
 <meta name="description" content="GOGO gets you from your street to anywhere in South Africa. Book a seat on a hike leaving your road, or send a parcel city to city and agree the price with the driver.">
 <meta name="theme-color" content="#0A192F">
+<meta name="gogo-maps-key" content="AIzaSyAY6CTTEKmEkkwjP4YMAnUyIADO7k2uED8">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="/gogo/manifest.webmanifest">
 <link rel="icon" href="/gogo/favicon-32.png" sizes="32x32" type="image/png">
@@ -19,7 +20,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-<div id="root"></div>
+<script>
+    /* The Google Maps key, read by the pickup address field. In the page rather
+       than the bundle because it is public by nature — it is restricted by HTTP
+       referrer, so a leaked copy is useless from another domain. */
+    window.__GOGO_MAPS_KEY = "AIzaSyAY6CTTEKmEkkwjP4YMAnUyIADO7k2uED8";
+  </script>
+  <div id="root"></div>
 <!-- runs before the app boots: clears any address left over from a previous
      visit, so the pickup field never arrives pre-filled -->
 <script src="/gogo/assets/gogo-session.js"></script>

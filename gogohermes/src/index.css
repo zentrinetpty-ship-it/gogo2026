@@ -708,3 +708,124 @@
   box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
 }
 @media (max-width: 400px) { .gh-pickup-sub { grid-template-columns: minmax(0, 1fr); } }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESKTOP COMPACT PASS
+
+   At 1264x569 the card measured 542px tall and ended 73px past the bottom of
+   the screen, so the landing needed scrolling. On a desktop the card is always
+   open, so every row costs height. These rules reclaim it from padding and
+   gaps rather than by removing anything: nothing is hidden, it is just set
+   tighter, and the whole card fits above the fold.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  /* the card frame: less air around the outside, and lifted higher */
+  .gh-card {
+    padding: 14px 16px 16px !important;
+  }
+
+  /* fields: 46 -> 42px. Still a comfortable target, and 4px x 9 rows adds up */
+  .gh-field,
+  .gh-dest,
+  .g-pickup {
+    height: 42px !important;
+  }
+  .gh-sub-in { height: 40px !important; }
+
+  /* the labels above each field lose a little margin */
+  .gh-lab,
+  .gh-sub-lab { margin-bottom: 3px !important; }
+
+  /* the gaps between rows tighten */
+  .space-y-2\.5 > * + * { margin-top: 6px !important; }
+  .gh-pickup-sub { margin-top: 6px !important; }
+
+  /* the collapsing panel opens with less lead-in */
+  .gh-card .pt-3 { padding-top: 8px !important; }
+
+  /* the seat / luggage / time row is the tallest block: bring it in */
+  .gh-card .h-\[54px\] { height: 42px !important; }
+}
+
+/* lift the card so it sits high on a desktop screen rather than centred */
+@media (min-width: 1024px) {
+  .gh-card { align-self: flex-start !important; margin-top: -8px !important; }
+}
+
+/* ── desktop: the last of the height ─────────────────────────────────────
+   The panel's own rows still carried their mobile margins. Measured at
+   1264x569 the card was 515px and still 46px past the fold, so these reclaim
+   it from the vertical rhythm between rows and the submit button. */
+@media (min-width: 769px) {
+  .gh-card .pt-3 { padding-top: 6px !important; }
+  .gh-pickup-sub { margin-top: 4px !important; }
+  .gh-card .gh-seg { margin-bottom: 8px !important; }
+  .gh-card .space-y-2\.5 > * + * { margin-top: 5px !important; }
+  .gh-card .mt-2\.5 { margin-top: 6px !important; }
+  .gh-card .gh-btn.mt-4,
+  .gh-card .gh-btn-block { margin-top: 12px !important; height: 42px !important; }
+  .gh-card .gh-btn-lime { height: 42px !important; }
+  /* the two details rows sit closer together */
+  .gh-card .grid.grid-cols-2.gap-2\.5 { gap: 6px !important; }
+}
+
+/* ── desktop density, taking the height from where it actually is ────────
+   Measured: the panel rows were still carrying their mobile margins because
+   Tailwind's utilities won on specificity, and `.mt-2.5` / `.mb-4` need the
+   class-attribute selector rather than a plain class match. These are the
+   real numbers the probe read back. */
+@media (min-width: 769px) {
+  /* the panel's lead-in */
+  .gh-card div.pt-3 { padding-top: 4px !important; }
+
+  /* the passenger / parcel switch */
+  .gh-card [class*="mb-4"] { margin-bottom: 8px !important; }
+  .gh-card .gh-seg { height: 38px !important; }
+
+  /* the destination row and the seat / luggage pair */
+  .gh-card [class~="mt-2.5"] { margin-top: 6px !important; }
+  .gh-card [class~="mt-4"] { margin-top: 10px !important; }
+
+  /* the submit */
+  .gh-card button[type="submit"],
+  .gh-card .gh-btn { height: 42px !important; min-height: 42px !important; }
+
+  /* the details rows: the tallest single block in the panel */
+  .gh-card [class*="grid-cols-2"] { gap: 6px !important; }
+  .gh-card [class*="grid-cols-2"] > * { min-height: 0 !important; }
+}
+
+/* ── desktop: fit the card above the fold ────────────────────────────────
+   Measured at 1264x569 the hero was 501px tall (100dvh - 68px) but the card
+   needed 513px starting at top:32px, so it could never fit and the landing
+   always scrolled. Two changes: the card is lifted to top:12px, and its
+   internal rhythm is compressed. Nothing is hidden — every field is still
+   there, just set tighter. */
+@media (min-width: 769px) {
+  /* the card is absolutely positioned, so its offset is what lifts it */
+  .gh-hero-card { top: 12px !important; }
+
+  /* the card's own padding and radius */
+  .gh-glass { padding: 12px 14px 13px !important; border-radius: 14px !important; }
+
+  /* every row inside, compressed */
+  .gh-hero-card .pt-3 { padding-top: 3px !important; }
+  .gh-hero-card [class~="mt-2.5"] { margin-top: 5px !important; }
+  .gh-hero-card [class~="mt-4"] { margin-top: 8px !important; }
+  .gh-hero-card [class*="mb-4"] { margin-bottom: 7px !important; }
+  .gh-hero-card [class~="space-y-2.5"] > * + * { margin-top: 5px !important; }
+
+  /* fields and buttons */
+  .gh-hero-card .gh-field,
+  .gh-hero-card .gh-dest,
+  .gh-hero-card .g-pickup { height: 40px !important; }
+  .gh-hero-card .gh-sub-in { height: 38px !important; }
+  .gh-hero-card .gh-seg { height: 36px !important; }
+  .gh-hero-card .gh-btn,
+  .gh-hero-card button[type="submit"] { height: 40px !important; min-height: 40px !important; }
+
+  /* the labels */
+  .gh-hero-card .gh-lab,
+  .gh-hero-card .gh-sub-lab { margin-bottom: 2px !important; font-size: 10px !important; }
+}

@@ -16,6 +16,12 @@ const STAGGER = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.
 export default function App() {
   /* the mode lives here so the hero buttons and the card stay in step */
   const [mode, setMode] = React.useState<Mode>(() => {
+    /* ?mode= wins, so a link from the dashboard opens the card in the mode the
+       rider tapped. Then the saved draft, then passenger. */
+    try {
+      const q = new URLSearchParams(window.location.search).get("mode");
+      if (q === "parcel" || q === "passenger") return q;
+    } catch { /* no URL access: fall through */ }
     try {
       const raw = localStorage.getItem("gogo_hermes_draft_v1");
       return raw ? (JSON.parse(raw).mode as Mode) || "passenger" : "passenger";
@@ -85,7 +91,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
           grows downward over the copy below. */}
       <div className="pointer-events-none absolute inset-0 z-[1]">
         <div className="container mx-auto h-full">
-          <div className="pointer-events-auto absolute right-5 top-8 hidden w-[27rem] md:block lg:right-[max(1.25rem,calc((100%-1280px)/2+1.25rem))]">
+          <div className="gh-hero-card pointer-events-auto absolute right-5 top-3 hidden w-[27rem] md:block lg:right-[max(1.25rem,calc((100%-1280px)/2+1.25rem))]">
             <BookingCard mode={mode} onMode={onMode} />
           </div>
         </div>

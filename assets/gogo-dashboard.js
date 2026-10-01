@@ -15,6 +15,17 @@
    ========================================================================= */
 
 function pageDashboard() {
+  /* ── signed-in only ──────────────────────────────────────────────────────
+     The dashboard is the rider's own trips, parcels and points. Without an
+     account there is nothing to show and nothing to keep, so it asks for one
+     rather than rendering an empty shell that looks broken. */
+  if (window.GOGOAuth && GOGOAuth.require) {
+    if (!GOGOAuth.isIn()) {
+      GOGOAuth.require("Sign in to see your trips", "dashboard");
+      return;
+    }
+  }
+
   const R = n => "R" + Number(n).toFixed(2);
 
   /* whatever the rider has booked, if anything. Everything degrades to zero
@@ -88,8 +99,8 @@ function pageDashboard() {
         <p class="g-db-hero-p">Long-distance seats and parcels, door to door.</p>
       </div>
       <div class="g-db-hero-a">
-        <a class="g-db-btn g-db-btn-lime" href="app?mode=passenger"><span aria-hidden>🔍</span> Find a ride</a>
-        <a class="g-db-btn g-db-btn-ghost" href="app?mode=parcel"><span aria-hidden>📦</span> Send a parcel</a>
+        <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=passenger"><span aria-hidden>🔍</span> Find a ride</a>
+        <a class="g-db-btn g-db-btn-ghost" href="/gogo/?mode=parcel"><span aria-hidden>📦</span> Send a parcel</a>
       </div>
     </section>
 
@@ -152,7 +163,7 @@ function pageDashboard() {
           <span aria-hidden>🚐</span>
           <b>No hikes yet</b>
           <p>Once you book a seat it shows here, with the driver and the live arrival time.</p>
-          <a class="g-db-btn g-db-btn-lime" href="app?mode=passenger">Find a ride</a>
+          <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=passenger">Find a ride</a>
         </div>`}
     </div>
 
@@ -175,7 +186,7 @@ function pageDashboard() {
           <span aria-hidden>📦</span>
           <b>No parcels yet</b>
           <p>Send something in the boot of a hike already going that way.</p>
-          <a class="g-db-btn g-db-btn-lime" href="app?mode=parcel">Send a parcel</a>
+          <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=parcel">Send a parcel</a>
         </div>`}
     </div>
 

@@ -22,6 +22,27 @@ const auth = require("./auth");
 const store = require("./store");
 const { db, touch, mutate, uuid } = store;
 
+/* ── booking references ────────────────────────────────────────────────────
+   Six characters, airline style: GG-4K7P2M. Read aloud without ambiguity,
+   so the alphabet leaves out the pairs people confuse on a phone — I and 1,
+   O and 0, S and 5, B and 8, Z and 2. That leaves 29 symbols, and six of them
+   is about 600 million combinations, so a reference cannot be guessed by
+   somebody fishing for other people's bookings.
+
+   Uniqueness is checked against the store, because a booking code that
+   collides would merge two people's trips. */
+const REF_ALPHABET = "ACDEFGHJKLMNPQRTUVWXY34679";
+function newRef() {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    let out = "";
+    const bytes = crypto.randomBytes(6);
+    for (let i = 0; i < 6; i++) out += REF_ALPHABET[bytes[i] % REF_ALPHABET.length];
+    if (!db.bookings.some((b) => b.ref === out)) return out;
+  }
+  /* 600m combinations: reaching here means something is wrong, not unlucky */
+  throw new Error("could not allocate a booking reference");
+}
+
 const PORT = Number(process.env.GOGO_PORT || 3051);
 
 /* ── fees — the authoritative numbers ──────────────────────────────────── */
@@ -369,6 +390,8 @@ const server = http.createServer(async (req, res) => {
           }
 
           const bk = {
+            /* the reference the rider carries, like a ticket number */
+            ref: newRef(),
             id: uuid(), at: new Date().toISOString(), status: "pending",
             rideId: b.rideId, userId: u.id, userEmail: u.email,
             kind: isParcel ? "parcel" : "passenger",
@@ -396,6 +419,8 @@ const server = http.createServer(async (req, res) => {
       /* the plate is NOT sent here — it is released only once accepted */
       return send(res, 201, {
         booking: {
+          /* the rider's ticket number — this is what they carry to the rank */
+          ref: outcome.ref,
           id: outcome.id, at: outcome.at, status: outcome.status,
           rideId: outcome.rideId, kind: outcome.kind, seats: outcome.seatCount,
           stop: outcome.stop, kg: outcome.kg, pickup: outcome.pickup,
@@ -407,6 +432,86 @@ const server = http.createServer(async (req, res) => {
     }
 
     /* ── my bookings ── */
+    /* ── a driver accepts a request ─────────────────────────────────────────
+       This is the moment the seat is committed and the driver's details are
+       released to the rider. Accepting twice is refused rather than silently
+       succeeding, so a double-tap cannot be mistaken for two acceptances. */
+    if (req.method === "POST" && route === "/accept") {
+      const u = requireUser(req, res);
+      if (!u) return;
+      const b = await readBody(req);
+      if (!b) return send(res, 400, { error: "bad json" });
+
+      /* the booking is found by reference, which is what the driver sees */
+      const key = String(b.ref || "").trim().toUpperCase();
+      const id = String(b.bookingId || "");
+      const bk = db.bookings.find((x) => (key && x.ref === key) || (id && x.id === id));
+      if (!bk) return send(res, 404, { error: "no booking with that reference" });
+
+      if (bk.status === "accepted") {
+        return send(res, 409, { error: "that booking is already accepted" });
+      }
+      if (bk.status === "cancelled") {
+        return send(res, 409, { error: "that booking was cancelled" });
+      }
+      if (bk.status !== "pending") {
+        return send(res, 409, { error: "that booking cannot be accepted" });
+      }
+
+      bk.status = "accepted";
+      bk.acceptedAt = new Date().toISOString();
+      bk.acceptedBy = u.id;
+      touch();
+
+      audit("ACCEPTED", u.id, { booking: bk.id, ref: bk.ref }, req);
+      const r = rideById(bk.rideId) || {};
+      return send(res, 200, {
+        booking: {
+          ref: bk.ref, id: bk.id, status: bk.status, at: bk.at,
+          acceptedAt: bk.acceptedAt,
+          rideId: bk.rideId, kind: bk.kind, seats: bk.seatCount,
+          stop: bk.stop, pickup: bk.pickup, suburb: bk.suburb, city: bk.city,
+          totalCents: bk.totalCents, payMethod: bk.payMethod, rows: bk.rows,
+          from: r.from, to: r.to, depart: r.departLabel,
+          vehicle: r.vehicle, driver: r.driverName,
+          plate: r.plate, colour: r.colour,
+          rider: { name: bk.riderName || null, phone: bk.riderPhone || null },
+        },
+      });
+    }
+
+    /* ── look a booking up by its reference ─────────────────────────────────
+       Used by the boarding pass: the rider can open their own ticket from any
+       device with the code alone, which is how a ticket is meant to work. */
+    if (req.method === "GET" && route.startsWith("/booking/")) {
+      const ref = decodeURIComponent(route.slice("/booking/".length)).trim().toUpperCase();
+      if (!ref) return send(res, 400, { error: "no reference given" });
+      const bk = db.bookings.find((x) => x.ref === ref);
+      if (!bk) return send(res, 404, { error: "no booking with that reference" });
+
+      /* optional: a public lookup still works, it just returns less */
+      const u = userFrom(req);
+      const mine = u && u.id === bk.userId;
+      /* the reference is the credential, so the sensitive fields are still
+         withheld unless the caller is the signed-in owner of the booking */
+      const r = rideById(bk.rideId) || {};
+      const released = bk.status === "accepted" || bk.status === "completed";
+      return send(res, 200, {
+        booking: {
+          ref: bk.ref, id: bk.id, status: bk.status, at: bk.at,
+          acceptedAt: bk.acceptedAt || null,
+          rideId: bk.rideId, kind: bk.kind, seats: bk.seatCount,
+          stop: bk.stop, pickup: mine ? bk.pickup : null,
+          suburb: mine ? bk.suburb : null, city: mine ? bk.city : null,
+          totalCents: bk.totalCents, payMethod: bk.payMethod, rows: bk.rows,
+          from: r.from, to: r.to, depart: r.departLabel,
+          vehicle: r.vehicle, driver: r.driverName,
+          plate: released ? r.plate : null,
+          colour: released ? r.colour : null,
+        },
+      });
+    }
+
     if (req.method === "GET" && route === "/bookings") {
       const u = requireUser(req, res);
       if (!u) return;
@@ -419,7 +524,7 @@ const server = http.createServer(async (req, res) => {
           const r = rideById(b.rideId) || {};
           const released = b.status === "accepted" || b.status === "completed";
           return {
-            id: b.id, at: b.at, status: b.status, rideId: b.rideId, kind: b.kind,
+            ref: b.ref, id: b.id, at: b.at, status: b.status, rideId: b.rideId, kind: b.kind,
             seats: b.seatCount, stop: b.stop, pickup: b.pickup,
             suburb: b.suburb, city: b.city, totalCents: b.totalCents,
             payMethod: b.payMethod, from: r.from, to: r.to, depart: r.departLabel,

@@ -337,8 +337,12 @@ const GOGOChat = (() => {
     renderVault();
     renderAudit();
     $('#wipeAll').onclick = () => {
-      selfies.slice().forEach(s => GOGOSafety.purgeNow(s.id));
-      toast("<b>Deleted</b> · your safety photos are gone");
+      const res = selfies.map(s => GOGOSafety.purgeNow(s.id));
+      const gone = res.filter(r => r.ok).length;
+      const held = res.length - gone;
+      toast(held
+        ? `<b>${gone} deleted</b> · ${held} still held until the ride is finished`
+        : "<b>Deleted</b> · your safety photos are gone");
       setTimeout(() => location.reload(), 700);
     };
   }
@@ -359,14 +363,21 @@ const GOGOChat = (() => {
           <div class="g-list-s">${r ? esc(r.from + " → " + r.to) : s.rideRef} · taken ${st.fmt(s.takenAt)}</div>
           <div class="g-mt-sm">${state}</div>
         </div>
-        <button class="g-btn g-btn-outline g-btn-sm" data-del="${s.id}" type="button">Delete</button>
+        ${GOGOSafety.canDelete(s.id).ok
+          ? `<button class="g-btn g-btn-outline g-btn-sm" data-del="${s.id}" type="button">Delete</button>`
+          : `<div class="g-vault-locked"><span aria-hidden>🔒</span><span>${esc(GOGOSafety.canDelete(s.id).reason)}</span></div>`}
       </div>`;
     }).join("") : `
       <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🛡️</span>
         <h3 class="g-h3">No safety photos stored</h3>
         <p class="g-s g-mt-sm">Book a ride and you will be asked for one selfie. It stays in this vault only until the trip is done and confirmed safe.</p>
         <a class="g-btn g-btn-ink g-mt" href="rides.html?from=East+London&to=Mthatha">Find a ride</a></div>`;
-    $$('[data-del]').forEach(b => b.onclick = () => { GOGOSafety.purgeNow(b.dataset.del); toast("Photo deleted"); setTimeout(() => location.reload(), 600); });
+    $$('[data-del]').forEach(b => b.onclick = () => {
+      const res = GOGOSafety.purgeNow(b.dataset.del);
+      /* say what actually happened: a refusal is not a success */
+      toast(res.ok ? "<b>Deleted</b> · your photo is gone" : "<b>" + esc(res.reason) + "</b>");
+      if (res.ok) setTimeout(() => location.reload(), 600);
+    });
   }
 
   function renderAudit() {
@@ -452,20 +463,62 @@ const GOGOChat = (() => {
           };
         }
 
-        /* I am safe */
+        /* ── I am safe ────────────────────────────────────────────────────
+           Only offered once the trip has actually run its course. Asking a
+           rider who has not been accepted, or whose ride has not started, to
+           confirm they are safe is meaningless — there is nothing to be safe
+           from yet, and a rider could close the safety window on a trip that
+           had not begun.
+
+           The gate follows the life of the ride:
+             pending   the driver has not accepted yet   -> say so, no button
+             accepted  accepted but not departed         -> say so, no button
+             started   the ride is under way             -> no button yet
+             completed the ride has ended                -> the button
+           Anything else with no state is treated as not started. */
+        const st = String(live.r.status || "open");
+        const already = live.r.safe && live.r.safe[live.q.phone];
+
         const safeBox = document.createElement("div");
         safeBox.className = "g-safe g-mt";
-        const already = live.r.safe && live.r.safe[live.q.phone];
-        safeBox.innerHTML = already
-          ? `<div class="g-safe-done"><span aria-hidden>✅</span> You confirmed you are safe${live.r.purgeAt ? ` · safety photos delete in ${GOGOSafety.countdown(live.r.purgeAt)}` : ""}</div>`
-          : `<div class="g-row">
+
+        if (already) {
+          safeBox.innerHTML = `<div class="g-safe-done"><span aria-hidden>✅</span> You confirmed you are safe${live.r.purgeAt ? ` · safety photos delete in ${GOGOSafety.countdown(live.r.purgeAt)}` : ""}</div>`;
+        } else if (live.q.status !== "accepted") {
+          /* not accepted: the request is still with the driver */
+          safeBox.innerHTML = `<div class="g-row">
+               <span class="g-ic" aria-hidden>⏳</span>
+               <div style="flex:1"><div class="g-t">Waiting for the driver</div>
+                 <div class="g-list-s">Your request is still with ${esc(live.r.driver.split(" ")[0])}. "I am safe" appears once your trip is done.</div></div>
+             </div>`;
+        } else if (st === "open" || st === "accepted") {
+          /* accepted, but the ride has not departed */
+          safeBox.innerHTML = `<div class="g-row">
+               <span class="g-ic" aria-hidden>🚐</span>
+               <div style="flex:1"><div class="g-t">Seat confirmed</div>
+                 <div class="g-list-s">Departs ${esc(live.r.departLabel || "")}. Once the trip ends you can tap "I am safe".</div></div>
+             </div>`;
+        } else if (st === "started") {
+          safeBox.innerHTML = `<div class="g-row">
+               <span class="g-ic g-ic-lime" aria-hidden>🛣️</span>
+               <div style="flex:1"><div class="g-t">On the road</div>
+                 <div class="g-list-s">"I am safe" appears when the trip is complete.</div></div>
+             </div>`;
+        } else if (st === "completed" || st === "ended") {
+          /* the ride is done — this is the only state that offers the button */
+          safeBox.innerHTML = `<div class="g-row">
                <span class="g-ic g-ic-lime" aria-hidden>🛡️</span>
-               <div style="flex:1"><div class="g-t">${live.r.status === "completed" ? "Trip finished — are you safe?" : "At the end of your trip"}</div>
+               <div style="flex:1"><div class="g-t">Trip finished — are you safe?</div>
                  <div class="g-list-s">Tapping this closes the safety window and starts the ${GOGOSafety.RETENTION_H}-hour deletion timer for the ride selfies.</div></div>
              </div>
              <button class="g-safe-btn g-btn-block g-mt" id="imSafe" type="button">✅ I am safe</button>`;
+        }
+
         const host = document.querySelector("#main .g-8");
-        if (host) host.appendChild(safeBox);
+        if (host && safeBox.innerHTML.trim()) host.appendChild(safeBox);
+
+        /* the handler is only ever attached when the button exists, so it can
+           never fire on a ride that has not finished */
         if ($('#imSafe')) $('#imSafe').onclick = () => {
           const allDone = GOGOSafety.markSafe(live.r, live.q);
           toast(allDone ? "<b>Thanks</b> · all passengers safe · photos delete in 24h" : "<b>Thanks</b> · marked safe");

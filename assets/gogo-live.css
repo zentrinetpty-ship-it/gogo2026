@@ -1336,3 +1336,370 @@ body.g2 .g-foot { display: block !important; }
   .g-install-t { font-size: 11px; }
   .g-install-go { padding: 0 11px; font-size: 11px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MY TRIPS — rebuilt
+
+   The screen used to carry: a welcome banner repeating the rider's name, a
+   five-icon stepper with a dot per stage, three "stat" cards (one of which
+   was a bar chart with a number that was invented), a scrollbar sparkline,
+   a notification feed, and a request list that repeated the card above it.
+   Almost none of it was information the rider acts on.
+
+   What is left answers four questions: where am I going, how far along, what
+   do I owe, who is driving. Everything else is one tap away.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── page head: title left, one action right ── */
+.g-mt-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+
+/* ── the active trip ── */
+.g-trip-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.g-trip-route {
+  font-family: var(--font-round, inherit);
+  font-size: 21px; font-weight: 800; letter-spacing: -.015em; color: var(--ink);
+}
+.g-trip-route em { font-style: normal; color: rgba(11, 11, 11, .32); margin: 0 3px; }
+.g-trip-state {
+  flex: 0 0 auto;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.g-trip-state.is-confirmed { color: #4A5D00; }
+
+/* ── progress rail: a line with five points, the passed ones filled ── */
+.g-rail {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 18px 0 4px; position: relative;
+}
+.g-rail::before {
+  content: ""; position: absolute; left: 10%; right: 10%; top: 13px; height: 2px;
+  background: rgba(11, 11, 11, .1); border-radius: 2px;
+}
+.g-rail-step { position: relative; text-align: center; }
+.g-rail-dot {
+  display: grid; place-items: center;
+  width: 28px; height: 28px; margin: 0 auto 7px; border-radius: 50%;
+  background: var(--card); border: 2px solid rgba(11, 11, 11, .14);
+  font-size: 12px; position: relative; z-index: 1;
+  transition: border-color .25s ease, background-color .25s ease;
+}
+.g-rail-step.is-done .g-rail-dot { background: var(--lime-wash); border-color: rgba(141, 182, 0, .55); }
+.g-rail-step.is-now .g-rail-dot {
+  background: var(--ink); border-color: var(--ink);
+  box-shadow: 0 0 0 4px rgba(141, 182, 0, .22);
+}
+.g-rail-lab {
+  display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+  color: rgba(11, 11, 11, .38);
+}
+.g-rail-step.is-done .g-rail-lab,
+.g-rail-step.is-now .g-rail-lab { color: var(--ink); }
+
+/* ── the facts: a definition list, two by two ── */
+.g-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px; margin: 16px 0 0;
+}
+.g-facts > div { min-width: 0; }
+.g-facts dt {
+  font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 2px;
+}
+.g-facts dd {
+  margin: 0; font-size: 14px; font-weight: 700; color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.g-facts-stack { grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 0; }
+.g-facts-stack dd { font-size: 26px; letter-spacing: -.02em; }
+
+/* ── driver strip: one row, message beside ── */
+.g-driver-strip {
+  display: flex; align-items: center; gap: 11px;
+  padding: 12px 0; margin-top: 4px;
+  border-top: 1px solid rgba(11, 11, 11, .08);
+  border-bottom: 1px solid rgba(11, 11, 11, .08);
+}
+.g-driver-txt { flex: 1; min-width: 0; }
+
+/* ── actions ── */
+.g-trip-acts { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ── phones: the rail labels get tight, so shrink them ── */
+@media (max-width: 620px) {
+  .g-trip-route { font-size: 18px; }
+  .g-rail-lab { font-size: 9px; letter-spacing: 0; }
+  .g-rail-dot { width: 24px; height: 24px; font-size: 11px; }
+  .g-rail::before { top: 11px; }
+  .g-facts { gap: 10px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RIDE CARD — rebuilt as a boarding pass
+
+   Layout follows the flight-card pattern: the two ends carry a time, a big
+   town code and the town name, all centre-aligned inside their column; the
+   journey runs between them; a dashed rule carries the date; and the facts
+   sit underneath in three equal centred columns.
+
+   Everything centres on a shared vertical axis, so the card reads as one
+   object rather than content pushed out to the edges. The stops row and the
+   button span the full width beneath.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.g-rc {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 0; padding: 18px 18px 16px;
+  text-align: center;                 /* every child centres unless told otherwise */
+}
+
+/* ── the journey: end · middle · end ── */
+.g-rc-journey {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.g-rc-end { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.g-rc-time {
+  font-size: 12px; font-weight: 700; letter-spacing: .02em;
+  color: var(--ink-mute); margin-bottom: 2px;
+}
+.g-rc-code {
+  font-family: var(--font-round, inherit);
+  font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -.03em;
+  color: var(--ink);
+}
+.g-rc-town {
+  margin-top: 3px; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--ink-mute);
+  overflow-wrap: anywhere;
+}
+
+/* the middle: vehicle above, the line with the van, door-to-door time below */
+.g-rc-mid {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 5px; padding-top: 15px; min-width: 0;
+}
+.g-rc-veh {
+  font-size: 11px; font-weight: 700; color: var(--ink-mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.g-rc-line { display: flex; align-items: center; gap: 5px; width: 100%; }
+.g-rc-line i { flex: 1 1 auto; height: 1px; background: rgba(11, 11, 11, .16); min-width: 6px; }
+.g-rc-van { flex: 0 0 auto; display: grid; place-items: center; color: var(--ink); }
+.g-rc-van svg { width: 17px; height: 17px; display: block; }
+.g-rc-dur { font-size: 11px; font-weight: 700; color: var(--ink-mute); }
+
+/* ── the dashed rule, with the date sitting on it ── */
+.g-rc-dash {
+  position: relative; margin: 18px 0 0; height: 1px;
+  border-top: 1px dashed rgba(11, 11, 11, .18);
+  display: flex; justify-content: center;
+}
+.g-rc-dash span {
+  position: relative; top: -8px; padding: 0 10px;
+  background: var(--card, #fff);
+  font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink-mute); white-space: nowrap;
+}
+
+/* ── the facts: three equal centred columns ── */
+.g-rc-facts {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px; margin-top: 16px;
+}
+.g-rc-fact { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.g-rc-fact-l {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.g-rc-fact-v {
+  font-size: 14px; font-weight: 800; color: var(--ink);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.g-rc-fact-s {
+  font-size: 10px; font-weight: 600; color: var(--ink-mute);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* the seat bar sits under its own column, centred and short */
+.g-rc-fact .g-rc-bar { width: 38px; height: 3px; }
+
+/* ── stops: full width, centred, quiet ── */
+.g-rc-stops {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  margin-top: 14px;
+}
+
+/* ── the action, full width at the bottom ── */
+.g-rc-go { margin-top: 14px; width: 100%; }
+
+/* a full ride dims rather than shouts */
+.g-rc-full .g-rc-code { color: var(--ink-mute); }
+
+/* ── narrow: the codes shrink, the columns keep their shape ── */
+@media (max-width: 420px) {
+  .g-rc { padding: 16px 14px 14px; }
+  .g-rc-code { font-size: 27px; }
+  .g-rc-journey { gap: 6px; }
+  .g-rc-fact-v { font-size: 13px; }
+}
+
+/* ── the list ──────────────────────────────────────────────────────────────
+   Cards are capped at a comfortable reading width and the TRACKS are centred,
+   not stretched. `1fr` tracks would each take an equal share of a 1180px grid
+   and push a single card hard left; fixed tracks plus place-content:center
+   keeps whatever number of results there are sitting in the middle of the
+   page, which is what the card is designed around. */
+.g-hikes {
+  grid-template-columns: minmax(0, 27rem);
+  gap: 16px;
+  /* the grid box itself must shrink to its tracks before anything can be
+     centred inside it — otherwise the box fills the column, the tracks sit
+     left within it, and justify-content has nothing to work with. */
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+@media (min-width: 720px) {
+  .g-hikes { grid-template-columns: repeat(2, minmax(0, 26rem)); }
+}
+@media (min-width: 1120px) {
+  .g-hikes { grid-template-columns: repeat(3, minmax(0, 24rem)); }
+}
+.g-hikes > .g-rc { width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOARDING PASS
+
+   The rider's ticket. Shape follows a real airline pass: the two ends carry
+   the town codes with times above them, the journey runs through the middle,
+   a perforated tear-line separates the stub, and the reference is printed
+   large enough to read out loud.
+
+   The perforation is drawn with two half-circles notched out of the card
+   edge, which is what makes it read as a ticket rather than a card.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.g-bp {
+  max-width: 30rem; margin-inline: auto;
+  background: var(--card, #fff);
+  border: 1px solid rgba(11, 11, 11, .13);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px -28px rgba(10, 27, 61, .5);
+  text-align: center;
+}
+
+/* ── header: the operator, and the state of the ticket ── */
+.g-bp-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 13px 18px;
+  background: var(--ink); color: #fff;
+}
+.g-bp-brand {
+  font-family: var(--font-wide, inherit);
+  font-size: 15px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+}
+.g-bp-brand i { font-style: normal; color: #8DB600; }
+.g-bp-state {
+  font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 4px;
+  background: rgba(255, 255, 255, .14); color: #fff;
+}
+.g-bp-state.is-ok { background: #8DB600; color: #0B0B0B; }
+
+/* ── the journey ── */
+.g-bp-journey {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 8px; padding: 20px 18px 16px; align-items: start;
+}
+.g-bp-end { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.g-bp-time { font-size: 11.5px; font-weight: 700; color: var(--ink-mute); }
+.g-bp-code {
+  font-family: var(--font-round, inherit);
+  font-size: 40px; line-height: 1.05; font-weight: 800; letter-spacing: -.035em;
+  color: var(--ink);
+}
+.g-bp-town {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-mute); overflow-wrap: anywhere;
+}
+.g-bp-mid {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding-top: 17px; min-width: 0;
+}
+.g-bp-veh { font-size: 11px; font-weight: 700; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.g-bp-arrow { display: flex; align-items: center; gap: 5px; width: 100%; }
+.g-bp-arrow i { flex: 1 1 auto; height: 1px; background: rgba(11, 11, 11, .18); min-width: 5px; }
+.g-bp-arrow span { flex: 0 0 auto; }
+.g-bp-arrow svg { width: 17px; height: 17px; display: block; }
+.g-bp-dur { font-size: 11px; font-weight: 700; color: var(--ink-mute); }
+
+/* ── the facts ── */
+.g-bp-facts {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px; padding: 0 18px 16px;
+}
+.g-bp-fact { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.g-bp-fact-l {
+  font-size: 9px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.g-bp-fact-v {
+  font-size: 14px; font-weight: 800; color: var(--ink);
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.g-bp-fact-s { font-size: 10px; font-weight: 600; color: var(--ink-mute); }
+
+/* ── the perforation, with a notch out of each edge ── */
+.g-bp-tear {
+  position: relative; height: 22px; margin: 0 0 4px;
+}
+.g-bp-tear::before {
+  content: ""; position: absolute; left: 16px; right: 16px; top: 50%;
+  border-top: 2px dashed rgba(11, 11, 11, .2);
+}
+.g-bp-tear::after {
+  content: ""; position: absolute; left: 16px; right: 16px; top: 50%;
+  border-top: 2px dashed rgba(11, 11, 11, .001);
+}
+.g-bp-notch {
+  position: absolute; top: 50%; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--paper, #F4F6FB); transform: translateY(-50%);
+  border: 1px solid rgba(11, 11, 11, .13);
+}
+.g-bp-notch.l { left: -12px; }
+.g-bp-notch.r { right: -12px; }
+
+/* ── the stub: the reference, printed to be read aloud ── */
+.g-bp-stub { padding: 6px 18px 20px; }
+.g-bp-ref-l {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.g-bp-ref {
+  font-family: var(--font-wide, monospace);
+  font-size: 34px; font-weight: 800; letter-spacing: .16em;
+  color: var(--ink); margin: 3px 0 8px; line-height: 1.1;
+}
+/* the bars: a scannable representation of the same code */
+.g-bp-bars { display: flex; justify-content: center; align-items: flex-end; gap: 2px; height: 34px; margin: 0 auto 10px; }
+.g-bp-bars i { display: block; width: 3px; background: var(--ink); border-radius: 1px; }
+
+.g-bp-note { font-size: 11.5px; color: var(--ink-mute); line-height: 1.5; margin: 0 0 14px; }
+
+.g-bp-acts { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 420px) {
+  .g-bp-code { font-size: 32px; }
+  .g-bp-ref { font-size: 27px; letter-spacing: .12em; }
+}
