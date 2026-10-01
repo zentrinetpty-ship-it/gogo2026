@@ -38,8 +38,8 @@ body.g2 .g2-map .g2-map-stub {
 /* the map credit stays on the map, above the sheet */
 body.g2 .g2-credit {
   position: absolute; right: 10px; left: auto; top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 22;
-  font-size: 9.5px; letter-spacing: .01em; color: rgba(38, 38, 43, .5);
-  background: rgba(255, 255, 255, .72); padding: 2px 6px; border-radius: 4px;
+  font-size: var(--t-xs); letter-spacing: .01em; color: rgba(38, 38, 43, .5);
+  background: rgba(255, 255, 255, .72); padding: 2px 6px; border-radius: 2px;
   pointer-events: none;
 }
 body.g2 .g-hero-scrim { display: none; }        /* the map is the surface, not a backdrop */
@@ -69,7 +69,7 @@ body.g2 .g-nav {
   body.g2 .g-nav .g-lamp { fill: #8DB600 !important; }
   body.g2 .g-nav .g-nav-links { display: none !important; }
   body.g2 .g-nav .g-nav-right > a:not(#acct) { display: none !important; }
-  body.g2 .g-nav .g-brand { font-size: 24px; }
+  body.g2 .g-nav .g-brand { font-size: var(--t-xl); }
 }
 
 /* ── the dock ──────────────────────────────────────────────────────────────
@@ -113,13 +113,13 @@ body.g2 .g2-hero .g-impact {
   font-size: clamp(2.55rem, 12.6vw, 3.5rem); color: var(--ink);
 }
 body.g2 .g2-hero .g-eyebrow {
-  display: inline-block; margin: 10px 0 0; font-size: 11px; font-weight: 800;
+  display: inline-block; margin: 10px 0 0; font-size: var(--t-xs); font-weight: 800;
   letter-spacing: .1em; text-transform: uppercase; color: #5F7A00;
   text-shadow: 0 1px 8px rgba(255, 255, 255, .95), 0 0 4px rgba(255, 255, 255, .9);
 }
 body.g2 .g2-hero .g-lead {
   margin: 16px 0 0; max-width: 33ch;
-  font-size: 14px; line-height: 1.5; color: rgba(38, 38, 43, .82);
+  font-size: var(--t-sm); line-height: 1.5; color: rgba(38, 38, 43, .82);
   text-shadow: 0 1px 10px rgba(255, 255, 255, .95), 0 0 4px rgba(255, 255, 255, .9),
                0 0 18px rgba(255, 255, 255, .8);
 }
@@ -131,7 +131,7 @@ body.g2 .g2-credit { display: none !important; }
 @media (min-width: 901px) {
   body.g2 .g2-hero { left: 22px; right: auto; max-width: 560px; top: calc(var(--g2-nav, 66px) + 30px); }
   body.g2 .g2-hero .g-impact { font-size: clamp(3.3rem, 4vw, 4.2rem); }
-  body.g2 .g2-hero .g-lead { font-size: 15.5px; max-width: 42ch; }
+  body.g2 .g2-hero .g-lead { font-size: var(--t-md); max-width: 42ch; }
 }
 
 /* ── the sheet: fixed, above the dock, moved by transform only ───────────── */
@@ -143,7 +143,7 @@ body.g2 .g2-sheet {
   z-index: 30;
   display: flex; flex-direction: column;
   background: #fff;
-  border-radius: 18px 18px 0 0;
+  border-radius: 2px 2px 0 0;
   box-shadow: 0 -16px 44px rgba(38, 38, 43, .20), 0 -1px 0 rgba(38, 38, 43, .06);
   /* the bottom edge sits on the dock and must not move, so the sheet grows by
      height, never by transform: a transform would drag the bottom edge with it */
@@ -160,7 +160,7 @@ body.g2 .g2-grab {
 }
 body.g2 .g2-grab:active { cursor: grabbing; }
 body.g2 .g2-grab i {
-  width: 44px; height: 4px; border-radius: 99px;
+  width: 44px; height: 4px; border-radius: 2px;
   background: rgba(38, 38, 43, .2);
   transition: background .2s ease;
 }
@@ -173,7 +173,7 @@ body.g2 .g2-peek {
   margin: 0 16px 10px;
   padding: 11px 13px;
   border: 1px solid rgba(38, 38, 43, .12);
-  border-radius: 12px;
+  border-radius: 2px;
   background: #fff;
   box-shadow: 0 1px 2px rgba(38, 38, 43, .05);
   cursor: pointer;
@@ -190,23 +190,23 @@ body.g2 .g2-sheet .g2-peek { transition: opacity .2s ease, height .3s cubic-bezi
 body.g2 .g2-peek-ic {
   width: 30px; height: 30px; flex: 0 0 auto;
   display: grid; place-items: center;
-  border-radius: 9px; background: rgba(163, 230, 53, .22);
-  font-size: 15px; line-height: 1;
+  border-radius: 2px; background: rgba(163, 230, 53, .22);
+  font-size: var(--t-md); line-height: 1;
 }
 body.g2 .g2-peek-txt { min-width: 0; flex: 1 1 auto; }
 body.g2 .g2-peek-k {
-  display: block; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  display: block; font-size: var(--t-xs); font-weight: 700; letter-spacing: .1em;
   text-transform: uppercase; color: #5F7A00;
 }
 body.g2 .g2-peek-v {
-  display: block; font-size: 15px; font-weight: 700; color: #26262B;
+  display: block; font-size: var(--t-md); font-weight: 700; color: #26262B;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 body.g2 .g2-peek-v.empty { color: rgba(38, 38, 43, .42); font-weight: 600; }
 body.g2 .g2-peek-go {
   flex: 0 0 auto; width: 40px; height: 40px;
   display: grid; place-items: center;
-  border: 0; border-radius: 11px;
+  border: 0; border-radius: 2px;
   background: #A3E635; color: #26262B;
   cursor: pointer;
 }
@@ -261,7 +261,7 @@ body.g2 .g2-body .g-book { padding-left: 0 !important; padding-right: 0 !importa
     left: 22px; right: auto;
     width: 430px;
     bottom: calc(var(--g2-dock) + 16px);
-    border-radius: 18px;
+    border-radius: 2px;
     max-height: none;
   }
   body.g2 .g2-map #heroMap { border-radius: 0; }

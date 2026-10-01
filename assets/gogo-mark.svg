@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- GOGO app icon: ink ground, lime swap arrows.
+       Two parallel horizontal arrows pointing in opposite directions.
+       Squared corners (18 of 512) to match the interface, not an app-store squircle. -->
+  <rect x="0" y="0" width="512" height="512" rx="18" fill="#0B0B0B"/>
+  <g transform="translate(96 176) scale(9.4)" fill="none"
+     stroke="#8DB600" stroke-width="5.8" stroke-linecap="butt"
+     stroke-linejoin="miter" stroke-miterlimit="6">
+    <path d="M3 7h26"/>
+    <path d="M23 3l6 4-6 4"/>
+    <path d="M31 17H5"/>
+    <path d="M11 13l-6 4 6 4"/>
+  </g>
+</svg>

@@ -14,7 +14,7 @@ const van = () => VAN_SVG;
 
 /* the front half of the car, cut off at the rear so it reads as driving out from
    behind the wordmark. Its front wheel is the same tyre. Faces right. */
-const CAR_SVG = '<svg class="g-car" viewBox="0 0 44 26" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M0 6h13l9 8 11 1c3.4.3 6 1.6 7 4.2l.4 1c.3.9-.3 1.8-1.2 1.8H0V6Zm4.6 3.6h7.2l4.6 4.6H4.6V9.6Z"/><circle class="g-hub" cx="27" cy="20.6" r="4.2" fill="none" stroke="currentColor" stroke-width="2.2"/><circle class="g-hub" cx="27" cy="20.6" r="1.3"/><circle class="g-lamp" cx="36.6" cy="17.4" r="1.5"/></svg>';
+const CAR_SVG = '<svg class="g-car" viewBox="0 0 44 26" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M0 6h13l9 8 11 1c3.4.3 6 1.6 7 4.2l.4 1c.3.9-.3 1.8-1.2 1.8H0V6Zm4.6 3.6h7.2l4.6 4.6H4.6V9.6Z"/><circle class="g-hub" cx="27" cy="20.6" r="4.2" fill="none" stroke="currentColor" stroke-width="8.91"/><circle class="g-hub" cx="27" cy="20.6" r="1.3"/><circle class="g-lamp" cx="36.6" cy="17.4" r="1.5"/></svg>';
   '</svg>';
 const initials = n => String(n || "?").trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
@@ -131,12 +131,31 @@ function feeTable(L, note) {
     </div>`;
 }
 
+/* ── the wordmark ─────────────────────────────────────────────────────────
+   GO + the swap mark + GO. Two lines that fold once each — the top runs right
+   and folds down, the bottom runs left and folds up — so the pair reads as one
+   return trip rather than two arrows.
+
+   Everything is in em so the mark holds its proportion at any font-size.
+   stroke 5.8 of a 24-unit viewBox = 0.193em, measured against Anton's own
+   0.210em stem. Butt caps and miter joins: rounded ends would contradict the
+   squared 2px language the rest of the interface uses.
+
+   Built here rather than written into 18 pages, so the mark has ONE definition
+   and the pages cannot drift apart. */
+var BRAND_MARK = '<svg viewBox="0 0 34 24" width=".72em" height=".51em" aria-hidden="true" style="display:block;flex:0 0 auto"><g fill="none" stroke-width="5.8" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="6"><path d="M3 7h26" stroke="currentColor"/><path d="M23 3l6 4-6 4" stroke="currentColor"/><path d="M31 17H5" stroke="currentColor"/><path d="M11 13l-6 4 6 4" stroke="currentColor"/></g></svg>';
+function brandWord() {
+  return '<span class="g-brand-word"><span class="g-brand-a">GO</span>' +
+         '<span class="g-brand-mk">' + BRAND_MARK + '</span>' +
+         '<span class="g-brand-b">GO</span></span>';
+}
+
 /* ── chrome: nav, dock, toast, reveal ───────────────────────────────────── */
 function paintChrome(active) {
   const nav = $('#nav'); if (nav) nav.removeAttribute('style');
   const links = [["/gogo/", "Book a ride", "home"], ["why", "Why GOGO", "why"], ["rides", "Find rides", "rides"], ["messages", "Chats", "messages"], ["rider", "My trips", "rider"], ["driver", "Drive with GOGO", "driver"], ["more", "More", "more"], ["ops", "Ops", "ops"]];
   if (nav) nav.innerHTML = `
-    <a class="g-brand" href="/gogo/" aria-label="GO GO, home"><span class="g-brand-word"><span class="g-brand-a">GO</span><span class="g-brand-b">GO</span></span></a>
+    <a class="g-brand" href="/gogo/" aria-label="GO GO, home">${brandWord()}</a>
     <nav class="g-nav-links">
       ${links.map(([h, t, k]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("")}
     </nav>
@@ -164,8 +183,8 @@ function paintChrome(active) {
 
   const WA_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.54 2 2.08 6.46 2.08 11.96c0 1.76.46 3.42 1.27 4.86L2 22l5.3-1.38c1.4.76 3 1.2 4.74 1.2 5.5 0 9.96-4.46 9.96-9.96S17.54 2 12.04 2Zm5.8 14.06c-.24.68-1.4 1.3-1.94 1.34-.54.05-1.03.24-3.5-.72-2.98-1.18-4.86-4.24-5-4.44-.15-.2-1.2-1.6-1.2-3.05 0-1.44.76-2.15 1.03-2.44.27-.29.58-.36.78-.36h.55c.18 0 .42-.07.65.5.24.58.8 1.98.87 2.12.07.15.12.32.02.51-.1.2-.15.32-.29.49l-.44.51c-.15.15-.3.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.29 2.33 1.44.29.15.46.12.63-.07.17-.2.73-.85.93-1.14.19-.29.39-.24.65-.15.27.1 1.68.79 1.97.94.29.15.48.22.55.34.07.12.07.7-.17 1.38Z"/></svg>';
   const X_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.53 3h3.02l-6.6 7.54L21.75 21h-5.9l-4.62-6.04L5.9 21H2.87l7.06-8.07L2.25 3h6.05l4.18 5.52L17.53 3Zm-1.06 16.2h1.67L7.6 4.71H5.8l10.67 14.49Z"/></svg>';
-  const IG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>';
-  const MAIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.6" y="4.6" width="18.8" height="14.8" rx="3"/><path d="m3.4 6.6 8.6 6.2 8.6-6.2"/></svg>';
+  const IG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="8.91" stroke-linecap="round" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>';
+  const MAIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="8.91" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.6" y="4.6" width="18.8" height="14.8" rx="3"/><path d="m3.4 6.6 8.6 6.2 8.6-6.2"/></svg>';
   const SOCIAL = [
     ["https://wa.me/27780472090", "WhatsApp", WA_SVG],
     ["https://x.com/gogohike", "X", X_SVG],
@@ -176,7 +195,7 @@ function paintChrome(active) {
   if (f) f.innerHTML = `
     <div class="g-wrap g-f1">
       <div class="g-f1-top">
-        <a class="g-brand g-brand-foot" href="/gogo/" aria-label="GOGO, home"><span class="g-brand-word"><span class="g-brand-a">GO</span><span class="g-brand-b">GO</span></span></a>
+        <a class="g-brand g-brand-foot" href="/gogo/" aria-label="GOGO, home">${brandWord()}</a>
         <p class="g-f1-tag">Long-distance seats and parcels, door to door.</p>
       </div>
       <nav class="g-f1-nav" aria-label="Footer">
@@ -406,15 +425,7 @@ function pageHome() {
                        collects in one city. -->
                   <div id="fromList" class="g-from-list" role="listbox" hidden></div>
               </div>
-              <div class="g-bk-subrow" hidden aria-hidden="true" style="display:none">
-                  <!-- Suburb and Province+City used to be two manual fields here.
-                       The address search fills both now. They are hidden rather
-                       than deleted because the draft, the payload, the
-                       validation and the share URL all still read #fromSuburb
-                       and #fromArea — removing the elements breaks all four. -->
-                  <input id="fromSuburb" type="text" name="suburb" value="" tabindex="-1">
-                  <select id="fromArea" name="area" tabindex="-1"><option value=""></option></select>
-                </div><div class="g-bk-fld">
+              <div class="g-bk-fld">
               <div class="g-bk-labrow">
               <label class="g-bk-lab" for="to">
                 <span class="g-ic-sq amber" aria-hidden>&#127937;</span> <span id="toLab">Destination</span>
@@ -469,7 +480,7 @@ function pageHome() {
           </div>
         </div>
 
-        <button class="g-btn g-bk-submit g-shimmer" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg> <span id="submitLab">Find a hike</span> <span aria-hidden>&#9889;</span></button>
+        <button class="g-btn g-bk-submit g-shimmer" type="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="8.91" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg> <span id="submitLab">Find a hike</span> <span aria-hidden>&#9889;</span></button>
         <p class="g-s-sm g-bk-fee" id="feeNote"></p>
 
         <select id="when" class="g-sr" tabindex="-1" aria-hidden="true">
@@ -2068,27 +2079,15 @@ window.GOGO = { reveal: reveal, grow: grow, save: save, toast: toast, money: mon
       var rawSub = get("sublocality_level_1") || get("sublocality") || get("neighborhood") || "";
       var sub = (window.GOGORenames && GOGORenames.cleanSuburb) ? GOGORenames.cleanSuburb(rawSub) : rawSub;
 
-      var subEl = document.getElementById("fromSuburb");
-      var areaEl = document.getElementById("fromArea");
-      if (subEl) subEl.value = sub;
+      /* The Suburb and Province/City fields were removed from the form. The
+         values live on window now — the draft, the validation, the payload and
+         the share URL all read them from there. Writing to the deleted elements
+         would silently do nothing, and the city gate would never pass. */
+      window.__gogoPickedSuburb = sub;
+      window.__gogoPickedTown = town;
+      window.__gogoPickedCity = town;
+      window.__gogoPickedProvince = get("administrative_area_level_1");
 
-      /* #fromArea is a select of province-and-city options. If the town is in it,
-         select it. If it is not, ADD it — an address the rider picked from Google
-         must never be silently dropped because a list does not contain it. */
-      if (areaEl && town) {
-        var found = false;
-        for (var i = 0; i < areaEl.options.length; i++) {
-          var v = areaEl.options[i].value || "";
-          if (v && v.toLowerCase().indexOf(town.toLowerCase()) !== -1) { areaEl.selectedIndex = i; found = true; break; }
-        }
-        if (!found) {
-          var prov = get("administrative_area_level_1");
-          var label = prov ? (prov + " \u00b7 " + town) : town;
-          var opt = document.createElement("option");
-          opt.value = label; opt.text = label;
-          areaEl.add(opt); areaEl.value = label;
-        }
-      }
       /* the form's own handlers must run, or the draft never sees any of this */
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));

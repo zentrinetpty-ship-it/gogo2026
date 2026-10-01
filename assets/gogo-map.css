@@ -19,27 +19,27 @@
 /* ── city pins: coloured squircle badge + white chip ─────────────────── */
 .g-map-pin { position: absolute; transform: translate(-50%, -50%); pointer-events: none; display: flex; align-items: center; gap: 7px; }
 .g-map-badge {
-  width: 31px; height: 31px; border-radius: 4px; position: relative; display: grid; place-items: center;
-  font-size: 15px; background: #A3E635; color: #0B0B0B; flex: 0 0 auto;
+  width: 31px; height: 31px; border-radius: 2px; position: relative; display: grid; place-items: center;
+  font-size: var(--t-md); background: #A3E635; color: #0B0B0B; flex: 0 0 auto;
   border: 2.5px solid #fff; box-shadow: 0 6px 16px rgba(11, 11, 11, .30), 0 1px 0 rgba(11, 11, 11, .12);
 }
-.g-map-pin.hub .g-map-badge { width: 35px; height: 35px; border-radius: 4px; }
+.g-map-pin.hub .g-map-badge { width: 35px; height: 35px; border-radius: 2px; }
 .g-map-pin.tone-lime .g-map-badge { background: linear-gradient(180deg, #A7CE2E, #8DB600); }
 .g-map-pin.tone-navy .g-map-badge { background: linear-gradient(180deg, #2A3550, #232328); color: #fff; }
 .g-map-pin.tone-gold .g-map-badge { background: linear-gradient(180deg, #C6EE6A, #A3E635); }
 
 .g-map-chip {
-  background: var(--card); border-radius: 4px; padding: 5px 10px;
+  background: var(--card); border-radius: 2px; padding: 5px 10px;
   border: 1px solid rgba(11, 11, 11, .10); box-shadow: 0 6px 16px rgba(11, 11, 11, .14);
   display: flex; flex-direction: column; line-height: 1.2; white-space: nowrap;
 }
-.g-map-chip b { font-size: 12.5px; font-weight: 800; color: #0B0B0B; }
-.g-map-chip i { font-style: normal; font-size: 10px; font-weight: 700; color: rgba(11, 11, 11, .52); }
-.g-map-pin.hub .g-map-chip b { font-size: 14px; }
+.g-map-chip b { font-size: var(--t-sm); font-weight: 800; color: #0B0B0B; }
+.g-map-chip i { font-style: normal; font-size: var(--t-xs); font-weight: 700; color: rgba(11, 11, 11, .52); }
+.g-map-pin.hub .g-map-chip b { font-size: var(--t-sm); }
 
 /* the two end points get a soft pulse so the corridor reads as live */
 .g-map-pin.hub .g-map-badge::after {
-  content: ""; position: absolute; inset: -6px; border-radius: 4px;
+  content: ""; position: absolute; inset: -6px; border-radius: 2px;
   border: 2px solid rgba(141, 182, 0, .55); animation: gPulse 2.6s ease-out infinite;
 }
 .g-map-pin.hub { position: absolute; }
@@ -48,15 +48,15 @@
 /* ── points of interest ──────────────────────────────────────────────── */
 .g-map-poi { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 5px; pointer-events: none; }
 .g-map-poi-ic {
-  width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; font-size: 12px;
+  width: 24px; height: 24px; border-radius: 2px; display: grid; place-items: center; font-size: var(--t-xs);
   background: var(--card); border: 1px solid rgba(11, 11, 11, .12); box-shadow: 0 3px 10px rgba(11, 11, 11, .16);
 }
 .g-map-poi.tone-navy .g-map-poi-ic { background: #232328; border-color: #232328; }
 .g-map-poi.tone-lime .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
 .g-map-poi.tone-gold .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
 .g-map-poi-lb {
-  background: rgba(255, 255, 255, .9); border-radius: 4px; padding: 2px 6px;
-  font-size: 9px; font-weight: 800; color: rgba(11, 11, 11, .5);
+  background: rgba(255, 255, 255, .9); border-radius: 2px; padding: 2px 6px;
+  font-size: var(--t-xs); font-weight: 800; color: rgba(11, 11, 11, .5);
   border: 1px solid rgba(11, 11, 11, .08); white-space: nowrap;
 }
 
@@ -64,7 +64,7 @@
 .g-map-car { position: absolute; transform: translate(-50%, -50%); }
 .g-map-car-body {
   position: relative; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%;
-  background: linear-gradient(180deg, #C6EE6A, #8DB600 62%, #6C8C00); font-size: 16px;
+  background: linear-gradient(180deg, #C6EE6A, #8DB600 62%, #6C8C00); font-size: var(--t-md);
   border: 2px solid #fff; box-shadow: 0 5px 14px rgba(11, 11, 11, .26);
 }
 .g-map-car-ring {
@@ -83,8 +83,8 @@
 
 .g-hero-credit {
   position: absolute; right: 12px; bottom: 8px; z-index: 6;
-  font-size: 9.5px; font-weight: 700; color: rgba(11, 11, 11, .42);
-  background: rgba(255, 255, 255, .78); border-radius: 4px; padding: 2px 7px;
+  font-size: var(--t-xs); font-weight: 700; color: rgba(11, 11, 11, .42);
+  background: rgba(255, 255, 255, .78); border-radius: 2px; padding: 2px 7px;
 }
 
 /* ── hero copy on a light map: ink, not white ────────────────────────── */
@@ -101,12 +101,12 @@
 
 @media (max-width: 640px) {
   .g-map-chip { padding: 4px 8px; }
-  .g-map-chip b { font-size: 11.5px; }
+  .g-map-chip b { font-size: var(--t-xs); }
   .g-map-chip i { display: none; }
   .g-map-badge { width: 30px; height: 30px; }
   .g-map-pin.hub .g-map-badge { width: 36px; height: 36px; }
   .g-map-poi-lb { display: none; }
-  .g-hero-credit { font-size: 8.5px; right: 8px; bottom: 6px; }
+  .g-hero-credit { font-size: var(--t-xs); right: 8px; bottom: 6px; }
   .g-hero-scrim {
     background: linear-gradient(180deg, rgba(255, 253, 244, .82) 0%, rgba(255, 253, 244, .34) 30%, rgba(255, 253, 244, 0) 56%, rgba(255, 253, 244, .22) 100%);
   }
@@ -131,7 +131,7 @@
 .g-map-chip.mini { display: none; }
 
 .g-map-chip.hub { padding: 6px 11px; }
-.g-map-chip.hub b { font-size: 14.5px; }
+.g-map-chip.hub b { font-size: var(--t-sm); }
 
 @media (max-width: 900px) {
   /* the booking card sits over the map on phones: markers only, no labels */

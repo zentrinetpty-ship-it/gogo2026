@@ -8,51 +8,51 @@
 /* ── fare breakdown: every rand on its own line ────────────────────────── */
 .g-fees {
   margin-top: 14px; padding: 13px 14px;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: 2px;
   background: var(--card-2);
 }
 .g-fees-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
 .g-fee-row {
   display: flex; align-items: baseline; justify-content: space-between;
-  font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+  font-size: var(--t-sm); font-weight: 600; color: var(--ink-soft);
   padding: 5px 0;
 }
 .g-fee-row b { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .g-fee-total {
   margin-top: 7px; padding-top: 10px;
   border-top: 1px solid var(--line);
-  font-size: 15px; color: var(--ink);
+  font-size: var(--t-md); color: var(--ink);
 }
-.g-fee-total b { font-size: 17px; }
+.g-fee-total b { font-size: var(--t-lg); }
 .g-fees-n { margin: 9px 0 0; color: var(--ink-mute); line-height: 1.5; }
 
 /* ── passenger / parcel switch on the booking card ─────────────────────── */
 .g-bk-seg {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
   padding: 4px; margin-bottom: 20px;
-  border: 1px solid var(--line); border-radius: 4px;
+  border: 1px solid var(--line); border-radius: 2px;
   background: var(--card-2);
 }
 .g-bk-seg button {
-  height: 40px; border: 0; border-radius: 3px; cursor: pointer;
+  height: 40px; border: 0; border-radius: 2px; cursor: pointer;
   background: transparent; color: var(--ink-mute);
-  font-family: inherit; font-size: 13.5px; font-weight: 800; letter-spacing: -.01em;
+  font-family: inherit; font-size: var(--t-sm); font-weight: 800; letter-spacing: -.01em;
   display: flex; align-items: center; justify-content: center; gap: 7px;
   transition: background .16s ease, color .16s ease;
 }
 .g-bk-seg button:hover { color: var(--ink); }
 .g-bk-seg button.on { background: var(--ink); color: #fff; }
 
-/* weight input sits inside the same 48px row as the other detail buttons */
+/* weight input sits inside the same row as the other detail buttons */
 .g-bk-num {
   flex: 1; min-width: 0; height: 100%; border: 0; background: transparent;
-  font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--ink);
+  font-family: inherit; font-size: var(--t-sm); font-weight: 700; color: var(--ink);
   outline: none; padding: 0;
 }
 .g-bk-num::placeholder { color: var(--ink-mute); font-weight: 600; }
 .g-bk-num::-webkit-outer-spin-button, .g-bk-num::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .g-bk-num { -moz-appearance: textfield; }
-.g-bk-unit { font-size: 12px; font-weight: 700; color: var(--ink-mute); flex: 0 0 auto; }
+.g-bk-unit { font-size: var(--t-xs); font-weight: 700; color: var(--ink-mute); flex: 0 0 auto; }
 
 /* ── chat thread ───────────────────────────────────────────────────────── */
 .g-thread {
@@ -64,16 +64,16 @@
 .g-msg.me { align-self: flex-end; align-items: flex-end; }
 .g-msg.them { align-self: flex-start; }
 .g-msg-b {
-  padding: 9px 12px; border-radius: 4px;
-  font-size: 13.5px; font-weight: 600; line-height: 1.5;
+  padding: 9px 12px; border-radius: 2px;
+  font-size: var(--t-sm); font-weight: 600; line-height: 1.5;
   background: var(--card-2); color: var(--ink); border: 1px solid var(--line);
 }
 .g-msg.me .g-msg-b { background: var(--ink); color: #fff; border-color: var(--ink); }
-.g-msg-t { font-size: 10.5px; font-weight: 600; color: var(--ink-mute); }
+.g-msg-t { font-size: var(--t-xs); font-weight: 600; color: var(--ink-mute); }
 
 /* ── offer cards: a price, who sent it, and whether it still stands ───── */
 .g-offer {
-  max-width: 82%; padding: 10px 13px; border-radius: 4px;
+  max-width: 82%; padding: 10px 13px; border-radius: 2px;
   border: 1px solid var(--ink); background: var(--lime-wash);
 }
 .g-offer.me { align-self: flex-end; }
@@ -86,7 +86,7 @@
 .g-steps { display: flex; flex-direction: column; gap: 7px; }
 .g-step {
   display: flex; align-items: center; gap: 10px;
-  font-size: 13px; font-weight: 600; color: var(--ink-mute);
+  font-size: var(--t-sm); font-weight: 600; color: var(--ink-mute);
 }
 .g-step-dot {
   width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto;
@@ -97,7 +97,7 @@
 
 @media (max-width: 620px) {
   .g-fees { padding: 11px 12px; }
-  .g-fee-row { font-size: 13px; }
+  .g-fee-row { font-size: var(--t-sm); }
   .g-thread { max-height: 240px; }
   .g-msg, .g-offer { max-width: 90%; }
 }

@@ -7,13 +7,13 @@
 
 .g-book {
   width: 100%; max-width: 27rem;
-  border-radius: 4px; padding: 24px;
+  border-radius: 2px; padding: 24px;
   display: block;
 }
-.g-bk-sec { margin-bottom: 22px; }
-.g-bk-sec:last-of-type { margin-bottom: 20px; }
+.g-bk-sec { margin-bottom: 15px; }
+.g-bk-sec:last-of-type { margin-bottom: 14px; }
 .g-bk-h {
-  margin: 0 0 9px; font-size: 14.5px; font-weight: 800; letter-spacing: -.01em;
+  margin: 0 0 7px; font-size: var(--t-sm); font-weight: 800; letter-spacing: -.01em;
   color: var(--ink);
 }
 .g-bk-inwrap { position: relative; display: flex; align-items: center; margin-bottom: 8px; }
@@ -25,47 +25,55 @@
 .g-bk-ic svg { width: 20px; height: 20px; display: block; }
 
 .g-bk-in {
-  height: 48px; width: 100%;
-  border-radius: 3px; border: 1px solid var(--line);
+  height: 44px; width: 100%;
+  /* 2px reads as a deliberate square edge rather than a failed attempt at a
+     rounded corner, which is what 3–4px looks like. */
+  border-radius: 2px; border: 1px solid var(--line);
   background: var(--card-2); color: var(--ink);
-  padding: 0 46px 0 41px;
-  font-family: inherit; font-size: 14px; font-weight: 600;
-  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+  /* no icon inset any more: the Suburb and Province/City fields that needed the
+     left gutter are gone, so the text starts at the edge like a normal field. */
+  padding: 0 12px;
+  font-family: inherit; font-size: var(--t-sm); font-weight: 600;
+  transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
 }
+#from { padding-left: 40px; }
 .g-bk-in::placeholder { color: var(--ink-mute); font-weight: 500; }
-.g-bk-in:hover { border-color: rgba(11, 11, 11, .3); }
+.g-bk-in:hover { border-color: rgba(11, 11, 11, .4); }
 .g-bk-in:focus {
   outline: none; background: var(--card);
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(11, 11, 11, .12);
+  box-shadow: 0 0 0 2px rgba(11, 11, 11, .14);
 }
 
 .g-bk-inwrap .g-swap { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); }
 .g-book .g-swap button {
-  width: 36px; height: 36px; border-radius: 3px; cursor: pointer;
+  width: 36px; height: 36px; border-radius: 2px; cursor: pointer;
   border: 1px solid var(--line); background: var(--card); color: var(--ink);
-  font-size: 15px; line-height: 1;
+  font-size: var(--t-md); line-height: 1;
 }
 .g-book .g-swap button:hover { background: var(--paper-2); }
 
-.g-bk-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.g-bk-row { display: flex; gap: 6px; margin-bottom: 6px; }
 .g-bk-row:last-child { margin-bottom: 0; }
 .g-bk-info {
-  position: relative; height: 48px; flex: 1; min-width: 0;
-  display: flex; align-items: center; gap: 11px; padding: 0 15px 0 41px;
-  border-radius: 3px; border: 1px solid var(--line);
+  /* 38px, not 48. Four of these sit in two rows under the address pair, and at 48
+     they read as the tallest thing on the card — heavier than the fields that
+     actually matter. They are secondary choices and should look it. */
+  position: relative; height: 38px; flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 8px; padding: 0 11px 0 34px;
+  border-radius: 2px; border: 1px solid var(--line);
   background: var(--card-2); color: var(--ink);
-  font-family: inherit; font-size: 13.5px; font-weight: 700; text-align: left;
+  font-family: inherit; font-size: var(--t-sm); font-weight: 600; text-align: left;
   cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-  transition: border-color .16s ease, background .16s ease;
+  transition: border-color .14s ease, background .14s ease;
 }
 .g-bk-info:hover { background: var(--card); border-color: rgba(11, 11, 11, .3); }
 .g-bk-info:active { background: var(--paper-2); }
-.g-bk-info .g-bk-ic { left: 12px; }
+.g-bk-info .g-bk-ic { left: 9px; }
 
 .g-bk-submit {
-  height: 48px; width: 100%; border-radius: 3px;
-  font-size: 15.5px; font-weight: 800; gap: 9px;
+  height: 46px; width: 100%; border-radius: 2px;
+  font-size: var(--t-sm); font-weight: 800; gap: 8px;
 }
 .g-bk-submit .g-bk-ic { position: static; color: var(--on-black); }
 .g-bk-fee { text-align: center; margin: 12px 0 0; }
@@ -90,9 +98,9 @@
   .g-book .g-bk-sec, .g-book .g-bk-submit, .g-book .g-bk-fee { animation: none; }
 }
 @media (max-width: 420px) {
-  .g-book { padding: 18px; border-radius: 4px; }
-  .g-bk-h { font-size: 14px; }
-  .g-bk-info { font-size: 12.5px; gap: 9px; padding: 0 12px 0 39px; }
+  .g-book { padding: 18px; border-radius: 2px; }
+  .g-bk-h { font-size: var(--t-sm); }
+  .g-bk-info { font-size: var(--t-sm); gap: 9px; padding: 0 12px 0 39px; }
 }
 
 /* ── the Going-to picker: provinces first, towns unfold in the same menu ─ */
@@ -101,8 +109,8 @@
 .g-ac-prow {
   width: 100%; display: flex; align-items: center; gap: 8px;
   padding: 9px 10px; margin-bottom: 2px;
-  border: 1px solid transparent; border-radius: 3px; background: transparent;
-  color: var(--ink); font-family: inherit; font-size: 12.5px; font-weight: 800;
+  border: 1px solid transparent; border-radius: 2px; background: transparent;
+  color: var(--ink); font-family: inherit; font-size: var(--t-sm); font-weight: 800;
   text-align: left; cursor: pointer;
 }
 .g-ac-prow:hover { background: rgba(11, 11, 11, .06); }
@@ -122,8 +130,8 @@
 }
 @keyframes gAcGrid { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 .g-ac-cbtn {
-  text-align: left; padding: 6px 7px; border: 0; border-radius: 3px; background: transparent;
-  color: var(--ink-soft); font-family: inherit; font-size: 11.5px; font-weight: 600;
+  text-align: left; padding: 6px 7px; border: 0; border-radius: 2px; background: transparent;
+  color: var(--ink-soft); font-family: inherit; font-size: var(--t-xs); font-weight: 600;
   cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .g-ac-cbtn:hover { background: rgba(11, 11, 11, .07); color: var(--ink); }
@@ -154,10 +162,10 @@
 
 /* the account avatar */
 .g-avatar {
-  width: 26px; height: 26px; border-radius: 3px; flex: 0 0 auto;
+  width: 26px; height: 26px; border-radius: 2px; flex: 0 0 auto;
   display: grid; place-items: center;
   background: var(--black); color: var(--on-black);
-  font-size: 11.5px; font-weight: 900; letter-spacing: .02em;
+  font-size: var(--t-xs); font-weight: 900; letter-spacing: .02em;
 }
 #acct { display: inline-flex; align-items: center; gap: 8px; }
 .g-acct-min { display: none; }
@@ -181,21 +189,21 @@
 /* ── #from suggestions (Google Places) ─────────────────────────────────── */
 .g-bk-inwrap { position: relative; }
 .g-from-list {
-  position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 60;
-  background: #fff; border: 1px solid rgba(10,25,47,.12); border-radius: 14px;
-  box-shadow: 0 18px 40px -16px rgba(10,25,47,.34); overflow: hidden;
-  max-height: 288px; overflow-y: auto;
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 60;
+  background: #fff; border: 1px solid rgba(10,25,47,.16); border-radius: 2px;
+  box-shadow: 0 14px 32px -14px rgba(10,25,47,.38); overflow: hidden;
+  max-height: 264px; overflow-y: auto;
 }
 .g-from-opt {
-  display: flex; align-items: flex-start; gap: 10px; width: 100%;
-  padding: 11px 13px; text-align: left; background: #fff; border: 0;
+  display: flex; align-items: flex-start; gap: 9px; width: 100%;
+  padding: 10px 12px; text-align: left; background: #fff; border: 0;
   border-bottom: 1px solid rgba(10,25,47,.06); cursor: pointer;
   font: inherit; color: inherit;
 }
 .g-from-opt:last-child { border-bottom: 0; }
 .g-from-opt:hover, .g-from-opt:focus { background: #F5F7FA; outline: none; }
-.g-from-pin { font-size: 14px; line-height: 1.35; flex: none; }
+.g-from-pin { font-size: var(--t-sm); line-height: 1.35; flex: none; }
 .g-from-txt { min-width: 0; display: flex; flex-direction: column; }
-.g-from-txt b { font-size: 14px; font-weight: 600; color: #0A192F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.g-from-txt small { font-size: 12.5px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.g-from-err { padding: 12px 13px; font-size: 12.5px; color: #B91C1C; }
+.g-from-txt b { font-size: var(--t-sm); font-weight: 600; color: #0A192F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-from-txt small { font-size: var(--t-sm); color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.g-from-err { padding: 12px 13px; font-size: var(--t-sm); color: #B91C1C; }

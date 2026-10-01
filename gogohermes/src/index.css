@@ -111,7 +111,7 @@
      Sized so the type seats properly inside: at 54px the 14.5px text floated in
      empty space and the longer labels crowded their icons. */
   .gh-field {
-    @apply relative flex h-[46px] w-full items-stretch gap-2.5 rounded-xl border bg-white px-3.5
+    @apply relative flex h-[46px] w-full items-stretch gap-[9px] rounded-[2px] border bg-white px-[14px]
            transition-all duration-200;
   }
   /* the leading icon and any trailing control stay vertically centred now that
@@ -141,7 +141,7 @@
 
   /* ── button: slightly round, never a pill, 2px-ish radius on the small ones */
   .gh-btn {
-    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-xl px-5
+    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-[2px] px-5
            text-[13.5px] font-bold transition-all duration-200 active:scale-[.985]
            disabled:cursor-not-allowed disabled:opacity-45;
   }
@@ -152,28 +152,28 @@
   /* a segmented control: equal widths, animated indicator, no borders on the
      items. The selected side is a solid lime panel with ink text, which is the
      GOGO accent at its strongest contrast against the white card. */
-  .gh-seg { @apply relative grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1; }
+  .gh-seg { @apply relative grid grid-cols-2 gap-1 rounded-[2px] bg-neutral-100 p-1; }
   .gh-seg-btn {
-    @apply relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-lg
+    @apply relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-[2px]
            text-[12.5px] font-bold text-neutral-600 transition-colors duration-200;
   }
   .gh-seg-btn[data-on="true"] { @apply text-ink; }
   .gh-seg-pill {
-    @apply absolute inset-y-1 left-1 w-[calc(50%-0.375rem)] rounded-lg bg-lime shadow-sm;
+    @apply absolute inset-y-1 left-1 w-[calc(50%-0.375rem)] rounded-[2px] bg-lime shadow-sm;
     will-change: transform;
     transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .gh-card { @apply rounded-2xl border bg-white shadow-soft; }
+  .gh-card { @apply rounded-[2px] border bg-white shadow-soft; }
   .gh-hairline { @apply h-px w-full bg-neutral-200/70; }
 
   /* the two CTAs that ride over the map on phones */
   .gh-btn-cta {
-    @apply inline-flex h-10 items-center gap-1.5 rounded-lg bg-ink px-3.5 text-[12.5px]
+    @apply inline-flex h-10 items-center gap-1.5 rounded-[2px] bg-ink px-3.5 text-[12.5px]
            font-bold text-white shadow-lift transition-all active:scale-[.97];
   }
   .gh-btn-cta-ghost {
-    @apply inline-flex h-10 items-center gap-1.5 rounded-lg border bg-white/90 px-3.5
+    @apply inline-flex h-10 items-center gap-1.5 rounded-[2px] border bg-white/90 px-3.5
            text-[12.5px] font-bold text-ink shadow-soft backdrop-blur transition-all active:scale-[.97];
   }
 }
@@ -280,7 +280,7 @@
   -webkit-backdrop-filter: blur(22px) saturate(180%);
   backdrop-filter: blur(22px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, .75);
-  border-radius: 13px;
+  border-radius: 2px;
   box-shadow:
     0 16px 40px -14px rgba(23, 23, 23, .3),
     0 2px 8px rgba(23, 23, 23, .06),
@@ -372,7 +372,7 @@
   -webkit-backdrop-filter: blur(10px) saturate(1.15);
   backdrop-filter: blur(10px) saturate(1.15);
   border: 1px solid #ececec;
-  border-radius: 12px;
+  border-radius: 2px;
   transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
 }
 .g-addr-fld:focus-within {
@@ -430,7 +430,7 @@
 
 .gh-dock a {
   position: relative;
-  border-radius: 16px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, .55);
   -webkit-backdrop-filter: blur(16px) saturate(1.9);
   backdrop-filter: blur(16px) saturate(1.9);
@@ -534,7 +534,7 @@
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 7px;
+  border-radius: 2px;
   flex: 0 0 auto;
 }
 
@@ -582,7 +582,7 @@
 /* ── the account button: Login when signed out, avatar when signed in ─────
    Same footprint in both states so the top bar never shifts. */
 .gh-account {
-  border-radius: 999px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, .72);
   -webkit-backdrop-filter: blur(14px) saturate(1.6);
   backdrop-filter: blur(14px) saturate(1.6);
@@ -601,7 +601,7 @@
   width: 32px;
   height: 32px;
   flex: 0 0 auto;
-  border-radius: 999px;
+  border-radius: 2px;
   background: #232328;
   color: #8DB600;
   font-size: 12.5px;
@@ -642,6 +642,15 @@
 /* ── the pickup field: a plain box, like Suburb and City ──────────────────
    It was a geocoder field with a suggestion dropdown. Now it is an ordinary
    text input, so nothing competes with what the rider types. */
+/* ── spacing scale ────────────────────────────────────────────────────────
+   The 4/8/12/16/24/32 scale the design references use. Before this, the card
+   mixed 6/7/8/9/10/12/13/14/46px — every value picked on its own, which is why
+   the rhythm read as off even though each row was individually reasonable. A
+   scale is what makes spacing feel intentional rather than arbitrary. */
+:root {
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
+}
+
 .g-pickup {
   display: flex;
   align-items: center;
@@ -649,7 +658,7 @@
   height: 46px;
   padding: 0 12px;
   border: 1px solid rgba(11, 11, 11, .16);
-  border-radius: 10px;
+  border-radius: 2px;
   background: #fff;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
@@ -680,13 +689,17 @@
   gap: 10px;
 }
 .gh-sub-lab {
+  /* Sentence case, 12.5px, 600 — was 10.5px/800/UPPERCASE with .08em tracking.
+     Small heavy all-caps is hard to read and reads as dated; the reference
+     systems put body text at 14/16 and reserve weight for emphasis, not for
+     making tiny text legible. */
   display: block;
-  margin: 0 0 5px;
-  font-size: 10.5px;
-  font-weight: 800;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgba(11, 11, 11, .5);
+  margin: 0 0 var(--s1);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(11, 11, 11, .56);
   white-space: nowrap;
 }
 .gh-sub-in {
@@ -694,7 +707,7 @@
   height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(11, 11, 11, .16);
-  border-radius: 10px;
+  border-radius: 2px;
   background: #fff;
   font: inherit;
   font-size: 16px;
@@ -807,7 +820,7 @@
   .gh-hero-card { top: 12px !important; }
 
   /* the card's own padding and radius */
-  .gh-glass { padding: 12px 14px 13px !important; border-radius: 14px !important; }
+  .gh-glass { padding: 12px 14px 13px !important; border-radius: 2px !important; }
 
   /* every row inside, compressed */
   .gh-hero-card .pt-3 { padding-top: 3px !important; }

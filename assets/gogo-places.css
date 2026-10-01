@@ -3,45 +3,45 @@
    ========================================================================= */
 
 /* ── the typeable / searchable field ──────────────────────────────────── */
-.g-hint { font-size: 10.5px; color: rgba(11, 11, 11, .45); font-weight: 600; margin-top: 3px; }
+.g-hint { font-size: var(--t-xs); color: rgba(11, 11, 11, .45); font-weight: 600; margin-top: 3px; }
 
 .g-ac {
   position: absolute; z-index: 40;
-  background: var(--card); border: 1px solid rgba(11, 11, 11, .16); border-radius: 4px;
+  background: var(--card); border: 1px solid rgba(11, 11, 11, .16); border-radius: 2px;
   box-shadow: 0 16px 34px rgba(11, 11, 11, .22), 0 2px 6px rgba(11, 11, 11, .10);
   max-height: 296px; overflow-y: auto; padding: 5px; -webkit-overflow-scrolling: touch;
 }
 .g-ac-group {
-  font-size: 10px; font-weight: 900; letter-spacing: .09em; text-transform: uppercase;
+  font-size: var(--t-xs); font-weight: 900; letter-spacing: .09em; text-transform: uppercase;
   color: rgba(11, 11, 11, .42); padding: 8px 9px 4px;
 }
 .g-ac-item {
   display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
-  border: 0; background: none; cursor: pointer; border-radius: 4px;
-  padding: 9px 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--ink);
+  border: 0; background: none; cursor: pointer; border-radius: 2px;
+  padding: 9px 10px; font-family: inherit; font-size: var(--t-sm); font-weight: 700; color: var(--ink);
 }
 .g-ac-item.on, .g-ac-item:hover { background: rgba(141, 182, 0, .22); }
 .g-ac-dot { width: 6px; height: 6px; border-radius: 50%; background: #A3E635; flex: 0 0 auto; }
 .g-ac-city { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-ac-prov {
-  font-size: 9.5px; font-weight: 900; letter-spacing: .06em; color: rgba(11, 11, 11, .45);
-  border: 1px solid rgba(11, 11, 11, .16); border-radius: 4px; padding: 2px 5px; flex: 0 0 auto;
+  font-size: var(--t-xs); font-weight: 900; letter-spacing: .06em; color: rgba(11, 11, 11, .45);
+  border: 1px solid rgba(11, 11, 11, .16); border-radius: 2px; padding: 2px 5px; flex: 0 0 auto;
 }
 .g-ac-any { background: rgba(141, 182, 0, .12); }
 .g-ac-any .g-ac-dot { background: #A3E635; }
-.g-ac-empty { font-size: 12px; font-weight: 600; color: rgba(11, 11, 11, .5); padding: 11px; }
+.g-ac-empty { font-size: var(--t-xs); font-weight: 600; color: rgba(11, 11, 11, .5); padding: 11px; }
 
 /* ── demo data: passengers + login switcher ───────────────────────────── */
 .g-people { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 @media (max-width: 720px) { .g-people { grid-template-columns: 1fr; } }
 .g-person {
   display: flex; align-items: center; gap: 11px; text-align: left; width: 100%;
-  border: 1px solid rgba(11, 11, 11, .14); background: var(--card); border-radius: 4px;
+  border: 1px solid rgba(11, 11, 11, .14); background: var(--card); border-radius: 2px;
   padding: 11px 12px; cursor: pointer; font-family: inherit;
   transition: border-color .18s ease, transform .12s ease, box-shadow .18s ease;
 }
 .g-person:hover { transform: translateY(-1px); border-color: rgba(11, 11, 11, .3); box-shadow: 0 6px 16px rgba(11, 11, 11, .09); }
 .g-person.on { border-color: #CF9B00; background: rgba(141, 182, 0, .12); }
-.g-person .g-p-meta { font-size: 11px; color: rgba(11, 11, 11, .55); font-weight: 600; }
+.g-person .g-p-meta { font-size: var(--t-xs); color: rgba(11, 11, 11, .55); font-weight: 600; }
 .g-person .g-p-amt { margin-left: auto; text-align: right; font-weight: 900; font-variant-numeric: tabular-nums; }
-.g-person .g-p-amt span { display: block; font-size: 10px; font-weight: 700; color: rgba(11, 11, 11, .5); letter-spacing: .04em; text-transform: uppercase; }
+.g-person .g-p-amt span { display: block; font-size: var(--t-xs); font-weight: 700; color: rgba(11, 11, 11, .5); letter-spacing: .04em; text-transform: uppercase; }

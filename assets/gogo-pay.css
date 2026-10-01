@@ -7,7 +7,7 @@
 .g-pay {
   display: flex; align-items: center; gap: 10px; text-align: left;
   border: 1px solid rgba(11, 11, 11, .16); background: linear-gradient(180deg, #fff, #F6F6F6);
-  border-radius: 4px; padding: 11px 12px; cursor: pointer;
+  border-radius: 2px; padding: 11px 12px; cursor: pointer;
   box-shadow: 0 1px 0 rgba(11, 11, 11, .12);
   transition: border-color .2s ease, transform .12s ease, box-shadow .12s ease;
 }
@@ -20,15 +20,15 @@
 .g-pay.active .g-list-s { color: rgba(11, 11, 11, .62); }
 
 /* ── money breakdown ──────────────────────────────────────────────────── */
-.g-breakdown { border: 1px dashed rgba(11, 11, 11, .22); border-radius: 4px; padding: 11px 12px; background: rgba(141, 182, 0, .05); }
-.g-bd-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; color: var(--ink-soft); padding: 3px 0; }
+.g-breakdown { border: 1px dashed rgba(11, 11, 11, .22); border-radius: 2px; padding: 11px 12px; background: rgba(141, 182, 0, .05); }
+.g-bd-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: var(--t-sm); font-weight: 600; color: var(--ink-soft); padding: 3px 0; }
 .g-bd-row b { color: var(--ink); font-weight: 800; font-variant-numeric: tabular-nums; }
-.g-bd-row.total { border-top: 1px solid rgba(11, 11, 11, .16); margin-top: 5px; padding-top: 7px; font-size: 14.5px; }
+.g-bd-row.total { border-top: 1px solid rgba(11, 11, 11, .16); margin-top: 5px; padding-top: 7px; font-size: var(--t-sm); }
 .g-bd-row.total span { color: var(--ink); font-weight: 900; }
-.g-bd-row.total b { font-size: 16px; }
+.g-bd-row.total b { font-size: var(--t-md); }
 
 /* the card-vs-payout proof block on the driver statement */
-.g-proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border: 1px solid rgba(11, 11, 11, .14); border-radius: 4px; padding: 12px; background: rgba(11, 11, 11, .03); }
+.g-proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border: 1px solid rgba(11, 11, 11, .14); border-radius: 2px; padding: 12px; background: rgba(11, 11, 11, .03); }
 .g-proof .g-t { font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) { .g-proof { grid-template-columns: 1fr; } }
 
@@ -51,7 +51,7 @@
 }
 @media (min-width: 900px) { .g-track-map { height: 340px; } }
 .g-track-map .g-map-tile { opacity: 1; }
-.g-track-map .g-map-name { font-size: 10px; }
+.g-track-map .g-map-name { font-size: var(--t-xs); }
 .g-track-map .g-map-stage { filter: none; }
 
 /* the recipient's page keeps the same map engine but without the dark scrim */

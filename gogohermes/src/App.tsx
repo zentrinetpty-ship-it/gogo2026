@@ -121,7 +121,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
               "Zero Queue." is struck through in lime, as the app sets it. */}
           <motion.h1
             variants={FADE}
-            className="gh-impact text-[clamp(3.8rem,10.4vw,7.8rem)]"
+            className="gh-impact text-[clamp(3.4rem,8.6vw,6rem)]"
             style={{ WebkitTextStroke: "1.1px #0B0B0B" }}
           >
             Smart Hike.
@@ -131,7 +131,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
 
           <motion.p
             variants={FADE}
-            className="mt-5 text-[clamp(12.5px,1.5vw,15px)] font-extrabold uppercase tracking-[.07em]"
+            className="mt-5 text-[clamp(13.5px,1.5vw,15px)] font-semibold"
           >
             Your seat, your{" "}
             <span className="shadow-[inset_0_-3px_0_rgba(141,182,0,.9)]">doorstep</span>
@@ -139,7 +139,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
 
           <motion.p
             variants={FADE}
-            className="mx-auto mt-6 max-w-[34rem] text-[16.5px] font-medium leading-[1.62] text-neutral-700 md:mx-0"
+            className="mx-auto mt-6 max-w-[34rem] text-[16px] font-medium leading-[1.62] text-neutral-700 md:mx-0"
           >
             <b className="font-extrabold text-ink">We fetch you from your door.</b>
             <br />

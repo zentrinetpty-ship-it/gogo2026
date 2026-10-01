@@ -119,7 +119,7 @@ export function BookingCard({
        is guessed: a default town would send the search somewhere they never
        asked for, and a street with no city gives the search nothing to match
        on. Focus the first missing field so it is obvious what to do. */
-    const missing = !d.pickup ? "pickup" : !d.city ? "pickupCity" : !d.destination ? "destination" : "";
+    const missing = !d.pickup ? "pickup" : !d.city ? "pickup" : !d.destination ? "destination" : "";
     if (missing) {
       const el = document.getElementById(missing);
       if (el) { (el as HTMLInputElement).focus(); el.scrollIntoView({ block: "center", behavior: "smooth" }); }
@@ -182,7 +182,7 @@ export function BookingCard({
     <form
       id="book"
       onSubmit={submit}
-      className="gh-glass w-full rounded-2xl border p-4 shadow-lift sm:p-5"
+      className="gh-glass w-full rounded-[2px] border p-4 shadow-lift sm:p-5"
     >
       {/* ── header: the collapse toggle wraps the title on mobile ─────── */}
       <button
@@ -192,8 +192,7 @@ export function BookingCard({
         className="flex w-full items-center justify-between gap-3 text-left md:pointer-events-none"
       >
         <span className="min-w-0">
-          <span className="gh-lab mb-1 block">Book in 30 seconds</span>
-          <span className="block text-[15px] font-semibold leading-tight">Where are we going?</span>
+          <span className="gh-lab block">Book in 30 seconds</span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.13em] text-neutral-500">
@@ -209,6 +208,43 @@ export function BookingCard({
         </span>
       </button>
 
+      {/* ── what are you sending.
+             FIRST, and outside the collapsed section: the mode changes what
+             every field below it MEANS — a parcel has a weight and a size, a
+             passenger has seats and luggage. Asking for the address before the
+             rider has said which one they are sending means the form can be
+             wrong for a moment and then rearrange itself. ── */}
+          {/* passenger / parcel switch — a lime panel slides under the
+              selected side, so the state is obvious at a glance */}
+          <span className="gh-sub-lab" id="modeLabel">Passenger or parcel?</span>
+            <div className="gh-seg mb-4" role="tablist" aria-label="What are you sending">
+            <span
+              aria-hidden
+              className="gh-seg-pill"
+              style={{ transform: `translateX(${isParcel ? "calc(100% + 0.25rem)" : "0"})` }}
+            />
+            {(["passenger", "parcel"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                data-on={mode === m}
+                onClick={() => onMode(m)}
+                className="gh-seg-btn"
+              >
+                {m === "passenger" ? <Armchair className="h-4 w-4" /> : <Package className="h-4 w-4" />}
+                {m === "passenger" ? "Passenger" : "Parcel"}
+              </button>
+            ))}
+          </div>
+
+      {/* ── the pickup field. The heading lives HERE, on the field it describes,
+             rather than on the collapse toggle above it. On the toggle it read as
+             a title for the whole card and sat above the Passenger/Parcel switch,
+             which is a different question entirely ("what are you sending", not
+             "where from"). A field's label belongs on the field. ── */}
+      <span className="gh-sub-lab mb-2 block" id="pickupLabel">Where are we going?</span>
       {/* ── the pickup field sits right under the title, always visible.
              Focusing it is what opens the rest of the form.
 
@@ -242,47 +278,12 @@ export function BookingCard({
       >
         <div className="overflow-hidden">
           <div className="pt-3">
-            {/* ── Suburb and the province-and-city picker, under the street field.
-             The city anchors the ride search, so it is its own field rather
-             than something guessed from the street text. One control holds
-             both province and city, grouped by province. ── */}
-      <div className="gh-pickup-sub mt-2.5" style={{ gridTemplateColumns: "1fr" }}>
-        <div className="min-w-0">
-          <span className="gh-sub-lab" id="pickupCityLabel">Province and city</span>
-          <CityPicker
-            id="pickupCity"
-            labelledBy="pickupCityLabel"
-            value={d.city}
-            onChange={(city) => set("city", city)}
-            placeholder="Choose province and city"
-          />
-        </div>
-      </div>
+            {/* Province and city used to be its own field here. The destination already
+               carries both, and the pickup search now fills the town from the
+               picked address, so this asked the rider for the same thing twice. */}
 
 
-            {/* passenger / parcel switch — a lime panel slides under the
-                selected side, so the state is obvious at a glance */}
-            <div className="gh-seg mb-4" role="tablist" aria-label="What are you sending">
-              <span
-                aria-hidden
-                className="gh-seg-pill"
-                style={{ transform: `translateX(${isParcel ? "calc(100% + 0.25rem)" : "0"})` }}
-              />
-              {(["passenger", "parcel"] as Mode[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === m}
-                  data-on={mode === m}
-                  onClick={() => onMode(m)}
-                  className="gh-seg-btn"
-                >
-                  {m === "passenger" ? <Armchair className="h-4 w-4" /> : <Package className="h-4 w-4" />}
-                  {m === "passenger" ? "Passenger" : "Parcel"}
-                </button>
-              ))}
-            </div>
+
 
             {/* route */}
             <div className="space-y-2.5">
@@ -306,7 +307,7 @@ export function BookingCard({
                   type="button"
                   onClick={swap}
                   aria-label="Swap pickup and destination"
-                  className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-xl border bg-white text-neutral-500 transition-colors hover:border-neutral-400 hover:text-ink"
+                  className="grid h-[54px] w-[54px] shrink-0 place-items-center rounded-[2px] border bg-white text-neutral-500 transition-colors hover:border-neutral-400 hover:text-ink"
                 >
                   <ArrowLeftRight className="h-4 w-4" />
                 </button>
@@ -391,13 +392,13 @@ export function BookingCard({
                     <span className="gh-stepper">
                       <button type="button" aria-label="One fewer seat"
                         onClick={() => set("seats", Math.max(1, d.seats - 1))}
-                        className="grid h-6 w-6 place-items-center rounded-md border text-neutral-500 transition hover:border-neutral-400 hover:text-ink disabled:opacity-30"
+                        className="grid h-6 w-6 place-items-center rounded-[2px] border text-neutral-500 transition hover:border-neutral-400 hover:text-ink disabled:opacity-30"
                         disabled={d.seats <= 1}>
                         <Minus className="h-3 w-3" />
                       </button>
                       <button type="button" aria-label="One more seat"
                         onClick={() => set("seats", Math.min(4, d.seats + 1))}
-                        className="grid h-6 w-6 place-items-center rounded-md border text-neutral-500 transition hover:border-neutral-400 hover:text-ink disabled:opacity-30"
+                        className="grid h-6 w-6 place-items-center rounded-[2px] border text-neutral-500 transition hover:border-neutral-400 hover:text-ink disabled:opacity-30"
                         disabled={d.seats >= 4}>
                         <Plus className="h-3 w-3" />
                       </button>

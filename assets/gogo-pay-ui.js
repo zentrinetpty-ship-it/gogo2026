@@ -90,7 +90,7 @@ const GOGOPayUI = (() => {
         </div>
         <div class="g-card g-card-dark" style="padding:16px">
           <div class="g-label">Card on file</div>
-          <div class="g-kpi-val g-mt-sm" style="font-size:20px">${existing ? "•••• •••• •••• " + existing.last4 : "•••• •••• •••• 4242"}</div>
+          <div class="g-kpi-val g-mt-sm" style="font-size:var(--t-xl)">${existing ? "•••• •••• •••• " + existing.last4 : "•••• •••• •••• 4242"}</div>
           <div class="g-list-s" style="margin-top:6px">${existing ? existing.brand + " · saved " + new Date(existing.at).toLocaleDateString([], { day: "numeric", month: "short" }) : "Visa · expires 04/29"}</div>
         </div>
         <p class="g-s g-mt-sm">Every seat is paid in cash to the driver. Card payments switch on with the GOGO payment provider, and this sheet then becomes the provider's own secure card field, so card details never reach GOGO.</p>

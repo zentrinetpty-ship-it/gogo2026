@@ -34,7 +34,7 @@
 .g-form .g-f-k {
   display: block;             /* never inline, never wrapping beside the input */
   margin: 0 0 6px;            /* sits close to its own control */
-  font-size: 11px;
+  font-size: var(--t-xs);
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -51,10 +51,10 @@
   height: 46px;
   padding: 0 12px;
   border: 1px solid rgba(11, 11, 11, .16);
-  border-radius: 8px;
+  border-radius: 2px;
   background: #fff;
   font-family: inherit;
-  font-size: 16px;            /* 16px keeps iOS Safari from zooming on focus */
+  font-size: var(--t-md);            /* 16px keeps iOS Safari from zooming on focus */
   font-weight: 600;
   color: var(--ink);
   line-height: 1.2;
@@ -111,7 +111,7 @@
 .g-form .g-addr-fld span {
   display: block;
   margin: 0 0 6px;
-  font-size: 11px;
+  font-size: var(--t-xs);
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -123,10 +123,10 @@
   height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(11, 11, 11, .16);
-  border-radius: 8px;
+  border-radius: 2px;
   background: #fff;
   font-family: inherit;
-  font-size: 16px;
+  font-size: var(--t-md);
   font-weight: 600;
   color: var(--ink);
   outline: 0;
@@ -145,7 +145,7 @@
   align-items: center;
   gap: 10px;
   margin: 26px 0 16px;
-  font-size: 11px;
+  font-size: var(--t-xs);
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -177,7 +177,7 @@
   margin-top: 10px;
 }
 .g-bk-subrow .g-bk-fld { margin: 0; min-width: 0; }
-.g-bk-subrow .g-bk-lab { font-size: 10.5px; }
+.g-bk-subrow .g-bk-lab { font-size: var(--t-xs); }
 @media (max-width: 380px) { .g-bk-subrow { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── the province-and-city picker ────────────────────────────────────────
@@ -189,7 +189,7 @@
   height: 46px;
   padding: 0 34px 0 12px;
   border: 1px solid rgba(11, 11, 11, .16);
-  border-radius: 8px;
+  border-radius: 2px;
   background-color: #fff;
   /* the native chevron is suppressed so the box matches the text inputs */
   appearance: none;
@@ -199,7 +199,7 @@
   background-position: right 12px center;
   background-size: 15px 15px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: var(--t-md);
   font-weight: 600;
   color: var(--ink);
   cursor: pointer;
@@ -213,5 +213,5 @@
 /* the placeholder row reads as a prompt, not a value */
 #fromArea:invalid { color: rgba(11, 11, 11, .42); font-weight: 500; }
 /* province headings inside the menu */
-#fromArea optgroup { font-weight: 800; font-size: 13px; color: rgba(11, 11, 11, .55); }
+#fromArea optgroup { font-weight: 800; font-size: var(--t-sm); color: rgba(11, 11, 11, .55); }
 #fromArea option { font-weight: 600; color: var(--ink); }
