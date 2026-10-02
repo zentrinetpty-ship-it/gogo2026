@@ -1125,10 +1125,25 @@ function pageRide() {
        to compete with it. The driver reads it and comes to the street. */
     const seatSel = $('#jOff');
     const fareFor = off => { const s = r.stops.find(x => x.city === off); return s ? s.fare : r.fare; };
-    /* the breakdown updates live as they change seats or drop-off */
+    /* the breakdown updates live as they change seats or drop-off.
+
+         There are TWO breakdowns on this screen: #joinFees (under the seat and
+         drop-off selects) and the pay panel's own #payBreakdown, in the payment
+         sheet. Both price the same thing from the same #jSeats value, but each has
+         its own render function and only this one was wired to the selects — so
+         the pay panel kept showing the total from whenever the sheet was opened.
+         The pay panel exposes its renderer as form.__paintPay for exactly this
+         reason and nothing ever called it.
+
+         Guarded, because the pay panel is built on demand: a rider who never opens
+         the payment sheet has no __paintPay and must not get a jump. */
     const showFees = () => {
       const off = seatSel.value, seats = Number($('#jSeats').value);
-      $('#joinFees').innerHTML = feeTable(fareLines(fareFor(off) * seats, seats), `${rands(FEE_CONFIG.pickup)} pickup + ${rands(FEE_CONFIG.platform)} platform fee per passenger.`);
+      $('#joinFees').innerHTML = feeTable(fareLines(fareFor(off) * seats, seats), `${rands(FEE_CONFIG.pickup)} pickup + ${rands(FEE_CONFIG.platform)} platform fee per passenger.`);
+        /* repaint the pay panel too: it renders the SAME seats value but has
+           its own renderer, and nothing was calling it. */
+        const jf = box.querySelector('#joinForm');
+        if (jf && typeof jf.__paintPay === 'function') jf.__paintPay();
     };
     seatSel.onchange = showFees;
     $('#jSeats').onchange = showFees;
