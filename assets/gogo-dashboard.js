@@ -21,7 +21,40 @@ function pageDashboard() {
      rather than rendering an empty shell that looks broken. */
   if (window.GOGOAuth && GOGOAuth.require) {
     if (!GOGOAuth.isIn()) {
-      GOGOAuth.require("Sign in to see your trips", "dashboard");
+      /* Render a real page first, THEN offer the modal. Returning early left
+         #main empty, so dismissing the modal dropped the rider onto a blank
+         white screen with a header and a dock — it read as a broken app rather
+         than as "this part needs an account". A welcome that names what the
+         dashboard holds is both honest and useful. */
+      const host = document.getElementById("main");
+      if (host) {
+        host.innerHTML = `
+    <div class="g-wrap g-section">
+      <span class="g-hero-kicker">Dashboard</span>
+      <h1 class="g-h2 g-mt-sm">Your trips, in one place</h1>
+      <p class="g-s g-mt-sm">Bookings, parcels and the people watching your trip all live here once you have an account. Sign in and this page fills in.</p>
+
+      <div class="g-card g-mt-lg">
+        <span class="g-label">What lands here</span>
+        <div class="g-list">
+          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("ticket")}</span>
+            <div><div class="g-list-t">Every seat you have booked</div><div class="g-list-s">Pickup time, driver, and how far along the route you are going.</div></div></div>
+          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span>
+            <div><div class="g-list-t">Parcels in transit</div><div class="g-list-s">What you sent, who is carrying it, and the price you agreed.</div></div></div>
+          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("chat")}</span>
+            <div><div class="g-list-t">Chat with the driver</div><div class="g-list-s">Number stays hidden until your seat is confirmed.</div></div></div>
+        </div>
+      </div>
+
+      <div class="g-card g-mt">
+        <div class="g-head"><span class="g-label">Next</span></div>
+        <p class="g-s">Sign in with your number and we will send a code. No password to remember.</p>
+        <a class="g-btn g-btn-ink g-btn-block g-mt" href="auth?next=dashboard"><span aria-hidden>${GICON("person")}</span> Sign in or create an account</a>
+        <a class="g-btn g-btn-outline g-btn-block g-mt-sm" href="/gogo/"><span aria-hidden>${GICON("search")}</span> Find a ride first</a>
+      </div>
+    </div>`;
+      }
+      if (window.GOGOAuth.require) GOGOAuth.require("Sign in to see your trips", "dashboard");
       return;
     }
   }
@@ -60,9 +93,9 @@ function pageDashboard() {
 
   /* ── the stat row: four cards, exactly like the reference ─────────────── */
   const STATS = [
-    { ic: "🚐", k: "Hikes",     sub: "all time",       n: bookings.length, href: "rides" },
-    { ic: "📦", k: "Parcels",   sub: "sent and coming", n: parcels.length,  href: "parcel" },
-    { ic: "🎫", k: "Seats",     sub: "booked",          n: live,            href: "rider" },
+    { ic: "van", k: "Hikes",     sub: "all time",       n: bookings.length, href: "rides" },
+    { ic: "parcel", k: "Parcels",   sub: "sent and coming", n: parcels.length,  href: "parcel" },
+    { ic: "ticket", k: "Seats",     sub: "booked",          n: live,            href: "rider" },
     { ic: "⭐", k: "Points",    sub: "loyalty balance", n: done * 10,       href: "more" },
   ];
 

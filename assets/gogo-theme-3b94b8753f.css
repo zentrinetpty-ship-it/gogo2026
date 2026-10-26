@@ -733,3 +733,27 @@ body:has(form) main { padding-bottom: 8px !important; }
 
 /* the last field in a form must never be reachable only under the dock */
 form { scroll-margin-bottom: 96px; }
+
+/* ══ dock overlap: the universal guarantee ══════════════════════════════════
+   The dock is position:fixed, 62px tall, 14px off the bottom — it permanently
+   owns the last ~90px of the viewport. Earlier I tried to solve its overlap
+   page by page (auth, then ride, then any page with a form) and kept finding
+   another page it sat on top of: safety's photo-vault card was the latest.
+
+   The per-page approach was the mistake. What every page actually needs is a
+   gutter at the END of the scroll equal to the dock's height, so the last thing
+   in the document can always be scrolled clear of it. That is one rule and it
+   cannot miss a page.
+
+   The dock stays floating (the intended look); content simply cannot end
+   underneath it. */
+:root { --dock-h: 62px; --dock-gap: 14px; }
+body { padding-bottom: calc(var(--dock-h) + var(--dock-gap) + 24px + env(safe-area-inset-bottom, 0px)) !important; }
+
+/* and while a field is focused the keyboard is up, so the dock gets out of the
+   way entirely rather than hovering over the input */
+body:has(input:focus) .g-dock,
+body:has(textarea:focus) .g-dock {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

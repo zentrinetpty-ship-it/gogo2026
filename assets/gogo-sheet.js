@@ -55,7 +55,7 @@
     sheet.innerHTML = `
       <div class="g2-grab" aria-hidden="true"><i></i></div>
       <div class="g2-peek" role="button" tabindex="0" aria-label="Enter your pickup address">
-        <span class="g2-peek-ic" aria-hidden="true">📍</span>
+        <span class="g2-peek-ic" aria-hidden="true">' + GEMO("pin") + '</span>
         <span class="g2-peek-txt">
           <span class="g2-peek-k">Pick me up</span>
           <span class="g2-peek-v empty" id="g2PeekV">Enter your pickup address</span>

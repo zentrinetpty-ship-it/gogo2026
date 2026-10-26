@@ -9,15 +9,15 @@ const GOGODocs = (() => {
   const DAY = 86400000;
 
   const REQUIREMENTS = [
-    { key: "licence",    label: "Driver's licence",        icon: "🪪", required: true,  months: 60, note: "Correct code for carrying passengers." },
-    { key: "pdp",        label: "Professional Driving Permit", icon: "🎫", required: true,  months: 6,  note: "Permit to carry passengers for reward." },
-    { key: "criminal",   label: "Criminal record clearance", icon: "🔎", required: true,  months: 6,  note: "Vetting decision is stored, not the certificate itself (POPIA)." },
-    { key: "roadworthy", label: "Roadworthy certificate",   icon: "🛠️", required: true,  months: 12, note: "Vehicle fitness, renewed annually." },
-    { key: "reg",        label: "Vehicle registration + disc", icon: "📄", required: true, months: 12, note: "Must match the plate on your ride listing." },
+    { key: "licence",    label: "Driver's licence",        icon: "label", required: true,  months: 60, note: "Correct code for carrying passengers." },
+    { key: "pdp",        label: "Professional Driving Permit", icon: "ticket", required: true,  months: 6,  note: "Permit to carry passengers for reward." },
+    { key: "criminal",   label: "Criminal record clearance", icon: "search", required: true,  months: 6,  note: "Vetting decision is stored, not the certificate itself (POPIA)." },
+    { key: "roadworthy", label: "Roadworthy certificate",   icon: "gear", required: true,  months: 12, note: "Vehicle fitness, renewed annually." },
+    { key: "reg",        label: "Vehicle registration + disc", icon: "doc", required: true, months: 12, note: "Must match the plate on your ride listing." },
     { key: "id",         label: "ID document",             icon: "🆔", required: true,  months: 120, note: "Identity must match the licence." },
     { key: "bank",       label: "Bank confirmation",        icon: "🏦", required: true,  months: 24, note: "Where your payout lands." },
-    { key: "photos",     label: "Vehicle photos",           icon: "📸", required: true,  months: 12, note: "All sides, plate, interior and seats." },
-    { key: "insurance",  label: "Insurance",               icon: "🛡️", required: false, months: 12, note: "Recommended, not blocking." },
+    { key: "photos",     label: "Vehicle photos",           icon: "camera", required: true,  months: 12, note: "All sides, plate, interior and seats." },
+    { key: "insurance",  label: "Insurance",               icon: "shield", required: false, months: 12, note: "Recommended, not blocking." },
   ];
 
   const STATES = {
@@ -205,7 +205,7 @@ const GOGODocs = (() => {
           const days = d.expires ? daysTo(d.expires) : null;
           return `
           <div class="g-doc">
-            <span class="g-ic g-ic-sm ${st === "verified" ? "g-ic-lime" : ""}" aria-hidden>${(REQUIREMENTS.find(r => r.key === d.key) || {}).icon || "📄"}</span>
+            <span class="g-ic g-ic-sm ${st === "verified" ? "g-ic-lime" : ""}" aria-hidden>${(REQUIREMENTS.find(r => r.key === d.key) || {}).icon || "doc"}</span>
             <div style="flex:1;min-width:0">
               <div class="g-list-t">${esc(d.label)}</div>
               <div class="g-list-s">${d.expires ? `expires ${new Date(d.expires).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })}${days !== null ? ` · ${days < 0 ? Math.abs(days) + " days ago" : days + " days left"}` : ""}` : (d.reason || "No expiry recorded")}</div>
@@ -276,7 +276,7 @@ const GOGODocs = (() => {
             ${queue.length ? queue.map(q => `
               <div class="g-req pending g-mt-sm">
                 <div class="g-between">
-                  <div class="g-row"><span class="g-ic g-ic-sm" aria-hidden>${(REQUIREMENTS.find(r => r.key === q.key) || {}).icon || "📄"}</span>
+                  <div class="g-row"><span class="g-ic g-ic-sm" aria-hidden>${(REQUIREMENTS.find(r => r.key === q.key) || {}).icon || "doc"}</span>
                     <div><div class="g-t">${esc(q.label)}</div><div class="g-list-s">${esc(q.driver)} · ${esc(q.fileSize || "file attached")}</div></div></div>
                   <span class="g-stamp g-stamp-open">review</span>
                 </div>
@@ -395,7 +395,7 @@ const GOGODocs = (() => {
           const banner = document.createElement("div");
           banner.className = "g-card g-mt";
           banner.style.borderColor = "rgba(192,57,43,.45)";
-          banner.innerHTML = `<div class="g-row"><span class="g-ic" aria-hidden>⛔</span>
+          banner.innerHTML = `<div class="g-row"><span class="g-ic" aria-hidden>${GICON("cross")}</span>
             <div><div class="g-t">Rides paused — compliance</div>
             <div class="g-list-s">${evaluate(r.driver).blocking.map(b => esc(b.label)).join(", ")} · fix this in the document centre below.</div></div></div>`;
           host.insertBefore(banner, host.firstChild);

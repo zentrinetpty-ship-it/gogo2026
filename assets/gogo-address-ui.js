@@ -218,7 +218,7 @@ const GOGOAddressField = (() => {
       list.innerHTML = rows.map((r, i) => `
         <button type="button" class="g-addr-row${i === active ? " on" : ""}" role="option"
                 aria-selected="${i === active}" data-i="${i}">
-          <span class="g-addr-ic" aria-hidden>📍</span>
+          <span class="g-addr-ic" aria-hidden>' + GEMO("pin") + '</span>
           <span class="g-addr-txt">
             <b>${fullLine(r)}</b>
             <span>${subLine(r)}</span>

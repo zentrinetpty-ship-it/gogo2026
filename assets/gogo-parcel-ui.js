@@ -57,10 +57,10 @@ function pageParcel() {
           </div>
           <div class="g-row g-mt-sm" style="gap:14px;flex-wrap:wrap">
             <span class="g-s-sm"><span aria-hidden>${GICON("parcel")}</span> ${p.weightKg}kg · ${esc((PARCEL_SIZES.find(s => s.id === p.sizeClass) || {}).label || p.sizeClass)}</span>
-            <span class="g-s-sm"><span aria-hidden>📅</span> ${esc(p.pickupDate)}${p.pickupTime ? " · " + esc(p.pickupTime) : ""}</span>
+            <span class="g-s-sm"><span aria-hidden>' + GEMO("clock") + '</span> ${esc(p.pickupDate)}${p.pickupTime ? " · " + esc(p.pickupTime) : ""}</span>
             <span class="g-s-sm"><span aria-hidden>${GICON("van")}</span> boot only, never a seat</span>
           </div>
-          ${p.description ? `<div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>📝</span><div><div class="g-list-t">${esc(p.description)}</div><div class="g-list-s">What is in the parcel</div></div></div>` : ""}
+          ${p.description ? `<div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${GICON("doc")}</span><div><div class="g-list-t">${esc(p.description)}</div><div class="g-list-s">What is in the parcel</div></div></div>` : ""}
 
           <h3 class="g-h3 g-mt-lg">Parcel details</h3>
           <p class="g-s-sm g-mt-sm">Everything here came from your booking and is editable. Nothing is asked twice.</p>
@@ -69,11 +69,11 @@ function pageParcel() {
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("flag")}</span><div style="flex:1"><label class="g-f-k">Goes to</label><input id="pTo" value="${esc(p.destinationCity)}"></div></div>
           </div>
           <div class="g-2col">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📅</span><div style="flex:1"><label class="g-f-k">Collection date</label><input id="pDate" type="date" value="${esc(p.pickupDate)}"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("clock") + '</span><div style="flex:1"><label class="g-f-k">Collection date</label><input id="pDate" type="date" value="${esc(p.pickupDate)}"></div></div>
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("clock")}</span><div style="flex:1"><label class="g-f-k">Time</label><input id="pTime" type="time" value="${esc(p.pickupTime || "")}"></div></div>
           </div>
           <div class="g-2col">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>⚖️</span><div style="flex:1"><label class="g-f-k">Weight (kg)</label><input id="pKg" type="number" min="1" max="200" value="${p.weightKg}"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("calc")}</span><div style="flex:1"><label class="g-f-k">Weight (kg)</label><input id="pKg" type="number" min="1" max="200" value="${p.weightKg}"></div></div>
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span><div style="flex:1"><label class="g-f-k">Size</label>
               <select id="pSize">${PARCEL_SIZES.map(s => `<option value="${s.id}"${s.id === p.sizeClass ? " selected" : ""}>${s.label} · ${s.hint}</option>`).join("")}</select></div></div>
           </div>
@@ -107,7 +107,7 @@ function pageParcel() {
       <div class="g-5 g-anim">
         ${pay ? `
         <div class="g-card g-card-lime">
-          <div class="g-head"><span class="g-label">Agreed price</span><span class="g-ic g-ic-sm" aria-hidden>🤝</span></div>
+          <div class="g-head"><span class="g-label">Agreed price</span><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("person") + '</span></div>
           <div class="g-kpi-val">${rands(p.agreedPrice)}</div>
           <div class="g-list-s">per parcel, agreed with ${selRide ? esc(selRide.driver) : "your driver"}</div>
           ${feeTable(pay ? parcelLines(p.agreedPrice) : null, `Carriage goes to the driver. GOGO keeps the ${rands(FEE_CONFIG.parcelBooking)} booking fee.`)}
@@ -126,15 +126,15 @@ function pageParcel() {
 
         ${selRide ? `
         <div class="g-card ${pay || myTurn ? "g-mt" : ""}">
-          <div class="g-head"><span class="g-label">Your driver</span><span class="g-ic g-ic-sm" aria-hidden>🛡️</span></div>
+          <div class="g-head"><span class="g-label">Your driver</span><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("shield") + '</span></div>
           <div class="g-driver">
             <div class="g-avatar">${esc(initials(selRide.driver))}</div>
             <div><div class="g-t">${esc(selRide.driver)}</div>
-            <div class="g-list-s"><span class="g-stars">★ ${selRide.rating}</span> · ${selRide.trips} trips</div></div>
+            <div class="g-list-s"><span class="g-stars">' + GEMO("star") + ' ${selRide.rating}</span> · ${selRide.trips} trips</div></div>
           </div>
           <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${van()}</span><div><div class="g-list-t">${esc(selRide.vehicle)}</div>
             <div class="g-list-s">${capacityLine(selRide)}</div></div></div>
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>⚖️</span><div><div class="g-list-t">Rate from ${rands(Number(selRide.ratePerKg || 12))}/kg</div><div class="g-list-s">A suggestion only. You agree the figure together.</div></div></div>
+          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("calc")}</span><div><div class="g-list-t">Rate from ${rands(Number(selRide.ratePerKg || 12))}/kg</div><div class="g-list-s">A suggestion only. You agree the figure together.</div></div></div>
         </div>` : ""}
 
         <div class="g-card ${(pay || myTurn || selRide) ? "g-mt" : ""}">

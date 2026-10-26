@@ -21,11 +21,11 @@ const GOGOPayUI = (() => {
       <span class="g-label">How will you pay?</span>
       <div class="g-pay-methods g-mt-sm" role="radiogroup" aria-label="Payment method">
         <button type="button" class="g-pay active" data-m="card">
-          <span class="g-ic g-ic-sm" aria-hidden>💳</span>
+          <span class="g-ic g-ic-sm" aria-hidden>${GICON("card")}</span>
           <div><div class="g-t">Card</div><div class="g-list-s">Charged in the app</div></div>
         </button>
         <button type="button" class="g-pay" data-m="cash">
-          <span class="g-ic g-ic-sm" aria-hidden>💵</span>
+          <span class="g-ic g-ic-sm" aria-hidden>card</span>
           <div><div class="g-t">Cash</div><div class="g-list-s">Pay the driver on boarding</div></div>
         </button>
       </div>
@@ -95,7 +95,7 @@ const GOGOPayUI = (() => {
         </div>
         <p class="g-s g-mt-sm">Every seat is paid in cash to the driver. Card payments switch on with the GOGO payment provider, and this sheet then becomes the provider's own secure card field, so card details never reach GOGO.</p>
         <div class="g-row g-mt">
-          <button class="g-btn g-btn-ink" id="useCard" type="button"><span aria-hidden>✅</span> Keep card on file</button>
+          <button class="g-btn g-btn-ink" id="useCard" type="button"><span aria-hidden>${GICON("check")}</span> Keep card on file</button>
           <button class="g-btn g-btn-outline" id="cardCancel" type="button">Not now</button>
         </div>
       </div>`;
@@ -124,7 +124,7 @@ const GOGOPayUI = (() => {
       <div class="g-bd-row"><span>Fare · ${booking.seats} seat${booking.seats === 1 ? "" : "s"}</span><b>${M2()(booking.fare)}</b></div>
       <div class="g-bd-row"><span>Platform booking fee</span><b>${M2()(booking.fee)}</b></div>
       <div class="g-bd-row total"><span>${booking.paymentMethod === "card" ? "On your card" : "Cash to driver"}</span><b>${M2()(booking.paymentMethod === "card" ? booking.fare + booking.fee : booking.fare)}</b></div>
-      <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${booking.paymentMethod === "card" ? "💳" : "💵"}</span>
+      <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${booking.paymentMethod === "card" ? "💳" : "card"}</span>
         <div><div class="g-list-t">${label[booking.paymentState] || booking.paymentState}</div>
           <div class="g-list-s">${booking.intentId ? "Reference " + booking.intentId : "No card reference · cash booking"}</div></div></div>
       ${ride && ride.safe && ride.safe[booking.phone] ? `<p class="g-s-sm g-mt-sm">Safe confirmed. Nothing further is charged.</p>` : ""}`;
@@ -162,7 +162,7 @@ const GOGOPayUI = (() => {
     const stmt = document.createElement("div");
     stmt.className = "g-card g-mt";
     stmt.innerHTML = `
-      <div class="g-head"><span class="g-label">Statement · ${st.label}</span><span class="g-ic g-ic-sm" aria-hidden>🧾</span></div>
+      <div class="g-head"><span class="g-label">Statement · ${st.label}</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("receipt")}</span></div>
       <div class="g-bd-row"><span>Card fares</span><b>${M2()(st.cardShare)}</b></div>
       <div class="g-bd-row"><span>Cash fares (kept by you)</span><b>${M2()(st.cashShare)}</b></div>
       <div class="g-bd-row"><span>Platform fees</span><b>−${M2()(st.fees)}</b></div>

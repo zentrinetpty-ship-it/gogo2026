@@ -532,12 +532,12 @@ function pageHome() {
         <h2 class="g-h2 g-mt-sm">One ride, many doorsteps</h2>
         <div class="g-mt">
           ${[
-            ["🧾", "A driver lists the ride", "East London to Mthatha, with the stops along the way and a fare per stop."],
-            ["📲", "You request a seat", "Your street, your seats. The driver sees everyone waiting on the route."],
-            ["✅", "The driver accepts", "Seats fill one by one until the car is full. Then the pickups begin."],
+            ["receipt", "A driver lists the ride", "East London to Mthatha, with the stops along the way and a fare per stop."],
+            ["mobile", "You request a seat", "Your street, your seats. The driver sees everyone waiting on the route."],
+            ["check", "The driver accepts", "Seats fill one by one until the car is full. Then the pickups begin."],
             [VAN_SVG, "The car comes to you", "Pickups run in route order: Southernwood, then Queenstown, then onward."],
           ].map(([e, t, s]) => `
-            <div class="g-list-row"><span class="g-ic" aria-hidden>${e}</span>
+            <div class="g-list-row"><span class="g-ic" aria-hidden>${GICON(e)}</span>
               <div><div class="g-list-t">${t}</div><div class="g-list-s">${s}</div></div></div>`).join("")}
         </div>
       </div>
@@ -548,9 +548,9 @@ function pageHome() {
           <h2 class="g-h2 g-mt-sm">Fill your car before you leave</h2>
           <p class="g-s g-mt-sm">You are already driving to Mthatha. List the ride, take requests from the route, and cover your fuel before you turn the key.</p>
           <div class="g-grid g-mt" style="grid-template-columns:repeat(3,1fr);gap:10px">
-            ${[["💰", "Earn per seat"], ["🛣️", "Add your stops"], ["🧾", "One trip list"]].map(([e, t]) => `
+            ${[["card", "Earn per seat"], ["route", "Add your stops"], ["receipt", "One trip list"]].map(([e, t]) => `
               <div class="g-tile">
-                <span class="g-ic g-ic-sm g-ic-glass" aria-hidden>${e}</span>
+                <span class="g-ic g-ic-sm g-ic-glass" aria-hidden>${GICON(e)}</span>
                 <div class="g-t g-mt-sm">${t}</div>
               </div>`).join("")}
           </div>
@@ -561,7 +561,7 @@ function pageHome() {
         </div>
 
         <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">Trusted by commuters</span><span class="g-ic g-ic-sm" aria-hidden>🛡️</span></div>
+          <div class="g-head"><span class="g-label">Trusted by commuters</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
           <div class="g-grid" style="grid-template-columns:repeat(3,1fr);gap:10px">
             ${[["4.9", "Avg driver rating"], ["12 min", "Avg pickup wait"], ["R180", "Saved vs shuttle"]].map(([v, l]) => `
               <div><div class="g-kpi-val" style="font-size:22px">${v}</div><div class="g-list-s">${l}</div></div>`).join("")}
@@ -584,7 +584,7 @@ function pageHome() {
     if (/mthatha|komani|queenstown|kokstad|hogsback|graaff|sabie|graskop|bethlehem|harrismith|qonce|makhanda|cradock|aliwal|mount frere|idutywa/.test(s)) return "🏔️";
     if (/kimberley|upington|springbok|kuruman|colesberg/.test(s)) return "🏜️";
     if (/tzaneen|hoedspruit|mokopane|bela-bela|polokwane|mbombela|secunda|middelburg|ermelo/.test(s)) return "🌿";
-    if (/johannesburg|pretoria|sandton|midrand|centurion|kempton|soweto|bloemfontein|polokwane/.test(s)) return "🏙️";
+    if (/johannesburg|pretoria|sandton|midrand|centurion|kempton|soweto|bloemfontein|polokwane/.test(s)) return "home";
     if (/gqeberha|east london|knysna|george|oudtshoorn|idutywa|butterworth/.test(s)) return "🚐";
     return "🛣️";
   };
@@ -1051,7 +1051,7 @@ function pageRide() {
       <!-- ── driver + the join form ── -->
       <div class="g-trip-side g-anim">
         <section class="g-card">
-          <div class="g-head"><span class="g-label">Your driver</span><span class="g-ic g-ic-sm" aria-hidden>🛡️</span></div>
+          <div class="g-head"><span class="g-label">Your driver</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
           <div class="g-driver">
             <div class="g-avatar">${esc(initials(r.driver))}</div>
             <div>
@@ -1090,7 +1090,7 @@ function pageRide() {
       ? d.destination : r.to;
     const lugNames = ["Hand luggage", "One bag", "Big bag + bags"];
     box.innerHTML = `
-      <div class="g-head"><span class="g-label">Request to join</span><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>🙋</span></div>
+      <div class="g-head"><span class="g-label">Request to join</span><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON("person")}</span></div>
       <form id="joinForm" class="g-form">
         <div class="g-field">
           <label class="g-f-k" for="jName">Your name</label>
@@ -1400,7 +1400,7 @@ function pageTicket() {
     })
     .catch(() => {
       host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
-        <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>📡</span>
+        <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("signal")}</span>
           <h3 class="g-h3">Could not reach GOGO</h3>
           <a class="g-btn g-btn-ink g-mt" href="ticket">Try again</a></div></div></div>`;
     });
@@ -1424,7 +1424,7 @@ function pageRider() {
     : live.r.status === "started" ? 4                                          /* on the way */
     : live.q.pickedUp ? 3                                                      /* picking up */
     : 2;                                                                       /* driver accepted */
-  const steps = [["🧾", "Sent"], [VAN_SVG, "Accepted"], ["📍", "Collected"], ["🛣️", "On the way"], ["🏁", "Arrived"]];
+  const steps = [["receipt", "Sent"], [VAN_SVG, "Accepted"], ["pin", "Collected"], ["route", "On the way"], ["flag", "Arrived"]];
 
   $('#main').innerHTML = `
   <div class="g-wrap g-section">
@@ -1538,7 +1538,7 @@ function pageDriver() {
             </div>
             <div class="g-row">
               <span class="g-stamp ${left ? "g-stamp-ink" : "g-stamp-full"}">${left ? left + " seats open" : "trip full"}</span>
-              <button class="g-btn g-btn-ink g-btn-sm" id="addStop" type="button"><span aria-hidden>➕</span> Add a stop</button>
+              <button class="g-btn g-btn-ink g-btn-sm" id="addStop" type="button"><span aria-hidden>${GICON("cross")}</span> Add a stop</button>
             </div>
           </div>
 
@@ -1584,7 +1584,7 @@ function pageDriver() {
                     <span class="g-stamp ${fits ? "g-stamp-open" : "g-stamp-full"}">${fits ? "fits the boot" : "no boot space"}</span></div>
                 </div>
                 ${p.description ? `<div class="g-list-s g-mt-sm">📝 ${esc(p.description)}</div>` : ""}
-                <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>⚖️</span>
+                <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${GICON("calc")}</span>
                   <div><div class="g-list-t">${rands(Number(r.ratePerKg || 12))}/kg is your rate</div>
                   <div class="g-list-s">Suggested ${rands(suggestCarriage(p, r))} · you agree the final figure with the sender</div></div></div>
                 <div class="g-row g-mt-sm">
@@ -1648,7 +1648,7 @@ function pageDriver() {
                 <div><div class="g-t">Trip full — ready to depart</div>
                   <div class="g-s-sm">All ${r.seatsTotal} seats are taken. Pickups run in route order below.</div></div></div>
               <button class="g-btn g-btn-ink g-btn-block g-mt" id="startTrip" type="button" ${r.status === "started" ? "disabled" : ""}>
-                <span aria-hidden>🛣️</span> ${r.status === "started" ? "Trip started" : "Start trip and collect"}</button>
+                <span aria-hidden>${GICON("route")}</span> ${r.status === "started" ? "Trip started" : "Start trip and collect"}</button>
             </div>` : ""}
         </div>
 
@@ -1701,7 +1701,7 @@ function pageDriver() {
         </div>
 
         <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">This week</span><span class="g-ic g-ic-sm" aria-hidden>📈</span></div>
+          <div class="g-head"><span class="g-label">This week</span><span class="g-ic g-ic-sm" aria-hidden>chart</span></div>
           <div class="g-kpi-val" id="dEarn">R0</div>
           <div class="g-bar g-mt-sm"><i data-w="72"></i></div>
           <p class="g-s-sm g-mt-sm">7 seats of 13 filled this week · rating holding at 4.9</p>
@@ -1709,13 +1709,13 @@ function pageDriver() {
         </div>
 
         <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">Stops on this ride</span><span class="g-ic g-ic-sm" aria-hidden>🛣️</span></div>
+          <div class="g-head"><span class="g-label">Stops on this ride</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("route")}</span></div>
           ${r.stops.length ? r.stops.map(s => `
             <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("stop")}</span>
               <div><div class="g-list-t">${esc(s.city)}</div><div class="g-list-s">around ${esc(s.time)} · ${money(s.fare)} per seat</div></div>
               <div class="g-list-r"><button class="g-btn g-btn-ghost g-btn-sm" data-rm="${esc(s.city)}" type="button">Remove</button></div></div>`).join("")
             : `<p class="g-s">No stops. Add one so commuters on the way can hop in.</p>`}
-          <button class="g-btn g-btn-ink g-btn-block g-mt" id="addStop2" type="button"><span aria-hidden>➕</span> Add a stop on the route</button>
+          <button class="g-btn g-btn-ink g-btn-block g-mt" id="addStop2" type="button"><span aria-hidden>${GICON("cross")}</span> Add a stop on the route</button>
         </div>
       </div>
     </div>

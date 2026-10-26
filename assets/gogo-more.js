@@ -15,7 +15,7 @@ function pageMore() {
   /* ── the sections, each a group of accordions ─────────────────────────── */
   const SECTIONS = [
     {
-      key: "how", icon: "🚐", title: "How GOGO works",
+      key: "how", icon: "van", title: "How GOGO works",
       sub: "Door collection, live tracking, no rank",
       items: [
         ["What is a hike?", "A hike is a long-distance trip with empty seats. A driver already going your way lists it, you book a seat, and they collect you at your address instead of you waiting at a rank."],
@@ -26,7 +26,7 @@ function pageMore() {
       ],
     },
     {
-      key: "cost", icon: "💳", title: "What it costs",
+      key: "cost", icon: "card", title: "What it costs",
       sub: `Fare, plus ${R(fee.pickup)} pickup and ${R(fee.platform)} platform fee per passenger`,
       items: [
         ["How is the price worked out?", `<p>You pay the fare for your seat, plus a ${R(fee.pickup)} pickup fee and a ${R(fee.platform)} platform fee. The two fees are charged <b>per passenger</b>, so three seats means three fares, three pickup fees and three platform fees.</p><p>There is no subscription and no hidden rank fee.</p>`],
@@ -37,7 +37,7 @@ function pageMore() {
       ],
     },
     {
-      key: "safety", icon: "🛡️", title: "Safety",
+      key: "safety", icon: "shield", title: "Safety",
       sub: "Four checks before a seat is ever sold",
       items: [
         ["What does GOGO check on a driver?", "Four things before a seat can be sold: a valid driver's licence, a professional driving permit, a criminal record clearance and a roadworthy certificate. When any one lapses, that driver's hikes disappear from the app automatically."],
@@ -48,7 +48,7 @@ function pageMore() {
       ],
     },
     {
-      key: "drive", icon: "🧭", title: "Drive with GOGO",
+      key: "drive", icon: "compass", title: "Drive with GOGO",
       sub: "Sell the seats you are driving past anyway",
       items: [
         ["Does it cost anything to list?", "No. Listing is free. You keep the fare."],
@@ -58,7 +58,7 @@ function pageMore() {
       ],
     },
     {
-      key: "account", icon: "⚙️", title: "Account and app",
+      key: "account", icon: "gear", title: "Account and app",
       sub: "Your details, parcels and messages",
       items: [
         /* Settings is reached from here now that the dock leads to More */
@@ -69,7 +69,7 @@ function pageMore() {
       ],
     },
     {
-      key: "legal", icon: "📄", title: "Legal",
+      key: "legal", icon: "doc", title: "Legal",
       sub: "The pages that spell it out in full",
       items: [
         ["Terms of service", `<p>The full agreement covering bookings, cancellations, conduct and liability.</p><p><a class="g-btn g-btn-ghost g-btn-sm" href="terms">Read the terms</a></p>`],
@@ -79,7 +79,7 @@ function pageMore() {
       ],
     },
     {
-      key: "help", icon: "💬", title: "Get help",
+      key: "help", icon: "chat", title: "Get help",
       sub: "Talk to a person",
       items: [
         ["Message us", `<p>Open a chat in the app and we will answer on the same thread as your booking.</p><p><a class="g-btn g-btn-ink g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Open messages</a></p>`],

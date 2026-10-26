@@ -36,10 +36,38 @@
     stop: '<circle cx="12" cy="12" r="8.4"/><rect x="9.4" y="9.4" width="5.2" height="5.2" rx="1"/>',
     calc: '<rect x="5" y="3.4" width="14" height="17.2" rx="2.2"/><path d="M8.6 7.4h6.8"/><path d="M8.6 12h.01"/><path d="M12 12h.01"/><path d="M15.4 12h.01"/><path d="M8.6 15.8h.01"/><path d="M12 15.8h.01"/><path d="M15.4 15.8h.01"/>',
     speaker: '<path d="M4.4 9.4h3l4.4-3.6v12.4l-4.4-3.6h-3Z"/><path d="M16 9.2a4 4 0 0 1 0 5.6"/>',
+
+    unlock: '<rect x="4.6" y="10.6" width="14.8" height="9.4" rx="2.2"/><path d="M8.2 10.6V7.8a3.8 3.8 0 0 1 7.2-1.2"/>',
+    camera: '<rect x="3.4" y="7.4" width="17.2" height="12" rx="2.4"/><circle cx="12" cy="13.4" r="3.4"/><path d="M8.6 7.4 10 4.8h4l1.4 2.6"/>',
+    cloud: '<path d="M7.5 18.5h9.2a3.9 3.9 0 0 0 .5-7.76 5.4 5.4 0 0 0-10.4-1.5A3.9 3.9 0 0 0 7.5 18.5Z"/>',
+    sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 3.4v2M12 18.6v2M3.4 12h2M18.6 12h2M5.9 5.9l1.4 1.4M16.7 16.7l1.4 1.4M18.1 5.9l-1.4 1.4M7.3 16.7l-1.4 1.4"/>',
+    moon: '<path d="M20 14.4A8.4 8.4 0 0 1 9.6 4a8.4 8.4 0 1 0 10.4 10.4Z"/>',
+    signal: '<path d="M4.5 19.5v-4M9.5 19.5v-8M14.5 19.5v-12M19.5 19.5v-16"/>',
+    bell: '<path d="M18 8.8a6 6 0 1 0-12 0c0 4.6-2 5.6-2 5.6h16s-2-1-2-5.6Z"/><path d="M13.7 18.4a2 2 0 0 1-3.4 0"/>',
+    bolt: '<path d="M13 3 5.5 13.2h5.2L10 21l7.5-10.2h-5.2Z"/>',
+    star: '<path d="m12 3.8 2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4-3.9 5.6-.8Z"/>',
+    home: '<path d="M3.5 10.6 12 4l8.5 6.6"/><path d="M5.8 9.6V20h12.4V9.6"/><path d="M9.8 20v-5.2h4.4V20"/>',
+    card: '<rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="M3.4 9.8h17.2"/><path d="M7 14.4h3.4"/>',
+
+    gear: '<circle cx="12" cy="12" r="3.1"/><path d="M12 3.4v2.2M12 18.4v2.2M3.4 12h2.2M18.4 12h2.2M5.9 5.9l1.6 1.6M16.5 16.5l1.6 1.6M18.1 5.9l-1.6 1.6M7.5 16.5l-1.6 1.6"/>',
+    doc: '<path d="M13.4 3.6H6.8a1.8 1.8 0 0 0-1.8 1.8v13.2a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V9.2Z"/><path d="M13.4 3.6v5.6h5.6"/><path d="M8.6 13h6.8M8.6 16.4h4.6"/>',
+    bulb: '<path d="M9.6 17.4h4.8"/><path d="M10.4 20.2h3.2"/><path d="M12 3.4a5.4 5.4 0 0 0-3.1 9.8v2h6.2v-2A5.4 5.4 0 0 0 12 3.4Z"/>',
+    info: '<circle cx="12" cy="12" r="8.4"/><path d="M12 11v5.2"/><path d="M12 8h.01"/>',
+    link: '<path d="M10 13.8a3.6 3.6 0 0 0 5.1 0l2.9-2.9a3.6 3.6 0 1 0-5.1-5.1l-1.4 1.4"/><path d="M14 10.2a3.6 3.6 0 0 0-5.1 0L6 13.1a3.6 3.6 0 1 0 5.1 5.1l1.4-1.4"/>',
+    globe: '<circle cx="12" cy="12" r="8.4"/><path d="M3.6 12h16.8"/><path d="M12 3.6a13 13 0 0 1 0 16.8 13 13 0 0 1 0-16.8Z"/>',
+    target: '<circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+    chart: '<path d="M4.4 20h15.2"/><rect x="6.6" y="11" width="3" height="6" rx="1"/><rect x="11.4" y="7" width="3" height="10" rx="1"/><rect x="16.2" y="13.4" width="3" height="3.6" rx="1"/>',
   };
   window.GICON = function (name, cls) {
     const body = P[name];
     if (!body) return "";
     return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + '</svg>';
   };
+/* ── GEMO: an icon as an expression, not markup ───────────────────────────
+     GICON returns markup, which is only safe inside a template literal or an
+     innerHTML assignment. A lot of the older code builds strings by
+     concatenation and passes them to text nodes, where raw <svg> would appear
+     as literal text. GEMO returns the same SVG from a CALL, which is valid in
+     every one of those positions. */
+  window.GEMO = function (name, cls) { return window.GICON(name, cls); };
 })();

@@ -110,24 +110,24 @@ const GOGOChat = (() => {
           <p class="g-s">Chat with the driver on your ride, or open a safety thread with GOGO. Numbers stay hidden until a seat is confirmed.</p></div>
         <div class="g-row">
           <span class="g-stamp g-stamp-idle">${st.length} thread${st.length === 1 ? "" : "s"}</span>
-          <a class="g-btn g-btn-outline g-btn-sm" href="safety"><span aria-hidden>🛡️</span> Safety centre</a>
+          <a class="g-btn g-btn-outline g-btn-sm" href="safety"><span aria-hidden>${GICON("shield")}</span> Safety centre</a>
         </div>
       </div>
 
       <div class="g-grid g-mt-lg">
         <div class="g-4 g-anim">
           <div class="g-card">
-            <div class="g-head"><span class="g-label">Ride updates</span><span class="g-ic g-ic-sm" aria-hidden>💺</span></div>
+            <div class="g-head"><span class="g-label">Ride updates</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("seat")}</span></div>
             <div class="g-updates" id="updatesList"></div>
           </div>
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Threads</span><span class="g-ic g-ic-sm" aria-hidden>💬</span></div>
+            <div class="g-head"><span class="g-label">Threads</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("chat")}</span></div>
             <div id="threadList"></div>
           </div>
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Start a thread</span><span class="g-ic g-ic-sm" aria-hidden>➕</span></div>
+            <div class="g-head"><span class="g-label">Start a thread</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("cross")}</span></div>
             <p class="g-s">No driver yet? Ask the platform to find you a seat on the route.</p>
-            <button class="g-btn g-btn-ink g-btn-block g-mt" id="newSupport" type="button"><span aria-hidden>🛡️</span> Message GOGO support</button>
+            <button class="g-btn g-btn-ink g-btn-block g-mt" id="newSupport" type="button"><span aria-hidden>${GICON("shield")}</span> Message GOGO support</button>
           </div>
         </div>
 
@@ -148,7 +148,7 @@ const GOGOChat = (() => {
       box.innerHTML = mine.length
         ? mine.map(n => `
         <div class="g-update${n.read ? "" : " unread"}">
-          <span class="g-update-ic" aria-hidden>💺</span>
+          <span class="g-update-ic" aria-hidden>${GICON("seat")}</span>
           <div style="min-width:0">
             <div class="g-update-t">${esc(n.text)}</div>
             <div class="g-update-s">${esc(n.sub || "")}</div>
@@ -216,7 +216,7 @@ const GOGOChat = (() => {
 
       <div class="g-composer">
         <textarea id="composer" rows="1" placeholder="Message ${esc(t.peer)}…" aria-label="Message"></textarea>
-        <button class="g-btn g-btn-ink" id="sendBtn" type="button"><span aria-hidden>➤</span> Send</button>
+        <button class="g-btn g-btn-ink" id="sendBtn" type="button"><span aria-hidden>${GICON("send")}</span> Send</button>
       </div>
       <div class="g-quick">
         ${quickReplies(t).map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")}
@@ -281,8 +281,8 @@ const GOGOChat = (() => {
         <div><span class="g-label">Safety centre</span><h1 class="g-h2 g-mt-sm">Your safety photos and how long we keep them</h1>
           <p class="g-s">Every driver and passenger takes one selfie before the ride. It is the security record for that ride session: if anything goes wrong on the trip, we know who was on board. It is shown only to the person you are travelling with, and deleted automatically ${st.RETENTION_H} hours after the trip ends and you tap "I am safe".</p></div>
         <div class="g-row">
-          <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>💬</span> Support chat</a>
-          <button class="g-btn g-btn-ink g-btn-sm" id="wipeAll" type="button"><span aria-hidden>🗑️</span> Delete my photos now</button>
+          <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Support chat</a>
+          <button class="g-btn g-btn-ink g-btn-sm" id="wipeAll" type="button"><span aria-hidden>${GICON("trash")}</span> Delete my photos now</button>
         </div>
       </div>
 
@@ -294,15 +294,15 @@ const GOGOChat = (() => {
           </div>
 
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Retention rules</span><span class="g-ic g-ic-sm" aria-hidden>📘</span></div>
+            <div class="g-head"><span class="g-label">Retention rules</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("doc")}</span></div>
             ${[
-              ["📸", "Taken when you book or list", "One selfie per person, per ride. Both sides are checked, so nobody rides anonymously."],
-              ["🔒", "Held only for the ride", "Visible to the other person on that ride only. Never public, never used for marketing."],
-              ["⏱️", `Deleted ${st.RETENTION_H} hours after the trip`, "The clock starts when the ride is completed and every passenger has tapped “I am safe”."],
-              ["🗑️", "You can delete early", "One tap removes your photo immediately, on top of the automatic deletion."],
-              ["⚠️", "If someone never confirms safe", `After ${st.ESCALATE_H} hours the ride is escalated to platform review and the photos are held for that investigation instead of silently expiring.`],
+              ["mobile", "Taken when you book or list", "One selfie per person, per ride. Both sides are checked, so nobody rides anonymously."],
+              ["lock", "Held only for the ride", "Visible to the other person on that ride only. Never public, never used for marketing."],
+              ["clock", `Deleted ${st.RETENTION_H} hours after the trip`, "The clock starts when the ride is completed and every passenger has tapped “I am safe”."],
+              ["trash", "You can delete early", "One tap removes your photo immediately, on top of the automatic deletion."],
+              ["info", "If someone never confirms safe", `After ${st.ESCALATE_H} hours the ride is escalated to platform review and the photos are held for that investigation instead of silently expiring.`],
             ].map(([e, t, s]) => `
-              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${e}</span>
+              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON(e)}</span>
                 <div><div class="g-list-t">${t}</div><div class="g-list-s">${s}</div></div></div>`).join("")}
             <p class="g-s-sm g-mt">South African law (POPIA) treats a face photo as special personal information. GOGO stores it with your explicit consent, for one purpose only, for the shortest possible time.</p>
           </div>
@@ -310,7 +310,7 @@ const GOGOChat = (() => {
 
         <div class="g-5 g-anim">
           <div class="g-card">
-            <div class="g-head"><span class="g-label">Ride safeguards</span><span class="g-ic g-ic-sm" aria-hidden>🛡️</span></div>
+            <div class="g-head"><span class="g-label">Ride safeguards</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
             ${rides.length ? rides.map(r => {
               const accepted = (r.requests || []).filter(q => q.status === "accepted");
               const safeCount = accepted.filter(q => (r.safe || {})[q.phone]).length;
@@ -326,7 +326,7 @@ const GOGOChat = (() => {
           </div>
 
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Audit trail</span><span class="g-ic g-ic-sm" aria-hidden>🧾</span></div>
+            <div class="g-head"><span class="g-label">Audit trail</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("receipt")}</span></div>
             <div class="g-audit" id="audit"></div>
             <p class="g-s-sm g-mt">Every capture, retention decision and deletion is logged with a timestamp.</p>
           </div>
@@ -365,10 +365,10 @@ const GOGOChat = (() => {
         </div>
         ${GOGOSafety.canDelete(s.id).ok
           ? `<button class="g-btn g-btn-outline g-btn-sm" data-del="${s.id}" type="button">Delete</button>`
-          : `<div class="g-vault-locked"><span aria-hidden>🔒</span><span>${esc(GOGOSafety.canDelete(s.id).reason)}</span></div>`}
+          : `<div class="g-vault-locked"><span aria-hidden>${GICON("lock")}</span><span>${esc(GOGOSafety.canDelete(s.id).reason)}</span></div>`}
       </div>`;
     }).join("") : `
-      <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🛡️</span>
+      <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("shield")}</span>
         <h3 class="g-h3">No safety photos stored</h3>
         <p class="g-s g-mt-sm">Book a ride and you will be asked for one selfie. It stays in this vault only until the trip is done and confirmed safe.</p>
         <a class="g-btn g-btn-ink g-mt" href="rides.html?from=East+London&to=Mthatha">Find a ride</a></div>`;
@@ -403,13 +403,13 @@ const GOGOChat = (() => {
         const me = GOGOSafety.forRide(rideId).find(s => s.role === "passenger");
         gate.innerHTML = `
           <div class="g-row">
-            <span class="g-ic g-ic-lime" aria-hidden>🛡️</span>
+            <span class="g-ic g-ic-lime" aria-hidden>${GICON("shield")}</span>
             <div style="flex:1"><div class="g-t">Safety selfie ${me ? "on file" : "required"}</div>
               <div class="g-list-s">${me ? `Taken ${GOGOSafety.fmt(me.takenAt)} · auto-deletes after the trip` : `Both sides take one. Kept for this ride, deleted ${GOGOSafety.RETENTION_H}h after it ends.`}</div></div>
             <div class="g-vault-face" style="width:52px;height:52px">${me && me.dataUrl ? `<img src="${me.dataUrl}" alt="">` : "📸"}</div>
           </div>
           <button class="g-btn ${me ? "g-btn-outline" : "g-btn-ink"} g-btn-block g-mt" id="selfieGate" type="button">
-            <span aria-hidden>📸</span> ${me ? "Retake my selfie" : "Take my safety selfie"}</button>`;
+            <span aria-hidden>${GICON("camera")}</span> ${me ? "Retake my selfie" : "Take my safety selfie"}</button>`;
         const submit = form.querySelector("button[type=submit]");
         form.insertBefore(gate, submit);
 
@@ -434,7 +434,7 @@ const GOGOChat = (() => {
         const link = document.createElement("a");
         link.className = "g-btn g-btn-outline g-btn-block g-mt";
         link.href = "messages";
-        link.innerHTML = `<span aria-hidden>💬</span> Message ${esc(thread.peer.split(" ")[0])} about this ride`;
+        link.innerHTML = `<span aria-hidden>${GICON("chat")}</span> Message ${esc(thread.peer.split(" ")[0])} about this ride`;
         back.appendChild(link);
       }
     }
@@ -451,8 +451,8 @@ const GOGOChat = (() => {
           const bar = document.createElement("div");
           bar.className = "g-row g-mt";
           bar.innerHTML = `
-            <a class="g-btn g-btn-ink g-btn-sm" href="messages"><span aria-hidden>💬</span> Message ${esc(live.r.driver.split(" ")[0])}${thread.unread ? ` (${thread.unread})` : ""}</a>
-            <a class="g-btn g-btn-outline g-btn-sm" href="safety"><span aria-hidden>🛡️</span> Safety</a>
+            <a class="g-btn g-btn-ink g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Message ${esc(live.r.driver.split(" ")[0])}${thread.unread ? ` (${thread.unread})` : ""}</a>
+            <a class="g-btn g-btn-outline g-btn-sm" href="safety"><span aria-hidden>${GICON("shield")}</span> Safety</a>
             <button class="g-btn g-btn-outline g-btn-sm" id="askSupport" type="button"><span aria-hidden>🆘</span> Get help now</button>`;
           card.appendChild(bar);
           $('#askSupport').onclick = () => {
@@ -483,7 +483,7 @@ const GOGOChat = (() => {
         safeBox.className = "g-safe g-mt";
 
         if (already) {
-          safeBox.innerHTML = `<div class="g-safe-done"><span aria-hidden>✅</span> You confirmed you are safe${live.r.purgeAt ? ` · safety photos delete in ${GOGOSafety.countdown(live.r.purgeAt)}` : ""}</div>`;
+          safeBox.innerHTML = `<div class="g-safe-done"><span aria-hidden>${GICON("check")}</span> You confirmed you are safe${live.r.purgeAt ? ` · safety photos delete in ${GOGOSafety.countdown(live.r.purgeAt)}` : ""}</div>`;
         } else if (live.q.status !== "accepted") {
           /* not accepted: the request is still with the driver */
           safeBox.innerHTML = `<div class="g-row">
@@ -494,20 +494,20 @@ const GOGOChat = (() => {
         } else if (st === "open" || st === "accepted") {
           /* accepted, but the ride has not departed */
           safeBox.innerHTML = `<div class="g-row">
-               <span class="g-ic" aria-hidden>🚐</span>
+               <span class="g-ic" aria-hidden>${GICON("van")}</span>
                <div style="flex:1"><div class="g-t">Seat confirmed</div>
                  <div class="g-list-s">Departs ${esc(live.r.departLabel || "")}. Once the trip ends you can tap "I am safe".</div></div>
              </div>`;
         } else if (st === "started") {
           safeBox.innerHTML = `<div class="g-row">
-               <span class="g-ic g-ic-lime" aria-hidden>🛣️</span>
+               <span class="g-ic g-ic-lime" aria-hidden>${GICON("route")}</span>
                <div style="flex:1"><div class="g-t">On the road</div>
                  <div class="g-list-s">"I am safe" appears when the trip is complete.</div></div>
              </div>`;
         } else if (st === "completed" || st === "ended") {
           /* the ride is done — this is the only state that offers the button */
           safeBox.innerHTML = `<div class="g-row">
-               <span class="g-ic g-ic-lime" aria-hidden>🛡️</span>
+               <span class="g-ic g-ic-lime" aria-hidden>${GICON("shield")}</span>
                <div style="flex:1"><div class="g-t">Trip finished — are you safe?</div>
                  <div class="g-list-s">Tapping this closes the safety window and starts the ${GOGOSafety.RETENTION_H}-hour deletion timer for the ride selfies.</div></div>
              </div>
@@ -539,15 +539,15 @@ const GOGOChat = (() => {
         const box = document.createElement("div");
         box.className = "g-card g-mt";
         box.innerHTML = `
-          <div class="g-head"><span class="g-label">Driver safety check</span><span class="g-ic g-ic-sm ${mine ? "g-ic-lime" : ""}" aria-hidden>🛡️</span></div>
+          <div class="g-head"><span class="g-label">Driver safety check</span><span class="g-ic g-ic-sm ${mine ? "g-ic-lime" : ""}" aria-hidden>${GICON("shield")}</span></div>
           <div class="g-row">
             <div class="g-vault-face" style="width:58px;height:58px">${mine && mine.dataUrl ? `<img src="${mine.dataUrl}" alt="">` : "📸"}</div>
             <div style="flex:1"><div class="g-t">${mine ? "Selfie on file" : "Selfie required before passengers board"}</div>
               <div class="g-list-s">${mine ? `Taken ${GOGOSafety.fmt(mine.takenAt)} · passengers on this ride can see it` : "Passengers see this so they know who is collecting them."}</div></div>
           </div>
           <button class="g-btn ${mine ? "g-btn-outline" : "g-btn-ink"} g-btn-block g-mt" id="driverSelfie" type="button">
-            <span aria-hidden>📸</span> ${mine ? "Retake driver selfie" : "Take driver selfie"}</button>
-          <a class="g-btn g-btn-outline g-btn-block g-mt-sm" href="safety"><span aria-hidden>🧾</span> Safety vault & audit log</a>`;
+            <span aria-hidden>${GICON("camera")}</span> ${mine ? "Retake driver selfie" : "Take driver selfie"}</button>
+          <a class="g-btn g-btn-outline g-btn-block g-mt-sm" href="safety"><span aria-hidden>${GICON("receipt")}</span> Safety vault & audit log</a>`;
         host.appendChild(box);
         $('#driverSelfie').onclick = () => GOGOSafety.capture({
           rideRef: r.id, role: "driver", name: r.driver,
@@ -561,29 +561,29 @@ const GOGOChat = (() => {
         const lr = document.createElement("div");
         lr.className = "g-card g-mt";
         lr.innerHTML = `
-          <div class="g-head"><span class="g-label">List a new ride</span><span class="g-ic g-ic-sm" aria-hidden>🗺️</span></div>
+          <div class="g-head"><span class="g-label">List a new ride</span><span class="g-ic g-ic-sm" aria-hidden>route️</span></div>
           <div class="g-2col">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📍</span><div style="flex:1"><label class="g-f-k">From</label>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("pin")}</span><div style="flex:1"><label class="g-f-k">From</label>
               <select id="nrFrom">${["East London","Mthatha","Queenstown","Butterworth","Idutywa"].map(c => `<option>${c}</option>`).join("")}</select></div></div>
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🏁</span><div style="flex:1"><label class="g-f-k">To</label>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("flag")}</span><div style="flex:1"><label class="g-f-k">To</label>
               <select id="nrTo">${["Mthatha","East London","Queenstown","Butterworth","Idutywa"].map(c => `<option${c === "Mthatha" ? " selected" : ""}>${c}</option>`).join("")}</select></div></div>
           </div>
           <div class="g-2col">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🕕</span><div style="flex:1"><label class="g-f-k">Leave at</label><input id="nrTime" type="time" value="07:00"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("clock")}</span><div style="flex:1"><label class="g-f-k">Leave at</label><input id="nrTime" type="time" value="07:00"></div></div>
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🪑</span><div style="flex:1"><label class="g-f-k">Seats</label>
               <select id="nrSeats">${[2,3,4,5,6,7].map(n => `<option${n === 6 ? " selected" : ""}>${n}</option>`).join("")}</select></div></div>
           </div>
           <div class="g-2col">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>💰</span><div style="flex:1"><label class="g-f-k">Fare / seat</label><input id="nrFare" value="230"></div></div>
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🧳</span><div style="flex:1"><label class="g-f-k">Luggage</label>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>card</span><div style="flex:1"><label class="g-f-k">Fare / seat</label><input id="nrFare" value="230"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("luggage")}</span><div style="flex:1"><label class="g-f-k">Luggage</label>
               <select id="nrLug"><option>Boot space</option><option>Hand luggage only</option><option>Trailer</option></select></div></div>
           </div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🚏</span><div style="flex:1"><label class="g-f-k">Stops (comma separated)</label>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("stop")}</span><div style="flex:1"><label class="g-f-k">Stops (comma separated)</label>
             <input id="nrStops" value="Queenstown, Butterworth" placeholder="Queenstown, Butterworth"></div></div>
           <div class="g-safe g-mt-sm">
             <div class="g-s-sm"><b>Security step:</b> one selfie before this goes live. It is the ride-session record, so if anything goes wrong we know who was on board, and it lets your passengers see who is collecting them. It deletes ${GOGOSafety.RETENTION_H}h after the trip and their “I am safe”.</div>
           </div>
-          <button class="g-btn g-btn-ink g-btn-block g-mt" id="publishNew" type="button"><span aria-hidden>📸</span> Take selfie and publish ride</button>
+          <button class="g-btn g-btn-ink g-btn-block g-mt" id="publishNew" type="button"><span aria-hidden>${GICON("camera")}</span> Take selfie and publish ride</button>
           <p class="g-s-sm g-mt-sm">Ride appears in search immediately and passengers can request seats.</p>`;
         host5.appendChild(lr);
 
@@ -606,7 +606,7 @@ const GOGOChat = (() => {
                 from: draft.from, to: draft.to, depart: d.toISOString(), seatsTotal: draft.seats, luggage: draft.luggage,
                 stops: draft.stops, fare: draft.fare, requests: [], status: "open",
               });
-              S.activity.unshift({ e: "🗺️", t: "Ride listed · " + draft.from + " → " + draft.to, s: `${draft.seats} seats · ${money(draft.fare)} per seat`, when: "just now" });
+              S.activity.unshift({ e: "route️", t: "Ride listed · " + draft.from + " → " + draft.to, s: `${draft.seats} seats · ${money(draft.fare)} per seat`, when: "just now" });
               save();
               toast("<b>Ride live</b> · passengers can now request seats");
               setTimeout(() => location.href = "rides.html?from=" + encodeURIComponent(draft.from) + "&to=" + encodeURIComponent(draft.to), 900);
@@ -621,9 +621,9 @@ const GOGOChat = (() => {
         const box = document.createElement("div");
         box.className = "g-card g-mt";
         box.innerHTML = `
-          <div class="g-head"><span class="g-label">Close the trip</span><span class="g-ic g-ic-sm" aria-hidden>🏁</span></div>
+          <div class="g-head"><span class="g-label">Close the trip</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("flag")}</span></div>
           <p class="g-s">Ending the trip asks every passenger to tap “I am safe”. Their safety photos then delete automatically ${GOGOSafety.RETENTION_H} hours later.</p>
-          <button class="g-btn g-btn-ink g-btn-block" id="endTrip" type="button"><span aria-hidden>🏁</span> End trip and ask for safe confirmations</button>`;
+          <button class="g-btn g-btn-ink g-btn-block" id="endTrip" type="button"><span aria-hidden>${GICON("flag")}</span> End trip and ask for safe confirmations</button>`;
         host7.appendChild(box);
         $('#endTrip').onclick = () => {
           r.status = "completed"; r.completedAt = new Date().toISOString();
@@ -649,7 +649,7 @@ const GOGOChat = (() => {
           const a = document.createElement("a");
           a.className = "g-btn g-btn-outline g-btn-sm";
           a.href = "messages";
-          a.innerHTML = `<span aria-hidden>💬</span> Message ${esc(q.name.split(" ")[0])}${t.unread ? ` (${t.unread})` : ""}`;
+          a.innerHTML = `<span aria-hidden>${GICON("chat")}</span> Message ${esc(q.name.split(" ")[0])}${t.unread ? ` (${t.unread})` : ""}`;
           row.appendChild(a);
         }
       });
@@ -660,12 +660,12 @@ const GOGOChat = (() => {
         const box = document.createElement("div");
         box.className = "g-card g-mt";
         box.innerHTML = `
-          <div class="g-head"><span class="g-label">Passenger chat</span><span class="g-ic g-ic-sm" aria-hidden>💬</span></div>
+          <div class="g-head"><span class="g-label">Passenger chat</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("chat")}</span></div>
           ${accepted.map(q => { const th = ensure(r.id, q.name, "passenger"); const last = th.messages[th.messages.length - 1];
-            return `<div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🧍</span>
+            return `<div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("person")}</span>
               <div><div class="g-list-t">${esc(q.name)}</div><div class="g-list-s">${last ? esc(last.text.slice(0, 40)) : "No messages yet"}</div></div>
               <div class="g-list-r"><span class="g-thread-badge" style="display:${th.unread ? "grid" : "none"}">${th.unread || ""}</span></div></div>`; }).join("")}
-          <a class="g-btn g-btn-ink g-btn-block g-mt" href="messages"><span aria-hidden>💬</span> Open chats</a>`;
+          <a class="g-btn g-btn-ink g-btn-block g-mt" href="messages"><span aria-hidden>${GICON("chat")}</span> Open chats</a>`;
         host7.appendChild(box);
         void t;
       }

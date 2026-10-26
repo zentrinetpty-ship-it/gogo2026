@@ -54,9 +54,9 @@ const GOGOSafety = (() => {
         </div>
 
         <div class="g-row g-mt" id="camBtns">
-          <button class="g-btn g-btn-ink" id="shotBtn" type="button"><span aria-hidden>📸</span> Take selfie</button>
+          <button class="g-btn g-btn-ink" id="shotBtn" type="button"><span aria-hidden>' + GEMO("camera") + '</span> Take selfie</button>
           <button class="g-btn g-btn-outline" id="retakeBtn" type="button" style="display:none">Retake</button>
-          <button class="g-btn g-btn-outline" id="fileBtn" type="button"><span aria-hidden>🖼️</span> Use a photo</button>
+          <button class="g-btn g-btn-outline" id="fileBtn" type="button"><span aria-hidden>${GICON("camera")}</span> Use a photo</button>
           <button class="g-btn g-btn-ghost" id="cancelBtn" type="button">Cancel</button>
         </div>
         <input type="file" id="camFile" accept="image/*" capture="user" style="display:none">
@@ -84,7 +84,7 @@ const GOGOSafety = (() => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 640 }, audio: false });
         video.srcObject = stream; video.style.display = "block"; shot.style.display = "none";
-        shotBtn.innerHTML = '<span aria-hidden>📸</span> Take selfie';
+        shotBtn.innerHTML = '<span aria-hidden>' + GEMO("camera") + '</span> Take selfie';
       } catch (e) {
         video.style.display = "none";
         hint.textContent = "No camera access — use a photo instead";
@@ -190,7 +190,7 @@ const GOGOSafety = (() => {
     if (completed && !allSafe && Date.now() - completed > ESCALATE_H * HOUR) {
       if (!r.escalated) {
         r.escalated = true;
-        audit(`⚠ ${rideRefOf(r)} · a passenger never confirmed safe · escalated to platform review · photos held`);
+        audit(`info ${rideRefOf(r)} · a passenger never confirmed safe · escalated to platform review · photos held`);
       }
     }
     if (completed && allSafe) r.escalated = false;

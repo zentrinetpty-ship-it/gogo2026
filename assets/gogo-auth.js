@@ -277,11 +277,11 @@ const GOGOAuth = (() => {
           <div class="g-card g-card-dark">
             <span class="g-label">Why an account</span>
             <h3 class="g-h3 g-mt-sm">Verified humans on both seats</h3>
-            ${[["🛡️", "A real person per seat", "Drivers and passengers verify before they can book or list."],
-               ["📞", "Number stays private", "Hidden until a seat is confirmed. Chat runs inside GOGO."],
-               ["📸", "Matching safety selfie", "The account and the safety selfie are tied to the same person for that ride."],
-               ["🚫", "One tap to block", "Report from the ride chat and the account is frozen for review."]].map(([e, t, d]) => `
-              <div class="g-list-row" style="border-color:rgba(11,11,11,.14)"><span class="g-ic g-ic-sm g-ic-glass" aria-hidden>${e}</span>
+            ${[["shield", "A real person per seat", "Drivers and passengers verify before they can book or list."],
+               ["phone", "Number stays private", "Hidden until a seat is confirmed. Chat runs inside GOGO."],
+               ["mobile", "Matching safety selfie", "The account and the safety selfie are tied to the same person for that ride."],
+               ["cross", "One tap to block", "Report from the ride chat and the account is frozen for review."]].map(([e, t, d]) => `
+              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON(e)}</span>
                 <div><div class="g-list-t">${t}</div><div class="g-list-s">${d}</div></div></div>`).join("")}
           </div>
 
@@ -289,7 +289,7 @@ const GOGOAuth = (() => {
             <div class="g-head"><span class="g-label">Good to know</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("lock")}</span></div>
             <div class="g-list">
               <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span><div><div class="g-list-t">Password stays hashed</div><div class="g-list-s">Stored as PBKDF2-SHA256 with a salt unique to your account. Never in plain text.</div></div></div>
-              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🗑️</span><div><div class="g-list-t">Delete whenever you want</div><div class="g-list-s">Delete your account in the app and your details go with it.</div></div></div>
+              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("trash")}</span><div><div class="g-list-t">Delete whenever you want</div><div class="g-list-s">Delete your account in the app and your details go with it.</div></div></div>
             </div>
             <p class="g-s-sm g-mt-sm">By creating an account you agree to our <a href="terms">Terms</a> and <a href="privacy">Privacy Policy</a>.</p>
           </div>
@@ -315,7 +315,7 @@ const GOGOAuth = (() => {
         </div>
         <button class="g-btn g-btn-ghost g-btn-block g-mt" id="signOut" type="button">Sign out</button>
         <div class="g-hr g-mt-lg"></div>
-        <div class="g-head"><span class="g-label">Delete account</span><span class="g-ic g-ic-sm" aria-hidden>🗑️</span></div>
+        <div class="g-head"><span class="g-label">Delete account</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("trash")}</span></div>
         <p class="g-s">Deleting removes your account, your saved routes and your cached trips from this device. It cannot be undone.</p>
         <div id="delWrap"><button class="g-btn g-btn-outline g-btn-block" id="delAsk" type="button">Delete my account</button></div>`;
       $('#signOut').onclick = () => { signOut(); toast("Signed out"); setTimeout(() => location.reload(), 600); };
@@ -339,7 +339,7 @@ const GOGOAuth = (() => {
           <button class="g-tab" id="tabSignup" role="tab" type="button">Create account</button>
         </div>
         <form id="loginForm" novalidate autocomplete="on">
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>✉️</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("chat") + '</span>
             <div style="flex:1"><label class="g-f-k" for="liEmail">Email</label>
               <input id="liEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div></div>
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span>
@@ -399,13 +399,13 @@ const GOGOAuth = (() => {
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("person")}</span>
             <div style="flex:1"><label class="g-f-k" for="suName">Full name</label>
               <input id="suName" name="name" type="text" autocomplete="name" placeholder="Thandi Mokoena" required></div></div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>✉️</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("chat") + '</span>
             <div style="flex:1"><label class="g-f-k" for="suEmail">Email</label>
               <input id="suEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div></div>
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span>
             <div style="flex:1"><label class="g-f-k" for="suPw">Password</label>
               <input id="suPw" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></div></div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🗺️</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>' + GEMO("route") + '</span>
             <div style="flex:1"><label class="g-f-k" for="suProv">Province</label>
               <select id="suProv" name="province" required>
                 <option value="">Choose your province</option>

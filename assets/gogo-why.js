@@ -8,7 +8,7 @@
 const GOGOWhy = (() => {
   const REASONS = [
     {
-      key: "weather", icon: "🌦️", tone: "navy", title: "No more standing in the weather",
+      key: "weather", icon: "cloud", tone: "navy", title: "No more standing in the weather",
       line: "You wait at your own gate. Not in the rain, not in the sun, not in the wind at a rank.",
       long: [
         "Hiking usually starts with the worst part of the trip: standing outside with your bags, hoping a car comes before the weather turns.",
@@ -18,7 +18,7 @@ const GOGOWhy = (() => {
       proof: "Door collection on every ride, with a live arrival time",
     },
     {
-      key: "safety", icon: "🛡️", tone: "lime", title: "No more robbery risk at the rank",
+      key: "safety", icon: "shield", tone: "lime", title: "No more robbery risk at the rank",
       line: "No cash waved around, no waiting on a dark corner, no climbing into a car nobody has checked.",
       long: [
         "The dangerous part of long-distance travel is rarely the road. It is the wait: cash in your hand, bags at your feet, a stranger's boot opening next to you.",
@@ -28,7 +28,7 @@ const GOGOWhy = (() => {
       proof: "Licence, PDP, criminal clearance and roadworthy, all verified before listing",
     },
     {
-      key: "nostray", icon: "🏠", tone: "gold", title: "If nobody is going your way, you stay home",
+      key: "nostray", icon: "home", tone: "gold", title: "If nobody is going your way, you stay home",
       line: "Search any route in all nine provinces. If there is no ride today, set an alert and we tell you the moment one appears.",
       long: [
         "The worst answer in travel is \"no cars going that way today\", usually shouted through a window after you already travelled to the rank.",
@@ -38,7 +38,7 @@ const GOGOWhy = (() => {
       proof: "9 provinces, 186 towns, alerts on routes that are quiet today",
     },
     {
-      key: "bags", icon: "🧳", tone: "navy", title: "Heavy bags? We come to you",
+      key: "bags", icon: "luggage", tone: "navy", title: "Heavy bags? We come to you",
       line: "Two suitcases, a mattress, a crate of groceries, a baby bag. You do not carry any of it to a rank.",
       long: [
         "Travelling with real luggage is the thing that breaks people. You cannot carry it far, you cannot leave it, and you cannot hold it on your lap for three hours.",
@@ -48,7 +48,7 @@ const GOGOWhy = (() => {
       proof: "Luggage listed per vehicle: hand luggage, boot space or trailer",
     },
     {
-      key: "night", icon: "🌙", tone: "navy", title: "Late night and early morning hikes",
+      key: "night", icon: "moon", tone: "navy", title: "Late night and early morning hikes",
       line: "The 4am hike to catch a clinic appointment, or the 9pm ride home after work. Both are covered.",
       long: [
         "Long-distance travel does not happen at convenient times. Buses are full, ranks are empty before dawn, and nobody wants to be the last person standing on a street at night.",
@@ -58,7 +58,7 @@ const GOGOWhy = (() => {
       proof: "Rides that depart from 04:00 through to late night, all trackable",
     },
     {
-      key: "watch", icon: "📡", tone: "lime", title: "Your people watch you the whole way",
+      key: "watch", icon: "signal", tone: "lime", title: "Your people watch you the whole way",
       line: "Share your live trip with up to 3 people on WhatsApp, SMS, Telegram or any app you use.",
       long: [
         "You should never have to send \"I am fine\" and hope your family believes you.",
@@ -68,7 +68,7 @@ const GOGOWhy = (() => {
       proof: "Up to 3 watchers, each with a revocable link, no phone numbers exposed",
     },
     {
-      key: "pay", icon: "💳", tone: "gold", title: "Pay by card or in cash",
+      key: "pay", icon: "card", tone: "gold", title: "Pay by card or in cash",
       line: "Your choice, every booking. One small booking fee, no fare games.",
       long: [
         "Some people travel with a card, some travel with cash. Both work, and the fare is the fare.",
@@ -114,17 +114,17 @@ const GOGOWhy = (() => {
           <h2 class="g-h2 g-mt-sm">The hard part of travelling is not the road</h2>
           <p class="g-s g-mt-sm" style="max-width:52em">It is the waiting, the weather, the bags and the walk to the rank. GOGO moves all of that out of your way.</p>
         </div>
-        <a class="g-btn g-btn-ink" href="why"><span aria-hidden>📖</span> All the reasons</a>
+        <a class="g-btn g-btn-ink" href="why"><span aria-hidden>${GICON("doc")}</span> All the reasons</a>
       </div>
 
       <div class="g-grid g-mt-lg">
         ${REASONS.slice(0, 6).map((r, i) => `
           <div class="g-4 g-anim">
             <article class="g-why">
-              <span class="g-ic g-why-ic ${r.tone === "lime" ? "g-ic-lime" : r.tone === "navy" ? "g-ic-ink" : ""}" aria-hidden>${r.icon}</span>
+              <span class="g-ic g-why-ic ${r.tone === "lime" ? "g-ic-lime" : r.tone === "navy" ? "g-ic-ink" : ""}" aria-hidden>${GICON(r.icon)}</span>
               <h3 class="g-h3 g-mt-sm">${r.title}</h3>
               <p class="g-s">${r.line}</p>
-              <div class="g-why-proof"><span aria-hidden>✅</span> ${r.proof}</div>
+              <div class="g-why-proof"><span aria-hidden>${GICON("check")}</span> ${r.proof}</div>
             </article>
           </div>`).join("")}
       </div>
@@ -132,7 +132,7 @@ const GOGOWhy = (() => {
       <div class="g-card g-mt-lg g-anim" style="background:linear-gradient(135deg,rgba(163,230,53,.18),rgba(141,182,0,.10))">
         <div class="g-between">
           <div class="g-row">
-            <span class="g-ic g-ic-lg" aria-hidden>📡</span>
+            <span class="g-ic g-ic-lg" aria-hidden>${GICON("signal")}</span>
             <div>
               <div class="g-t">Share your trip with up to 3 people</div>
               <div class="g-list-s">Live map, arrival time, and your I am safe at the end. They never see your number.</div>
@@ -153,14 +153,14 @@ const GOGOWhy = (() => {
         <h1 class="g-h1 g-mt-sm" style="max-width:20em">Travel that starts at your gate, not at a rank</h1>
         <p class="g-s g-mt" style="max-width:60em;font-size:15.5px">Every reason people stay home instead of travelling has the same shape: the wait, the walk, the weather and the luggage. GOGO was built to remove all four, and to keep your family able to see you while you travel.</p>
         <div class="g-row g-mt-lg">
-          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>🔍</span> Find a ride</a>
+          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
           <a class="g-btn g-btn-outline" href="#reasons">Read the reasons</a>
         </div>
       </div>
 
       <div class="g-grid g-mt-lg" style="grid-template-columns:repeat(4,1fr);gap:12px">
-        ${[["🪪", "4 checks", "before a seat is sold"], ["📡", "3 watchers", "on every trip"], ["🕕", "04:00 to late", "every day"], ["🔒", "24 hours", "then selfies delete"]].map(([e, a, b]) => `
-          <div class="g-card g-anim"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${e}</span>
+        ${[["label", "4 checks", "before a seat is sold"], ["signal", "3 watchers", "on every trip"], ["clock", "04:00 to late", "every day"], ["lock", "24 hours", "then selfies delete"]].map(([e, a, b]) => `
+          <div class="g-card g-anim"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON(e)}</span>
             <div class="g-t g-mt-sm">${a}</div><div class="g-list-s">${b}</div></div>`).join("")}
       </div>
 
@@ -168,7 +168,7 @@ const GOGOWhy = (() => {
         <div class="g-head"><span class="g-label">The old way vs GOGO</span><span class="g-s-sm">same trip, different day</span></div>
         <div class="g-vs g-mt">
           <div class="g-vs-col bad">
-            <div class="g-vs-head"><span aria-hidden>🚕</span> Standing at the rank</div>
+            <div class="g-vs-head"><span aria-hidden>${GICON("van")}</span> Standing at the rank</div>
             <ul>
               <li>Leave home an hour early to hold a spot</li>
               <li>Wait in the rain, the sun or the wind</li>
@@ -202,7 +202,7 @@ const GOGOWhy = (() => {
       ${REASONS.map((r, i) => `
         <div class="g-card g-mt-lg g-anim" id="${r.key}">
           <div class="g-row">
-            <span class="g-ic g-ic-lg ${r.tone === "lime" ? "g-ic-lime" : r.tone === "navy" ? "g-ic-ink" : ""}" aria-hidden>${r.icon}</span>
+            <span class="g-ic g-ic-lg ${r.tone === "lime" ? "g-ic-lime" : r.tone === "navy" ? "g-ic-ink" : ""}" aria-hidden>${GICON(r.icon)}</span>
             <div style="min-width:0">
               <span class="g-label">Reason ${String(i + 1).padStart(2, "0")}</span>
               <h3 class="g-h3 g-mt-sm">${r.title}</h3>
@@ -210,7 +210,7 @@ const GOGOWhy = (() => {
           </div>
           <p class="g-s g-mt" style="font-size:15px">${r.line}</p>
           <div class="g-mt">${r.long.map(p => `<p class="g-s g-mt-sm">${p}</p>`).join("")}</div>
-          <div class="g-why-proof g-mt"><span aria-hidden>✅</span> ${r.proof}</div>
+          <div class="g-why-proof g-mt"><span aria-hidden>${GICON("check")}</span> ${r.proof}</div>
         </div>`).join("")}
 
       <div class="g-card g-mt-lg g-anim" id="watch">
@@ -227,10 +227,10 @@ const GOGOWhy = (() => {
                 <div><div class="g-t">${t}</div><div class="g-list-s">${s}</div></div></div></div></div>`).join("")}
         </div>
         <ul class="g-ticks g-mt">
-          <li><span aria-hidden>✅</span> No phone numbers shown to anyone</li>
-          <li><span aria-hidden>✅</span> Revoke any link mid trip</li>
-          <li><span aria-hidden>✅</span> See who opened your link and when</li>
-          <li><span aria-hidden>✅</span> Links expire when the trip closes</li>
+          <li><span aria-hidden>${GICON("check")}</span> No phone numbers shown to anyone</li>
+          <li><span aria-hidden>${GICON("check")}</span> Revoke any link mid trip</li>
+          <li><span aria-hidden>${GICON("check")}</span> See who opened your link and when</li>
+          <li><span aria-hidden>${GICON("check")}</span> Links expire when the trip closes</li>
         </ul>
       </div>
 
@@ -238,18 +238,18 @@ const GOGOWhy = (() => {
         <span class="g-label">Safety, in plain terms</span>
         <h3 class="g-h3 g-mt-sm">What GOGO checks before you get in</h3>
         <div class="g-grid g-mt">
-          ${[["🪪", "Driver's licence", "The right code for carrying passengers, verified against their ID."],
-             ["🎫", "Professional driving permit", "The permit that makes carrying passengers for reward legal."],
-             ["🔎", "Criminal record clearance", "Vetted before a seat is sold. We keep the result and its expiry, not the certificate."],
-             ["🛠️", "Roadworthy certificate", "The vehicle is fit to carry people, and its plate matches the listing."],
-             ["📸", "Safety selfie, both sides", "Held for the duration of the ride, then deleted 24 hours after you confirm you are safe."],
+          ${[["label", "Driver's licence", "The right code for carrying passengers, verified against their ID."],
+             ["ticket", "Professional driving permit", "The permit that makes carrying passengers for reward legal."],
+             ["search", "Criminal record clearance", "Vetted before a seat is sold. We keep the result and its expiry, not the certificate."],
+             ["gear", "Roadworthy certificate", "The vehicle is fit to carry people, and its plate matches the listing."],
+             ["mobile", "Safety selfie, both sides", "Held for the duration of the ride, then deleted 24 hours after you confirm you are safe."],
              ["🆘", "Support inside the trip", "Report from the ride chat or from a watcher's link. The trip is attached automatically."]]
             .map(([e, t, s]) => `
               <div class="g-6"><div class="g-card" style="height:100%">
-                <span class="g-ic g-ic-sm" aria-hidden>${e}</span>
+                <span class="g-ic g-ic-sm" aria-hidden>${GICON(e)}</span>
                 <div class="g-t g-mt-sm">${t}</div><div class="g-list-s">${s}</div></div></div>`).join("")}
         </div>
-        <a class="g-btn g-btn-outline g-mt" href="safety"><span aria-hidden>🛡️</span> Visit the safety centre</a>
+        <a class="g-btn g-btn-outline g-mt" href="safety"><span aria-hidden>${GICON("shield")}</span> Visit the safety centre</a>
       </div>
 
       <div class="g-mt-lg">
@@ -268,8 +268,8 @@ const GOGOWhy = (() => {
         <h2 class="g-h2">Your next hike starts at your gate</h2>
         <p class="g-s g-mt-sm" style="max-width:44em;margin-inline:auto">Pick your town, pick your seat, and let the people who love you watch you arrive.</p>
         <div class="g-row g-mt" style="justify-content:center">
-          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>🔍</span> Find a ride</a>
-          <a class="g-btn g-btn-lime" href="auth"><span aria-hidden>💬</span> Start with your number</a>
+          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
+          <a class="g-btn g-btn-lime" href="auth"><span aria-hidden>${GICON("chat")}</span> Start with your number</a>
         </div>
       </div>
     </div>`;
@@ -337,10 +337,10 @@ const GOGOWhy = (() => {
       <p class="g-s">Maps and place search in GOGO are drawn from OpenStreetMap contributors, whose data is made available under the Open Database Licence, and from Esri and CARTO basemaps used with their permission. Those contributors and providers own their data and imagery. Places come from GOGO's own list of South African towns, not from a third party directory.</p>
 
       <div class="g-card g-mt-lg">
-        <div class="g-row"><span class="g-ic g-ic-sm" aria-hidden>✉️</span>
+        <div class="g-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("chat")}</span>
           <div><div class="g-t">Questions about these terms</div>
           <div class="g-list-s">Reach the platform team from the chat in the app, or call 078 047 2090.</div></div></div>
-        <a class="g-btn g-btn-outline g-mt" href="messages"><span aria-hidden>💬</span> Open the chat</a>
+        <a class="g-btn g-btn-outline g-mt" href="messages"><span aria-hidden>${GICON("chat")}</span> Open the chat</a>
       </div>
     </div>`;
   }
@@ -398,10 +398,10 @@ const GOGOWhy = (() => {
       <p class="g-s">Access to personal information is limited to the people who need it for a specific job, every access to sensitive records is logged, and money movements are recorded in an append-only ledger that cannot be quietly edited.</p>
 
       <div class="g-card g-mt-lg">
-        <div class="g-row"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>🛡️</span>
+        <div class="g-row"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON("shield")}</span>
           <div><div class="g-t">Manage your data in the app</div>
           <div class="g-list-s">Delete your safety selfie now, or ask us anything, from the safety centre.</div></div></div>
-        <div class="g-row g-mt"><a class="g-btn g-btn-outline" href="safety"><span aria-hidden>🛡️</span> Safety centre</a>
+        <div class="g-row g-mt"><a class="g-btn g-btn-outline" href="safety"><span aria-hidden>${GICON("shield")}</span> Safety centre</a>
         <a class="g-btn g-btn-ghost" href="messages">Ask a question</a></div>
       </div>
     </div>`;
@@ -412,11 +412,11 @@ const GOGOWhy = (() => {
     $('#main').innerHTML = `
     <div class="g-wrap g-section">
       <div class="g-card" style="max-width:620px;margin-inline:auto;text-align:center">
-        <span class="g-ic g-ic-lg" aria-hidden>🧭</span>
+        <span class="g-ic g-ic-lg" aria-hidden>compass</span>
         <h1 class="g-h2 g-mt-sm">This road does not exist</h1>
         <p class="g-s g-mt-sm">The page you were looking for is not here. It may have moved, or the link may be wrong.</p>
         <div class="g-row g-mt" style="justify-content:center">
-          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>🔍</span> Book a ride</a>
+          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>${GICON("search")}</span> Book a ride</a>
           <a class="g-btn g-btn-outline" href="why">Why GOGO</a>
         </div>
       </div>

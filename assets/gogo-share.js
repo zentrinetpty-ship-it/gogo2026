@@ -77,11 +77,11 @@ const GOGOShare = (() => {
     const url = encodeURIComponent(linkFor(ride, s));
     return [
       { key: "whatsapp", label: "WhatsApp", icon: "🟢", href: `https://wa.me/?text=${text}` },
-      { key: "sms", label: "SMS", icon: "💬", href: `sms:?&body=${text}` },
+      { key: "sms", label: "SMS", icon: "chat", href: `sms:?&body=${text}` },
       { key: "telegram", label: "Telegram", icon: "✈️", href: `https://t.me/share/url?url=${url}&text=${encodeURIComponent("GOGO live trip")}` },
-      { key: "email", label: "Email", icon: "✉️", href: `mailto:?subject=${encodeURIComponent("Watch my GOGO trip")}&body=${text}` },
-      { key: "copy", label: "Copy link", icon: "🔗", action: "copy" },
-      { key: "native", label: "More apps", icon: "📤", action: "native" },
+      { key: "email", label: "Email", icon: "chat", href: `mailto:?subject=${encodeURIComponent("Watch my GOGO trip")}&body=${text}` },
+      { key: "copy", label: "Copy link", icon: "link", action: "copy" },
+      { key: "native", label: "More apps", icon: "send", action: "native" },
     ];
   }
 
@@ -112,7 +112,7 @@ const GOGOShare = (() => {
 
       ${live.length ? live.map(s => `
         <div class="g-thread" style="cursor:default">
-          <span class="g-ic g-ic-sm ${s.views.length ? "g-ic-lime" : ""}" aria-hidden>${s.views.length ? "👀" : "🔗"}</span>
+          <span class="g-ic g-ic-sm ${s.views.length ? "g-ic-lime" : ""}" aria-hidden>${s.views.length ? "👀" : "link"}</span>
           <div style="min-width:0">
             <div class="g-list-t">${esc(s.label)}</div>
             <div class="g-list-s">${s.views.length ? `${s.views.length} view${s.views.length === 1 ? "" : "s"} · last ${new Date(s.views[s.views.length - 1]).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "not opened yet"} · expires ${new Date(expiryFor(ride)).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
@@ -126,7 +126,7 @@ const GOGOShare = (() => {
       ${live.length < MAX_SHARES ? `
         <div class="g-row g-mt">
           <input id="shareLabel" placeholder="Who? e.g. Mom" style="flex:1;min-width:0;border:1px solid rgba(11,11,11,.16);border-radius:4px;padding:11px 12px;font-family:inherit;font-size:13px;font-weight:700" value="">
-          <button class="g-btn g-btn-ink g-btn-sm" id="addShare" type="button"><span aria-hidden>➕</span> Add</button>
+          <button class="g-btn g-btn-ink g-btn-sm" id="addShare" type="button"><span aria-hidden>${GICON("cross")}</span> Add</button>
         </div>
         <div class="g-chips g-mt-sm" id="shareChannels"></div>
       ` : `<p class="g-s-sm g-mt">All three shares are in use. Revoke one to add someone else.</p>`}
@@ -171,7 +171,7 @@ const GOGOShare = (() => {
 
     if (!s) {
       $('#main').innerHTML = `<div class="g-wrap g-section"><div class="g-card"><div class="g-empty">
-        <span class="g-ic g-ic-lg" aria-hidden>🔒</span><h3 class="g-h3">This tracking link is not valid</h3>
+        <span class="g-ic g-ic-lg" aria-hidden>${GICON("lock")}</span><h3 class="g-h3">This tracking link is not valid</h3>
         <p class="g-s g-mt-sm">It may have expired, or the passenger revoked it. Ask them to send a fresh link.</p></div></div></div>`;
       return;
     }
@@ -182,7 +182,7 @@ const GOGOShare = (() => {
     const expired = Date.now() > new Date(expiryFor(ride)).getTime();
     if (revoked || expired) {
       $('#main').innerHTML = `<div class="g-wrap g-section"><div class="g-card"><div class="g-empty">
-        <span class="g-ic g-ic-lg" aria-hidden>${revoked ? "🚫" : "⌛"}</span>
+        <span class="g-ic g-ic-lg" aria-hidden>${revoked ? "🚫" : "clock"}</span>
         <h3 class="g-h3">${revoked ? "The passenger stopped sharing this trip" : "This trip link has expired"}</h3>
         <p class="g-s g-mt-sm">${revoked ? "Contact them directly if you need an update." : "Tracking links close shortly after a trip ends. Ask for a new one next time."}</p></div></div></div>`;
       return;
@@ -210,9 +210,9 @@ const GOGOShare = (() => {
             <span class="g-stamp ${ride.status === "completed" ? "g-stamp-full" : "g-stamp-open"}">${esc(st.label)}</span>
           </div>
           <div class="g-row g-mt-sm" style="gap:14px">
-            <span class="g-s-sm"><span aria-hidden>🕕</span> left ${t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-            <span class="g-s-sm" id="heartbeat"><span aria-hidden>📡</span> updated just now</span>
-            <span class="g-s-sm"><span aria-hidden>🚏</span> ${stops.length} points on the route</span>
+            <span class="g-s-sm"><span aria-hidden>${GICON("clock")}</span> left ${t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            <span class="g-s-sm" id="heartbeat"><span aria-hidden>${GICON("signal")}</span> updated just now</span>
+            <span class="g-s-sm"><span aria-hidden>${GICON("stop")}</span> ${stops.length} points on the route</span>
           </div>
         </div>
       </div>
@@ -235,8 +235,8 @@ const GOGOShare = (() => {
           </div>
 
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Safety</span><span class="g-ic g-ic-sm" aria-hidden>🛡️</span></div>
-            <div class="g-list-row"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>📸</span>
+            <div class="g-head"><span class="g-label">Safety</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
+            <div class="g-list-row"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON("camera")}</span>
               <div><div class="g-list-t">Identity checked at booking</div>
                 <div class="g-list-s">Both driver and passenger took a safety selfie for this ride. They delete 24 hours after the trip ends and the passenger confirms safe.</div></div></div>
             <div class="g-list-row"><span class="g-ic g-ic-sm ${safeDone.length ? "g-ic-lime" : ""}" aria-hidden>${safeDone.length ? "✅" : "⏳"}</span>
@@ -254,7 +254,7 @@ const GOGOShare = (() => {
               <div><div class="g-t">${esc(ride.driver)}</div><div class="g-list-s"><span class="g-stars">★ ${ride.rating}</span> · ${ride.trips} trips</div></div></div>
             <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${(window.GOGO && GOGO.van) ? GOGO.van() : ''}</span>
               <div><div class="g-list-t">${esc(ride.colour)} ${esc(ride.vehicle)}</div><div class="g-list-s">${esc(ride.plate)}</div></div></div>
-            <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>📄</span>
+            <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>doc</span>
               <div><div class="g-list-t">Documents on file</div><div class="g-list-s">Licence · PDP · criminal clearance · roadworthy, all verified by GOGO</div></div></div>
           </div>
 
@@ -274,7 +274,7 @@ const GOGOShare = (() => {
 
     const hb = $('#heartbeat');
     let secs = 0;
-    setInterval(() => { secs += 5; if (hb) hb.innerHTML = `<span aria-hidden>📡</span> updated ${secs < 60 ? secs + "s" : Math.round(secs / 60) + "m"} ago`; }, 5000);
+    setInterval(() => { secs += 5; if (hb) hb.innerHTML = `<span aria-hidden>${GICON("signal")}</span> updated ${secs < 60 ? secs + "s" : Math.round(secs / 60) + "m"} ago`; }, 5000);
 
     const rep = $('#reportBtn');
     if (rep) rep.onclick = () => {

@@ -36,10 +36,10 @@
     bar = document.createElement("div");
     bar.className = "g-install";
     bar.innerHTML =
-      '<span class="g-install-ic" aria-hidden>📲</span>' +
+      '<span class="g-install-ic" aria-hidden>' + GEMO("mobile") + '</span>' +
       '<span class="g-install-t">' + label + '</span>' +
       '<button type="button" class="g-install-go">Install</button>' +
-      '<button type="button" class="g-install-x" aria-label="Not now">✕</button>';
+      '<button type="button" class="g-install-x" aria-label="Not now">' + GEMO("cross") + '</button>';
     document.body.appendChild(bar);
     bar.querySelector(".g-install-go").addEventListener("click", onClick);
     bar.querySelector(".g-install-x").addEventListener("click", function () {
