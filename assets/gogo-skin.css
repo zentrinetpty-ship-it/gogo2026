@@ -1,0 +1,243 @@
+/* =========================================================================
+   GOGO — unified UI skin, layer 3.
+
+   Loaded last, after gogo-theme.css, so it can bring every inner screen
+   (rides, ride, dashboard, auth, messages, more, ticket, track, why, parcel,
+   ops, driver, legal) into line with the React landing page.
+
+   The landing page is the reference: white ground, near-black ink, lime used
+   only where it means something, Poppins throughout, and SOFT rounding. The
+   old inner pages were built on --radius: 2px — almost square — which is the
+   single biggest reason they felt like a different product.
+
+   This file changes tokens first (so anything not explicitly styled still
+   inherits the new feel), then restyles the handful of components that carry
+   the most visual weight: cards, buttons, fields, the header, the bottom dock
+   and the ride rows.
+   ========================================================================= */
+
+:root {
+  /* Rounding: the whole point of the restyle. 2px became 20/26 for surfaces */
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-lg: 26px;
+  --btn-radius: 999px;
+
+  /* soft, wide shadows instead of hard drops — reads as lifted, not stamped */
+  --shadow-lift: 0 18px 40px -24px rgba(11, 11, 11, .28);
+  --shadow-soft: 0 10px 24px -18px rgba(11, 11, 11, .25);
+
+  /* hairlines, not borders */
+  --line-soft: #EDEDED;
+  --line: #E4E4E4;
+
+  --paper: #FFFFFF;
+  --ink-mute: #6B7280;
+}
+
+/* ── ground ─────────────────────────────────────────────────────────────── */
+body {
+  background: #FFFFFF;
+  color: var(--ink);
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.g-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, .9);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+.g-nav a {
+  border-radius: 999px;
+  font-weight: 600;
+  transition: background-color .15s ease, color .15s ease;
+}
+.g-nav a:hover { background: #F6F6F6; }
+/* the active tab: a filled pill, matching the landing nav's active dot idea */
+.g-nav a.on,
+.g-nav a[aria-current="page"] {
+  background: var(--ink);
+  color: #fff;
+}
+.g-nav a.on:hover,
+.g-nav a[aria-current="page"]:hover { background: var(--ink); }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+/* .g-rc is the ride-result card — the element that carries most of this page. */
+.g-card,
+.g-card-dark,
+.g-ride,
+.g-rc,
+.g-panel,
+.g-tile {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--line-soft) !important;
+  background: #FFFFFF;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.g-card:hover,
+.g-ride:hover,
+.g-rc:hover {
+  border-color: #D6D6D6 !important;
+  box-shadow: var(--shadow-lift);
+}
+
+/* The lime rule across the top of ride cards was the loudest thing on the page.
+   Leave a hairline of accent only on the card the rider is looking at. */
+.g-ride::before,
+.g-card::before { border-radius: 0; }
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+.g-btn,
+.g-bk-submit,
+.btn,
+button.btn {
+  border-radius: 999px !important;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease;
+}
+.g-btn-lime,
+.g-bk-submit,
+.g-rc-go {
+  background: var(--ink) !important;
+  color: #fff !important;
+  border-color: var(--ink) !important;
+}
+.g-btn-lime:hover,
+.g-bk-submit:hover,
+.g-rc-go:hover { opacity: .9; }
+
+.g-btn-ink { background: var(--ink) !important; color: #fff !important; }
+.g-btn-outline {
+  background: #fff !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+}
+.g-btn-outline:hover { border-color: var(--ink) !important; }
+.g-btn-ghost { background: #F5F5F5 !important; color: var(--ink) !important; }
+
+/* ── fields ─────────────────────────────────────────────────────────────── */
+.g-field,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+  border-radius: 14px !important;
+  border: 1px solid var(--line) !important;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color .15s ease;
+}
+.g-field:focus,
+input:focus,
+select:focus,
+textarea:focus { border-color: var(--ink) !important; outline: none; }
+
+/* ── pills, chips, tags ─────────────────────────────────────────────────── */
+.g-pill, .g-chip, .g-tag, .g-stamp, .g-badge {
+  border-radius: 999px !important;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.g-pill-lime, .g-tag-lime, .g-stamp-lime {
+  background: var(--lime-bright) !important;
+  color: var(--ink) !important;
+  border-color: transparent !important;
+}
+
+/* ── the bottom dock ────────────────────────────────────────────────────── */
+/* The landing page has a flat, full-width bar flush to the bottom edge. The
+   inner pages had a transparent floating dock with emoji labels, which looked
+   like a different app. This makes them the same bar. */
+.g-dock {
+  background: #FFFFFF;
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-top: 1px solid var(--line-soft);
+  box-shadow: 0 -6px 24px -20px rgba(0, 0, 0, .35);
+  border-radius: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.g-dock a {
+  color: var(--ink-mute);
+  font-weight: 600;
+  border-radius: 12px;
+  transition: color .15s ease;
+}
+.g-dock a.on { color: var(--ink); }
+/* the active dot, same device as the landing nav */
+.g-dock a.on::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 3px auto 0;
+  border-radius: 999px;
+  background: var(--lime);
+}
+
+/* ── section headings ───────────────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+h1 { font-weight: 800; }
+h2, h3 { font-weight: 700; }
+
+/* The small ALL-CAPS eyebrow labels read as dated. Sentence case, softer. */
+.g-lab, .g-sub-lab, .g-eyebrow {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-mute);
+}
+
+/* ── the footer ─────────────────────────────────────────────────────────── */
+.g-foot {
+  background: #FAFAFA;
+  border-top: 1px solid var(--line-soft);
+}
+.g-foot a { color: var(--ink-mute); }
+.g-foot a:hover { color: var(--ink); }
+
+/* ── tables / lists inside dashboard & ops ──────────────────────────────── */
+.g-table, table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.g-table th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--line-soft);
+}
+.g-row, .g-table td { border-bottom: 1px solid var(--line-soft); }
+
+/* ── links ──────────────────────────────────────────────────────────────── */
+a { color: inherit; }
+.g-link-lime { color: var(--ink); text-decoration-color: var(--lime); }
+
+/* ── scrollbars, quiet ──────────────────────────────────────────────────── */
+.no-sb::-webkit-scrollbar { display: none; }
+
+/* ── mobile: the dock must never sit on top of content ──────────────────── */
+@media (max-width: 767px) {
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .g-wrap, .g-section, main { scroll-margin-bottom: 80px; }
+}

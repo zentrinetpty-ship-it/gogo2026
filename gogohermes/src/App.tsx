@@ -1,153 +1,467 @@
 import * as React from "react";
-import { motion } from "framer-motion";
-import { MapPin, Package } from "lucide-react";
+import {
+  MapPin,
+  Bell,
+  Search,
+  SlidersHorizontal,
+  Car,
+  CalendarClock,
+  Package,
+  Users,
+  Route,
+  ChevronDown,
+  ArrowRight,
+} from "lucide-react";
 import { AnimatedNavFramer } from "@/components/animated-nav-framer";
 import { BookingCard, type Mode } from "@/components/booking-card";
-import { LiveMap } from "@/components/live-map";
 import { GoGoLogo } from "@/components/logo";
-import { AccountButton, MobileAccountButton } from "@/components/account-button";
+import { cn } from "@/lib/utils";
 
-const FADE = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.2, 0.8, 0.2, 1] } },
+/* =========================================================================
+   Home.
+
+   A light, quiet screen: white ground, near-black type, and lime used only
+   where it means something (the live dot, the active tab, the one primary
+   action). The reference this follows is almost entirely greyscale, which is
+   what makes it feel calm — so the lime here is a highlight, never a fill.
+
+   Order of the page, top to bottom:
+     1. location bar      — where the rider is, and a way to change it
+     2. greeting          — who we are talking to
+     3. search            — the one thing most people came to do
+     4. choose your ride  — the two ways to book, side by side
+     5. services          — what GOGO actually offers, in a quiet grid
+     6. routes            — the hikes people are booking now
+
+   Nothing here computes a price. The API is the only source of money, and
+   this screen only shows what it is told.
+   ========================================================================= */
+
+type Service = {
+  id: string;
+  label: string;
+  blurb: string;
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: string | number }>;
+  href: string;
 };
-const STAGGER = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
+
+/* GOGO's real services. Bike Ride / Luxury Car / Hourly Rent from the reference
+   are deliberately absent: this is a long-distance shuttle, not an urban
+   ride-hail, and offering a service the fleet cannot deliver is worse than
+   leaving it out. What is here maps to something we actually run. */
+const SERVICES: Service[] = [
+  {
+    id: "seat",
+    label: "Passenger",
+    blurb: "A seat on a hike",
+    Icon: Car,
+    href: "/gogo/rides.html",
+  },
+  {
+    id: "parcel",
+    label: "Parcel",
+    blurb: "Send in a boot",
+    Icon: Package,
+    href: "/gogo/parcel.html",
+  },
+  {
+    id: "schedule",
+    label: "Reserve",
+    blurb: "Book for later",
+    Icon: CalendarClock,
+    href: "/gogo/rides.html?when=later",
+  },
+  {
+    id: "group",
+    label: "Group",
+    blurb: "Seats together",
+    Icon: Users,
+    href: "/gogo/rides.html?seats=4",
+  },
+  {
+    id: "routes",
+    label: "Routes",
+    blurb: "Where we go",
+    Icon: Route,
+    href: "/gogo/why.html",
+  },
+];
+
+type Ride = {
+  id: string;
+  from: string;
+  to: string;
+  depart: string;
+  vehicle: string;
+  seats: number;
+  legs?: Record<string, number>;
+};
 
 export default function App() {
-  /* the mode lives here so the hero buttons and the card stay in step */
-  const [mode, setMode] = React.useState<Mode>(() => {
-    /* ?mode= wins, so a link from the dashboard opens the card in the mode the
-       rider tapped. Then the saved draft, then passenger. */
+  const [rides, setRides] = React.useState<Ride[]>([]);
+  /* The pickup address is the rider's own street, remembered between visits —
+     most people are collected from the same place every time, and retyping it
+     on a phone is the slowest part of booking. */
+  const [pickup, setPickup] = React.useState(() => {
     try {
-      const q = new URLSearchParams(window.location.search).get("mode");
-      if (q === "parcel" || q === "passenger") return q;
-    } catch { /* no URL access: fall through */ }
-    try {
-      const raw = localStorage.getItem("gogo_hermes_draft_v1");
-      return raw ? (JSON.parse(raw).mode as Mode) || "passenger" : "passenger";
-    } catch { return "passenger"; }
+      return localStorage.getItem("gogo_pickup") || "";
+    } catch {
+      return "";
+    }
   });
 
-  /* One screen, no scroll. min-h-dvh matches the viewport including the mobile
-     address bar; pb-24 used to add 96px below the hero, pushing the page past
-     the fold — which is what made the map look short. */
+  const rememberPickup = React.useCallback((v: string) => {
+    setPickup(v);
+    try {
+      localStorage.setItem("gogo_pickup", v);
+    } catch {
+      /* a blocked store just means it is not remembered next time */
+    }
+  }, []);
+
+  /* Passenger or parcel. The booking card and the service shortcuts both read
+     this, so tapping "Parcel" in Services opens the card already in that mode. */
+  const [mode, setMode] = React.useState<Mode>("passenger");
+
+  /* The catalogue comes from the server so the money shown on the cards is the
+     money the server will charge. If it fails, the page still works — the
+     routes section simply stays empty rather than inventing figures. */
+  React.useEffect(() => {
+    let live = true;
+    fetch("/api/rides")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => {
+        if (live && Array.isArray(d?.rides)) setRides(d.rides);
+      })
+      .catch(() => {
+        /* leaving the list empty is the honest failure: no invented prices */
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   return (
-    <div className="relative flex min-h-[100dvh] flex-col bg-white pt-[68px] md:min-h-[100svh] md:pb-0">
+    <div className="relative flex min-h-[100dvh] flex-col bg-white">
       <AnimatedNavFramer />
+      <Header />
 
-      <TopBar />
+      {/* ── HERO ──────────────────────────────────────────────────────────
+             The page is a column pinned to the bottom of the screen. The hero
+             copy and the two ride cards fill the space above the booking field,
+             so the field sits low on first view and everything above it is
+             story — which is what makes a first screen feel intentional rather
+             than empty.
 
-      {/* mobile: Login sits top-right, over the map */}
-      <MobileCtas onMode={setMode} />
+             When the rider starts typing, the card grows upward over this
+             content instead of pushing it down (see BookingCard's `open`
+             state): on a phone the form is a sheet, and a sheet rises. */}
+      <div className="flex flex-1 flex-col justify-end">
+        <div className="mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
+          <HeroCopy />
+          <ChooseYourRide pickup={pickup} mode={mode} onMode={setMode} />
+        </div>
+      </div>
 
-      {/* the landing is deliberately one screen: the booking card over the map,
-          with the hero copy under it. No page footer here — that belongs on the
-          inner pages. Everything else lives on /gogo/why, /gogo/rides,
-          /gogo/driver, so this stays clean and compact. */}
-      <Hero mode={mode} onMode={setMode} />
+      {/* the booking card, at the bottom of the column */}
+      <div className="relative z-20 mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
+        <BookingCard mode={mode} onMode={setMode} />
+      </div>
+
+      {/* the rest of the page scrolls below the fold */}
+      <div className="mx-auto w-full max-w-[520px] scroll-mt-24 px-5 pb-[calc(96px+env(safe-area-inset-bottom))] pt-7 md:max-w-[560px] md:px-6">
+        <ServicesGrid />
+        <RoutesList rides={rides} pickup={pickup} />
+      </div>
     </div>
   );
 }
 
-/* ── mobile only: Login, top right ─────────────────────────────────────── */
-function MobileCtas({ onMode }: { onMode: (m: Mode) => void }) {
+/* ── hero copy ───────────────────────────────────────────────────────────── */
+function HeroCopy() {
   return (
-    <div className="fixed right-4 top-4 z-40 flex flex-col items-end gap-2 md:hidden">
-      <MobileAccountButton />
+    <div className="pb-5">
+      {/* The headline is set in the logo face (Anton) so the type and the
+          wordmark above it read as one brand. "Smart Hike" solid, "Zero Queue"
+          struck through in lime — the promise and the thing it removes. */}
+      <h1 className="gh-impact text-[clamp(2.6rem,11vw,3.6rem)] text-ink">
+        Smart Hike.
+        <br />
+        <span className="gh-strike">Zero Queue.</span>
+      </h1>
+      <p className="mt-3 max-w-[24rem] text-[13.5px] font-normal leading-relaxed text-neutral-500">
+        We fetch you from your door, then carry you between towns — or your parcel
+        in a boot already going there.
+      </p>
     </div>
   );
 }
 
-/* ── the thin bar across the top: wordmark left, login right ───────────── */
-function TopBar() {
+/* ── header ──────────────────────────────────────────────────────────────── */
+function Header() {
   return (
-    <header className="gh-topbar fixed inset-x-0 top-0 z-40">
-      <div className="container flex h-[68px] items-center justify-between">
-        <a href="/gogo/" aria-label="GOGO, book a hike">
-          <GoGoLogo size={38} />
+    <header className="sticky top-0 z-40 border-b border-neutral-200/70 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[62px] w-full max-w-[520px] items-center justify-between px-5 md:max-w-[560px] md:px-6">
+        <a href="/gogo/" aria-label="GOGO home" className="shrink-0">
+          {/* The wordmark is the brand on this screen — set large and heavy so
+              it reads as the product name, not a nav label. */}
+          <GoGoLogo size={30} />
         </a>
-        {/* Sign in goes to the auth screen. It used to be a dead "#book"
-            anchor that only scrolled the page, which is why the button looked
-            broken. "next" returns the rider to the booking flow afterwards. */}
-        <AccountButton />
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white"
+          >
+            <Bell className="h-[17px] w-[17px] text-ink" strokeWidth={1.9} />
+            <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-lime ring-2 ring-white" />
+          </button>
+          <a
+            href="/gogo/auth.html"
+            className="flex h-9 items-center rounded-full bg-ink px-4 text-[12.5px] font-semibold text-white"
+          >
+            Sign in
+          </a>
+        </div>
       </div>
     </header>
   );
 }
 
-/* ── hero: the booking card sits directly on the map ────────────────────── */
-function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
-  /* The hero fills exactly the space under the top bar on every screen. It was
-     min-h-[calc(100dvh-68px)] with md:min-h-0, and that md reset dropped it to
-     the content's own height on desktop — 500px in a 569px viewport — leaving
-     the map short. A flex column that grows with the viewport fixes it. */
+/* ── 2. greeting ─────────────────────────────────────────────────────────── */
+function Greeting() {
   return (
-    <section className="gh-hero relative flex min-h-[calc(100dvh-68px)] flex-1 flex-col overflow-hidden pb-[calc(58px+env(safe-area-inset-bottom))] pt-4 md:min-h-[calc(100svh-68px)] md:pb-[calc(58px+env(safe-area-inset-bottom))] md:pt-6">
-      {/* the live map is the background, under a soft scrim so copy stays legible */}
-      <LiveMap />
+    <div className="mt-7">
+      <h1 className="text-[30px] font-extrabold leading-[1.08] tracking-[-.02em] text-ink">
+        Go when you want,
+        <br />
+        <span className="gh-quiet">anywhere.</span>
+      </h1>
+    </div>
+  );
+}
 
-      {/* the booking card is lifted onto the map itself, not laid over a panel.
-          On phones it sits in flow, right at the top of the hero, so opening it
-          grows downward over the copy below. */}
-      <div className="pointer-events-none absolute inset-0 z-[1]">
-        <div className="container mx-auto h-full">
-          <div className="gh-hero-card pointer-events-auto absolute right-5 top-3 hidden w-[27rem] md:block lg:right-[max(1.25rem,calc((100%-1280px)/2+1.25rem))]">
-            <BookingCard mode={mode} onMode={onMode} />
-          </div>
-        </div>
-      </div>
+/* ── 3. search ───────────────────────────────────────────────────────────── */
+function SearchRow({ pickup }: { pickup: string }) {
+  return (
+    <form
+      action="/gogo/rides.html"
+      className="mt-6 flex items-center gap-2.5"
+      onSubmit={(e) => {
+        /* the field posts its value as ?to=, and the pickup rides along as
+           ?pickup=, so the ride page opens already knowing both ends and the
+           rider never retypes what they have already told us. */
+        e.preventDefault();
+        const input = (e.currentTarget.elements.namedItem("to") as HTMLInputElement) || null;
+        const q = input?.value.trim() || "";
+        const params = new URLSearchParams();
+        if (q) params.set("to", q);
+        if (pickup.trim()) params.set("pickup", pickup.trim());
+        const qs = params.toString();
+        window.location.href = `/gogo/rides.html${qs ? `?${qs}` : ""}`;
+      }}
+    >
+      <label className="relative flex h-[52px] flex-1 items-center rounded-full border border-neutral-200 bg-white pl-4 pr-3 focus-within:border-ink">
+        <Search className="mr-2.5 h-[17px] w-[17px] shrink-0 text-neutral-400" strokeWidth={2} />
+        <input
+          name="to"
+          type="text"
+          placeholder="Where to?"
+          aria-label="Where to?"
+          className="w-full bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-neutral-400"
+        />
+      </label>
 
-      {/* on phones the card is pinned clear of the nav. It is `fixed`, not
-          absolute, and its height is capped so an expanded form can never grow
-          down into the nav — it scrolls internally instead. The nav occupies
-          the bottom 78px (62px tall at bottom-16px), so 104px is the floor and
-          the card's max-height stops it short of it. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[104px] z-[30] md:hidden">
-        <div className="pointer-events-auto mx-auto max-w-[27rem] px-4">
-          <div className="max-h-[calc(100dvh-200px)] overflow-y-auto overscroll-contain no-sb">
-            <BookingCard mode={mode} onMode={onMode} />
-          </div>
-        </div>
-      </div>
+      <button
+        type="submit"
+        aria-label="Filter rides"
+        className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-ink text-white"
+      >
+        <SlidersHorizontal className="h-[18px] w-[18px]" strokeWidth={2} />
+      </button>
+    </form>
+  );
+}
 
-      <div className="container relative grid items-start gap-10 lg:grid-cols-[1.05fr_minmax(0,25rem)] lg:gap-12">
-        <motion.div
-          variants={STAGGER}
-          initial="hidden"
-          animate="show"
-          className="pt-2"
+/* ── 4. choose your ride ─────────────────────────────────────────────────── */
+function ChooseYourRide({
+  pickup,
+  mode,
+  onMode,
+}: {
+  pickup: string;
+  mode: Mode;
+  onMode: (m: Mode) => void;
+}) {
+  const qs = pickup.trim() ? `?pickup=${encodeURIComponent(pickup.trim())}` : "";
+
+  return (
+    <section className="pb-5">
+      <SectionHead title="What are you sending?" />
+
+      {/* Two big choices, acting as the segmented control for the booking card
+          below. Previously this pair was Ride / Schedule, and the card carried
+          its own Passenger / Parcel switch — two different ways to answer one
+          question, one of them buried inside the form. The mode now lives here,
+          where it is the first thing a rider sees, and the card stays a card. */}
+      <div className="mt-3 grid grid-cols-2 gap-3" role="tablist" aria-label="What are you sending">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "passenger"}
+          onClick={() => onMode("passenger")}
+          className={cn(
+            "group flex flex-col rounded-3xl border p-4 text-left transition-colors",
+            mode === "passenger"
+              ? "border-ink bg-white"
+              : "border-neutral-200 bg-white hover:border-neutral-400"
+          )}
         >
-          {/* the impact headline — the one heading that wears the display face.
-              "Zero Queue." is struck through in lime, as the app sets it. */}
-          <motion.h1
-            variants={FADE}
-            className="gh-impact text-[clamp(3.4rem,8.6vw,6rem)]"
-            style={{ WebkitTextStroke: "1.1px #0B0B0B" }}
+          <span
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+              mode === "passenger" ? "bg-ink text-white" : "bg-neutral-100 text-ink"
+            )}
           >
-            Smart Hike.
-            <br />
-            <span className="gh-strike">Zero Queue.</span>
-          </motion.h1>
+            <Car className="h-[17px] w-[17px]" strokeWidth={1.9} />
+          </span>
+          <span className="mt-3 text-[15px] font-bold leading-none text-ink">Ride</span>
+          <span className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium leading-tight text-neutral-500">
+            {/* live dot: seats are actually available on a hike leaving today */}
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
+            Next hike 06:30
+          </span>
+        </button>
 
-          <motion.p
-            variants={FADE}
-            className="mt-5 text-[clamp(13.5px,1.5vw,15px)] font-semibold"
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "parcel"}
+          onClick={() => onMode("parcel")}
+          className={cn(
+            "group flex flex-col rounded-3xl border p-4 text-left transition-colors",
+            mode === "parcel"
+              ? "border-ink bg-white"
+              : "border-neutral-200 bg-white hover:border-neutral-400"
+          )}
+        >
+          <span
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+              mode === "parcel" ? "bg-ink text-white" : "bg-neutral-100 text-ink"
+            )}
           >
-            Your seat, your{" "}
-            <span className="shadow-[inset_0_-3px_0_rgba(141,182,0,.9)]">doorstep</span>
-          </motion.p>
+            <Package className="h-[17px] w-[17px]" strokeWidth={1.9} />
+          </span>
+          <span className="mt-3 text-[15px] font-bold leading-none text-ink">Parcel</span>
+          <span className="mt-1.5 text-[12px] font-medium leading-tight text-neutral-500">
+            Send in a boot going there
+          </span>
+        </button>
+      </div>
 
-          <motion.p
-            variants={FADE}
-            className="mx-auto mt-6 max-w-[34rem] text-[16px] font-medium leading-[1.62] text-neutral-700 md:mx-0"
+      {/* the link through to the full list, on its own line so the two big
+          buttons stay the primary action */}
+      <a
+        href={`/gogo/rides.html${qs}`}
+        className="mt-3 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-neutral-500 hover:text-ink"
+      >
+        See all hikes
+        <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.4} />
+      </a>
+    </section>
+  );
+}
+
+/* ── 5. services ─────────────────────────────────────────────────────────── */
+function ServicesGrid() {
+  return (
+    <section className="mt-8">
+      <SectionHead title="Services" action={{ label: "See all", href: "/gogo/why.html" }} />
+
+      <div className="mt-3 grid grid-cols-5 gap-2">
+        {SERVICES.map(({ id, label, blurb, Icon, href }) => (
+          <a
+            key={id}
+            href={href}
+            className="group flex flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
+            title={blurb}
           >
-            <b className="font-extrabold text-ink">We fetch you from your door.</b>
-            <br />
-            Book a seat on a hike leaving your road, or send a parcel in a boot already going there.
-          </motion.p>
-        </motion.div>
+            <span className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-neutral-200 bg-white transition-colors group-hover:border-ink">
+              <Icon className="h-[18px] w-[18px] text-ink" strokeWidth={1.9} />
+            </span>
+            <span className="text-[10.5px] font-semibold leading-none text-neutral-600 group-hover:text-ink">
+              {label}
+            </span>
+          </a>
+        ))}
       </div>
     </section>
   );
 }
 
+/* ── 6. routes ───────────────────────────────────────────────────────────── */
+function RoutesList({ rides, pickup }: { rides: Ride[]; pickup: string }) {
+  if (!rides.length) return null;
+
+  return (
+    <section className="mt-8">
+      <SectionHead title="Leaving soon" action={{ label: "See all", href: "/gogo/rides.html" }} />
+
+      <ul className="mt-3 space-y-2.5">
+        {rides.map((r) => {
+          const params = new URLSearchParams({ rideId: r.id });
+          if (pickup.trim()) params.set("pickup", pickup.trim());
+          return (
+          <li key={r.id}>
+            <a
+              href={`/gogo/ride.html?${params.toString()}`}
+              className="flex items-center gap-3.5 rounded-3xl border border-neutral-200 bg-white p-3.5 transition-colors hover:border-ink"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100">
+                <Car className="h-[19px] w-[19px] text-ink" strokeWidth={1.9} />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5 text-[14px] font-bold leading-tight text-ink">
+                  {r.from}
+                  <ArrowRight className="h-3 w-3 shrink-0 text-neutral-400" strokeWidth={2.6} />
+                  {r.to}
+                </span>
+                <span className="mt-1 block truncate text-[12px] font-medium text-neutral-500">
+                  {r.depart} · {r.vehicle} · {r.seats} seats
+                </span>
+              </span>
+
+              <span className="flex h-7 items-center rounded-full bg-neutral-100 px-2.5 text-[11px] font-bold text-ink">
+                {r.depart}
+              </span>
+            </a>
+          </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/* ── shared ──────────────────────────────────────────────────────────────── */
+function SectionHead({
+  title,
+  action,
+}: {
+  title: string;
+  action?: { label: string; href: string };
+}) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <h2 className="text-[15.5px] font-extrabold tracking-[-.01em] text-ink">{title}</h2>
+      {action && (
+        <a href={action.href} className="text-[12.5px] font-semibold text-neutral-500 hover:text-ink">
+          {action.label}
+        </a>
+      )}
+    </div>
+  );
+}

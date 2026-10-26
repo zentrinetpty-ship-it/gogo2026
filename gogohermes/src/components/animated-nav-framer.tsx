@@ -67,6 +67,16 @@ export function AnimatedNavFramer({ pathname }: { pathname?: string }) {
                 <span className="text-[10px] font-semibold leading-none tracking-[.01em]">
                   {item.name}
                 </span>
+                {/* Active marker: a dot under the label, in the brand accent.
+                    It carries the only colour in the bar, so "where am I" reads
+                    at a glance without tinting the whole tab. */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "mt-[1px] h-1 w-1 rounded-full transition-opacity duration-150",
+                    active ? "bg-lime opacity-100" : "opacity-0"
+                  )}
+                />
               </a>
             </li>
           );
