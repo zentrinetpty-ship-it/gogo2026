@@ -414,3 +414,128 @@ input, textarea, select {
   -webkit-tap-highlight-color: transparent;
   font-size: 16px;
 }
+
+
+/* ── chrome: header + dock, matched to the React landing ────────────────────
+   These override the earlier skin rules rather than replacing them, so page
+   content styling stays put and only the shell changes. */
+
+/* header: no bar, no border — it should read as part of the page */
+.g-nav {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 10px 0 4px !important;
+}
+.g-nav-wrap { max-width: 560px !important; margin: 0 auto !important; padding: 0 20px !important; }
+.g-nav .g-brand, .g-brand { font-weight: 900 !important; letter-spacing: -.02em !important; }
+
+/* one lime CTA instead of two outlined buttons competing */
+.g-nav-right .g-btn-outline { display: none !important; }
+.g-nav-right .g-btn-ink {
+  background: #1A1A1A !important;
+  color: #A3E635 !important;
+  border-color: #1A1A1A !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  padding: 9px 16px !important;
+  font-size: 13px !important;
+}
+
+/* dock: floating pill, hairline border, line icons */
+.g-dock {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  transform: translateX(-50%) !important;
+  width: min(calc(100% - 32px), 420px) !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 2px !important;
+  background: rgba(255, 255, 255, .94) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(18px) !important;
+  backdrop-filter: saturate(180%) blur(18px) !important;
+  border: 1px solid rgb(233, 233, 235) !important;
+  border-radius: 999px !important;
+  padding: 6px !important;
+  box-shadow: 0 8px 28px rgba(16, 16, 18, .10), 0 1px 2px rgba(16, 16, 18, .04) !important;
+  z-index: 90 !important;
+}
+
+.g-dock-a {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 7px 4px 6px !important;
+  border-radius: 999px !important;
+  color: rgb(140, 140, 148) !important;
+  text-decoration: none !important;
+  transition: background-color .18s ease, color .18s ease, transform .12s ease !important;
+}
+.g-dock-ic { display: flex; width: 20px; height: 20px; }
+.g-dock-ic svg { width: 20px; height: 20px; }
+.g-dock-lb { font-size: 10.5px; font-weight: 600; letter-spacing: .01em; line-height: 1; }
+
+/* active: solid ink pill, lime label dot — the same language as the landing */
+.g-dock-a.on {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  position: relative !important;
+}
+.g-dock-a.on::after {
+  content: "";
+  position: absolute;
+  bottom: 3px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 3px;
+  border-radius: 999px;
+  background: #A3E635;
+}
+.g-dock-a:active { transform: scale(.96); }
+
+/* room for the floating dock, since it no longer sits flush */
+.g-dock-body, body { padding-bottom: 96px !important; }
+
+/* the old flush bar's active style would fight the pill — neutralise it */
+.g-dock a.on > span:first-child { background: transparent !important; }
+
+/* ── inline icon sizing ──────────────────────────────────────────────────────
+   GICON() emits a bare <svg> with no width, so it would fall back to the
+   browser default (300x150). These rules give every icon a sane box and let it
+   inherit the surrounding text colour, which is what keeps the lime/ink palette
+   intact now that emoji no longer bring their own. */
+.g-ic svg, .g-btn svg, .g-dock-ic svg, .g-row svg, .g-tile svg, [class*="g-ic"] svg {
+  width: 18px; height: 18px; display: block; flex: none;
+}
+.g-ic-lg svg { width: 22px; height: 22px; }
+.g-btn svg { width: 16px; height: 16px; }
+.g-btn-sm svg { width: 15px; height: 15px; }
+.g-acct-ic svg { width: 16px; height: 16px; }
+/* the tabular/table icons in the docs and receipt screens are content-sized */
+td svg, .g-doc svg { width: 16px; height: 16px; }
+
+/* ── dock label sizing (overrides gogo-live.css) ─────────────────────────────
+   gogo-live.css carries `.g-dock a span { font-size: var(--t-xl) }` from when
+   the dock children were EMOJI — emoji need ~24px to read. Now they are SVG
+   icons plus a real text label, and that rule was blowing the labels up to 24px,
+   stretching each item to 148px and pushing the dock past its own bounds.
+
+   Higher specificity + !important because gogo-live.css loads after the skin and
+   nests the rule inside media queries, so an equally-specific rule loses at some
+   widths and not others — the worst kind of layout bug. */
+.g-dock .g-dock-a span.g-dock-lb {
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em !important;
+  white-space: nowrap !important;
+}
+.g-dock .g-dock-a span.g-dock-ic {
+  font-size: 0 !important;      /* the svg sizes itself; stray em metrics off */
+  line-height: 0 !important;
+}
+.g-dock .g-dock-a { min-width: 0 !important; overflow: hidden !important; }

@@ -82,7 +82,7 @@ function pageMore() {
       key: "help", icon: "💬", title: "Get help",
       sub: "Talk to a person",
       items: [
-        ["Message us", `<p>Open a chat in the app and we will answer on the same thread as your booking.</p><p><a class="g-btn g-btn-ink g-btn-sm" href="messages"><span aria-hidden>💬</span> Open messages</a></p>`],
+        ["Message us", `<p>Open a chat in the app and we will answer on the same thread as your booking.</p><p><a class="g-btn g-btn-ink g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Open messages</a></p>`],
         ["Phone or WhatsApp", `<p><a href="https://wa.me/27780472090">078 047 2090</a> on WhatsApp, or call the same number.</p>`],
         ["Email", `<p><a href="mailto:order@cleanic.co.za">order@cleanic.co.za</a></p>`],
       ],
@@ -120,7 +120,7 @@ function pageMore() {
     <div class="g-card g-mt-lg g-anim" style="text-align:center">
       <h2 class="g-h3">Ready to hike?</h2>
       <p class="g-s g-mt-sm">Find a seat on a ride leaving your street.</p>
-      <a class="g-btn g-btn-ink g-mt" href="rides"><span aria-hidden>🔍</span> Find a ride</a>
+      <a class="g-btn g-btn-ink g-mt" href="rides"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
     </div>
   </div>`;
 }

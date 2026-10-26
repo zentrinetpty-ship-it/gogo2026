@@ -50,7 +50,7 @@ const GOGOAuth = (() => {
        rider has stopped using is revoked on the next request anyway. */
     const t = token();
     if (t) {
-      fetch("/api/auth/logout", {
+      fetch("/gogo/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + t },
       }).catch(() => {});
@@ -71,12 +71,12 @@ const GOGOAuth = (() => {
     sheet.className = "g-sheet";
     sheet.innerHTML = `
       <div class="g-sheet-card" style="max-width:400px">
-        <div class="g-row"><span class="g-ic g-ic-lg g-ic-lime" aria-hidden>🔐</span>
+        <div class="g-row"><span class="g-ic g-ic-lg g-ic-lime" aria-hidden>${GICON("lock")}</span>
           <div><span class="g-label">Sign in first</span>
             <div class="g-t g-mt-sm">${reason}</div></div></div>
         <p class="g-s g-mt-sm">One account holds your trips, your saved routes and your safety details, and it keeps the person on the other seat real.</p>
         <div class="g-row g-mt">
-          <button class="g-btn g-btn-ink" id="goAuth" type="button"><span aria-hidden>➤</span> Sign in or sign up</button>
+          <button class="g-btn g-btn-ink" id="goAuth" type="button"><span aria-hidden>${GICON("send")}</span> Sign in or sign up</button>
           <button class="g-btn g-btn-outline" id="notNow" type="button">Not now</button>
         </div>
       </div>`;
@@ -123,7 +123,7 @@ const GOGOAuth = (() => {
      The account record is NOT written locally any more — it lives on the
      server, which is the whole point: a rider cannot forge an account. */
   function api(path, body, token) {
-    return fetch("/api" + path, {
+    return fetch("/gogo/api" + path, {
       method: body ? "POST" : "GET",
       headers: Object.assign({ "Content-Type": "application/json" },
                              token ? { Authorization: "Bearer " + token } : {}),
@@ -286,9 +286,9 @@ const GOGOAuth = (() => {
           </div>
 
           <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Good to know</span><span class="g-ic g-ic-sm" aria-hidden>🔒</span></div>
+            <div class="g-head"><span class="g-label">Good to know</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("lock")}</span></div>
             <div class="g-list">
-              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🔑</span><div><div class="g-list-t">Password stays hashed</div><div class="g-list-s">Stored as PBKDF2-SHA256 with a salt unique to your account. Never in plain text.</div></div></div>
+              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span><div><div class="g-list-t">Password stays hashed</div><div class="g-list-s">Stored as PBKDF2-SHA256 with a salt unique to your account. Never in plain text.</div></div></div>
               <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🗑️</span><div><div class="g-list-t">Delete whenever you want</div><div class="g-list-s">Delete your account in the app and your details go with it.</div></div></div>
             </div>
             <p class="g-s-sm g-mt-sm">By creating an account you agree to our <a href="terms">Terms</a> and <a href="privacy">Privacy Policy</a>.</p>
@@ -310,7 +310,7 @@ const GOGOAuth = (() => {
         </div>
         <div class="g-kv g-mt"><span>Member since</span><b>${a.createdAt ? new Date(a.createdAt).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" }) : "—"}</b></div>
         <div class="g-row g-mt">
-          <a class="g-btn g-btn-lime" href="${next || "rides.html?from=East+London&to=Mthatha"}"><span aria-hidden>🔍</span> Find a hike</a>
+          <a class="g-btn g-btn-lime" href="${next || "rides.html?from=East+London&to=Mthatha"}"><span aria-hidden>${GICON("search")}</span> Find a hike</a>
           <a class="g-btn g-btn-outline" href="rider">My trips</a>
         </div>
         <button class="g-btn g-btn-ghost g-btn-block g-mt" id="signOut" type="button">Sign out</button>
@@ -342,11 +342,11 @@ const GOGOAuth = (() => {
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>✉️</span>
             <div style="flex:1"><label class="g-f-k" for="liEmail">Email</label>
               <input id="liEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div></div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🔑</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span>
             <div style="flex:1"><label class="g-f-k" for="liPw">Password</label>
               <input id="liPw" name="password" type="password" autocomplete="current-password" placeholder="Your password" required></div></div>
           ${err ? `<p class="g-s-sm" style="color:#B42318"><b>${esc(err)}</b></p>` : ""}
-          <button class="g-btn g-btn-lime g-btn-block g-mt" id="liGo" type="submit"><span aria-hidden>➤</span> Log in</button>
+          <button class="g-btn g-btn-lime g-btn-block g-mt" id="liGo" type="submit"><span aria-hidden>${GICON("send")}</span> Log in</button>
           <div class="g-row g-mt-sm">
             <button class="g-btn g-btn-ghost g-btn-sm" id="forgot" type="button">Forgot password?</button>
           </div>
@@ -396,13 +396,13 @@ const GOGOAuth = (() => {
           <button class="g-tab on" id="tabSignup2" role="tab" type="button">Create account</button>
         </div>
         <form id="signForm" novalidate autocomplete="on">
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🧍</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("person")}</span>
             <div style="flex:1"><label class="g-f-k" for="suName">Full name</label>
               <input id="suName" name="name" type="text" autocomplete="name" placeholder="Thandi Mokoena" required></div></div>
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>✉️</span>
             <div style="flex:1"><label class="g-f-k" for="suEmail">Email</label>
               <input id="suEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div></div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🔑</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("key")}</span>
             <div style="flex:1"><label class="g-f-k" for="suPw">Password</label>
               <input id="suPw" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required></div></div>
           <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🗺️</span>
@@ -411,7 +411,7 @@ const GOGOAuth = (() => {
                 <option value="">Choose your province</option>
                 ${PROVINCES.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join("")}
               </select></div></div>
-          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📍</span>
+          <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("pin")}</span>
             <div style="flex:1"><label class="g-f-k" for="suTown">City or town</label>
               <select id="suTown" name="town" required disabled>
                 <option value="">Choose your province first</option>
@@ -503,7 +503,7 @@ const GOGOAuth = (() => {
     const unread = s ? (S.notices || []).filter(n => !n.read && n.to === String(S.me && S.me.phone || "").replace(/[^\d+]/g, "")).length : 0;
     a.innerHTML = s
       ? `<span class="g-avatar" aria-hidden>${esc(initials)}</span><span class="g-acct-name">${esc(first)}</span>${unread ? `<span class="g-badge" aria-label="${unread} new update${unread === 1 ? "" : "s"}">${unread}</span>` : ""}`
-      : `<span aria-hidden>💬</span> <span class="g-acct-name">Log in</span><span class="g-acct-min">Log in</span>`;
+      : `<span class="g-acct-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/></svg></span><span class="g-acct-name">Log in</span><span class="g-acct-min">Log in</span>`;
     nav.insertBefore(a, nav.firstChild);
   }
 
@@ -556,7 +556,7 @@ const GOGOAuth = (() => {
       if (host) {
         const n = document.createElement("div");
         n.className = "g-card g-mt";
-        n.innerHTML = `<div class="g-row"><span class="g-ic" aria-hidden>💬</span>
+        n.innerHTML = `<div class="g-row"><span class="g-ic" aria-hidden>${GICON("chat")}</span>
           <div style="flex:1"><div class="g-t">Sign in to see your trips</div>
           <div class="g-list-s">Bookings, chat and safety photos are tied to your GOGO account.</div></div>
           <a class="g-btn g-btn-ink g-btn-sm" href="auth.html?next=rider.html">Log in</a></div>`;

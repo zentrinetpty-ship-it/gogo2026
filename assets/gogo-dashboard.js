@@ -93,14 +93,14 @@ function pageDashboard() {
     <!-- ── hero: navy banner, the same shape as the reference ── -->
     <section class="g-db-hero">
       <div class="g-db-hero-l">
-        <span class="g-db-hero-ic" aria-hidden>🚐</span>
+        <span class="g-db-hero-ic" aria-hidden>${GICON("van")}</span>
         <p class="g-db-hero-eyebrow">Welcome back, ${hello}</p>
         <h1 class="g-db-hero-h">Ready for your next hike?</h1>
         <p class="g-db-hero-p">Long-distance seats and parcels, door to door.</p>
       </div>
       <div class="g-db-hero-a">
-        <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=passenger"><span aria-hidden>🔍</span> Find a ride</a>
-        <a class="g-db-btn g-db-btn-ghost" href="/gogo/?mode=parcel"><span aria-hidden>📦</span> Send a parcel</a>
+        <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=passenger"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
+        <a class="g-db-btn g-db-btn-ghost" href="/gogo/?mode=parcel"><span aria-hidden>${GICON("parcel")}</span> Send a parcel</a>
       </div>
     </section>
 
@@ -130,7 +130,7 @@ function pageDashboard() {
           <div class="g-db-routes">
             ${routes.map(([to, why]) => `
               <a class="g-db-route" href="rides?from=${encodeURIComponent(city || "East London")}&to=${encodeURIComponent(to)}">
-                <span class="g-db-route-ic" aria-hidden>🚐</span>
+                <span class="g-db-route-ic" aria-hidden>${GICON("van")}</span>
                 <span class="g-db-route-t">
                   <b>${city || "East London"} → ${to}</b>
                   <span>${why}</span>
@@ -151,7 +151,7 @@ function pageDashboard() {
         <div class="g-db-list">
           ${bookings.map(b => `
             <a class="g-db-row" href="ride.html?id=${b.rideId || ""}">
-              <span class="g-db-row-ic" aria-hidden>🚐</span>
+              <span class="g-db-row-ic" aria-hidden>${GICON("van")}</span>
               <span class="g-db-row-t">
                 <b>${b.to || "Ride"}</b>
                 <span>${b.when || ""}${b.seats ? ` · ${b.seats} seat${b.seats > 1 ? "s" : ""}` : ""}</span>
@@ -160,7 +160,7 @@ function pageDashboard() {
             </a>`).join("")}
         </div>` : `
         <div class="g-db-empty">
-          <span aria-hidden>🚐</span>
+          <span aria-hidden>${GICON("van")}</span>
           <b>No hikes yet</b>
           <p>Once you book a seat it shows here, with the driver and the live arrival time.</p>
           <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=passenger">Find a ride</a>
@@ -174,7 +174,7 @@ function pageDashboard() {
         <div class="g-db-list">
           ${parcels.map(p => `
             <a class="g-db-row" href="track.html?id=${p.id || ""}">
-              <span class="g-db-row-ic" aria-hidden>📦</span>
+              <span class="g-db-row-ic" aria-hidden>${GICON("parcel")}</span>
               <span class="g-db-row-t">
                 <b>${p.to || "Parcel"}</b>
                 <span>${p.kg ? p.kg + " kg · " : ""}${p.status || "in transit"}</span>
@@ -183,7 +183,7 @@ function pageDashboard() {
             </a>`).join("")}
         </div>` : `
         <div class="g-db-empty">
-          <span aria-hidden>📦</span>
+          <span aria-hidden>${GICON("parcel")}</span>
           <b>No parcels yet</b>
           <p>Send something in the boot of a hike already going that way.</p>
           <a class="g-db-btn g-db-btn-lime" href="/gogo/?mode=parcel">Send a parcel</a>

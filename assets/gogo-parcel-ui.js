@@ -18,7 +18,7 @@ function pageParcel() {
       $('#main').innerHTML = `
         <div class="g-wrap g-section"><div class="g-card">
           <div class="g-empty">
-            <span class="g-ic g-ic-lg" aria-hidden>📦</span>
+            <span class="g-ic g-ic-lg" aria-hidden>${GICON("parcel")}</span>
             <h3 class="g-h3">Tell us about the parcel first</h3>
             <p class="g-s g-mt-sm">Where we collect it, where it goes and how heavy it is. That is all we need to find a driver.</p>
             <a class="g-btn g-btn-ink g-mt" href="index.html">Back to booking</a>
@@ -56,25 +56,25 @@ function pageParcel() {
             <span class="g-stamp ${["booked", "collected", "in_transit", "delivered", "accepted"].includes(p.status) ? "g-stamp-full" : "g-stamp-open"}">${esc(PARCEL_LABEL[p.status] || p.status)}</span>
           </div>
           <div class="g-row g-mt-sm" style="gap:14px;flex-wrap:wrap">
-            <span class="g-s-sm"><span aria-hidden>📦</span> ${p.weightKg}kg · ${esc((PARCEL_SIZES.find(s => s.id === p.sizeClass) || {}).label || p.sizeClass)}</span>
+            <span class="g-s-sm"><span aria-hidden>${GICON("parcel")}</span> ${p.weightKg}kg · ${esc((PARCEL_SIZES.find(s => s.id === p.sizeClass) || {}).label || p.sizeClass)}</span>
             <span class="g-s-sm"><span aria-hidden>📅</span> ${esc(p.pickupDate)}${p.pickupTime ? " · " + esc(p.pickupTime) : ""}</span>
-            <span class="g-s-sm"><span aria-hidden>🚐</span> boot only, never a seat</span>
+            <span class="g-s-sm"><span aria-hidden>${GICON("van")}</span> boot only, never a seat</span>
           </div>
           ${p.description ? `<div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>📝</span><div><div class="g-list-t">${esc(p.description)}</div><div class="g-list-s">What is in the parcel</div></div></div>` : ""}
 
           <h3 class="g-h3 g-mt-lg">Parcel details</h3>
           <p class="g-s-sm g-mt-sm">Everything here came from your booking and is editable. Nothing is asked twice.</p>
           <div class="g-2col g-mt">
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📍</span><div style="flex:1"><label class="g-f-k">Collect from</label><input id="pFrom" value="${esc(p.pickupAddress)}"></div></div>
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🏁</span><div style="flex:1"><label class="g-f-k">Goes to</label><input id="pTo" value="${esc(p.destinationCity)}"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("pin")}</span><div style="flex:1"><label class="g-f-k">Collect from</label><input id="pFrom" value="${esc(p.pickupAddress)}"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("flag")}</span><div style="flex:1"><label class="g-f-k">Goes to</label><input id="pTo" value="${esc(p.destinationCity)}"></div></div>
           </div>
           <div class="g-2col">
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📅</span><div style="flex:1"><label class="g-f-k">Collection date</label><input id="pDate" type="date" value="${esc(p.pickupDate)}"></div></div>
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>🕕</span><div style="flex:1"><label class="g-f-k">Time</label><input id="pTime" type="time" value="${esc(p.pickupTime || "")}"></div></div>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("clock")}</span><div style="flex:1"><label class="g-f-k">Time</label><input id="pTime" type="time" value="${esc(p.pickupTime || "")}"></div></div>
           </div>
           <div class="g-2col">
             <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>⚖️</span><div style="flex:1"><label class="g-f-k">Weight (kg)</label><input id="pKg" type="number" min="1" max="200" value="${p.weightKg}"></div></div>
-            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>📦</span><div style="flex:1"><label class="g-f-k">Size</label>
+            <div class="g-field"><span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span><div style="flex:1"><label class="g-f-k">Size</label>
               <select id="pSize">${PARCEL_SIZES.map(s => `<option value="${s.id}"${s.id === p.sizeClass ? " selected" : ""}>${s.label} · ${s.hint}</option>`).join("")}</select></div></div>
           </div>
           <button class="g-btn g-btn-ghost g-btn-block g-mt" type="button" id="pSave">Save these details</button>

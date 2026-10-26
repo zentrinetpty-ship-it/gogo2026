@@ -76,7 +76,7 @@ const GOGOSafety = (() => {
     if (existing) {                      // already captured this ride
       shot.src = existing.dataUrl; shot.style.display = "block"; video.style.display = "none";
       hint.textContent = "Selfie on file for this ride";
-      shotBtn.innerHTML = '<span aria-hidden>✅</span> Keep this selfie';
+      shotBtn.innerHTML = '<span aria-hidden>${GICON("check")}</span> Keep this selfie';
       consent.checked = true;
     }
 
@@ -111,7 +111,7 @@ const GOGOSafety = (() => {
       shot.src = dataUrl; shot.style.display = "block"; video.style.display = "none";
       retakeBtn.style.display = "";
       hint.textContent = confirmed ? "Selfie on file for this ride" : "Looking good";
-      shotBtn.innerHTML = confirmed ? '<span aria-hidden>✅</span> Confirm selfie' : '<span aria-hidden>✅</span> Use this selfie';
+      shotBtn.innerHTML = confirmed ? '<span aria-hidden>${GICON("check")}</span> Confirm selfie' : '<span aria-hidden>${GICON("check")}</span> Use this selfie';
     }
 
     shotBtn.onclick = () => {

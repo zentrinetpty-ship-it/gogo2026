@@ -160,24 +160,34 @@ function paintChrome(active) {
       ${links.map(([h, t, k]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("")}
     </nav>
     <div class="g-nav-right">
-      <a class="g-btn g-btn-outline g-btn-sm" href="rides"><span aria-hidden>🔍</span> Find a hike</a>
+      <a class="g-btn g-btn-outline g-btn-sm" href="rides"><span aria-hidden>${GICON("search")}</span> Find a hike</a>
       <a class="g-btn g-btn-ink g-btn-sm" href="driver">${van()} List a ride</a>
     </div>`;
 
-  const dock = $('#dock');
+/* Line icons, not emoji. Emoji render differently on every platform and read
+     as a hobby project; these match the React landing's lucide set exactly:
+     same 24 viewBox, same 1.75 stroke, same round caps. */
+  const IC = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.65L4 21l1.2-4.2A8.5 8.5 0 1 1 20.5 12Z"/></svg>',
+    dots: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
+  };
+
+const dock = $('#dock');
   if (dock) {
     /* The same four items as the landing, so the nav never changes shape.
        Parcel has no tab of its own — it is a mode on the booking card and a
        section of the dashboard, and parcel.html / track.html / driver.html all
        live under Dashboard along with the trips and the ride pages. */
     const dockItems = [
-      ["/gogo/", ["landing"], "🏠", "Home"],
-      ["dashboard", ["dashboard", "home", "rides", "ride", "parcel", "track", "driver"], "📊", "Dashboard"],
-      ["messages", ["messages"], "💬", "Messages"],
-      ["more", ["more", "why", "safety", "terms", "privacy", "ops", "rider", "auth"], "⋯", "More"],
+      ["/gogo/", ["landing"], IC.home, "Home"],
+      ["dashboard", ["dashboard", "home", "rides", "ride", "parcel", "track", "driver"], IC.grid, "Dashboard"],
+      ["messages", ["messages"], IC.chat, "Messages"],
+      ["more", ["more", "why", "safety", "terms", "privacy", "ops", "rider", "auth"], IC.dots, "More"],
     ];
     dock.innerHTML = dockItems.map(([h, keys, e, t]) =>
-      `<a href="${h}" class="${keys.includes(active) ? "on" : ""}"><span aria-hidden>${e}</span>${t}</a>`
+      `<a href="${h}" class="g-dock-a${keys.includes(active) ? " on" : ""}"><span class="g-dock-ic" aria-hidden="true">${e}</span><span class="g-dock-lb">${t}</span></a>`
     ).join("");
   }
 
@@ -860,7 +870,7 @@ function pageRides() {
     <div class="g-card g-anim">
       <div class="g-between">
         <div class="g-row">
-          <span class="g-ic" aria-hidden>🧭</span>
+          <span class="g-ic" aria-hidden>${GICON("compass")}</span>
           <div>
             <div class="g-t">${esc(from)} <span class="g-s-sm">to</span> ${esc(to)}${window.GOGOPlaces && GOGOPlaces.provinceByName(to) ? ` <span class="g-stamp g-stamp-idle">province</span>` : ""}</div>
             <div class="g-list-s">${seats} seat${seats === 1 ? "" : "s"} · ${q.when === "tomorrow" ? "tomorrow" : q.when === "any" ? "any day" : "today"}${q.slot ? ` · 🕕 ${String(q.slot).padStart(2, "0")}:00 – ${String(Number(q.slot) + 2).padStart(2, "0")}:00` : ""}${q.pickup ? ` · pickup ${esc(q.pickup)}` : ""}</div>
@@ -1010,7 +1020,7 @@ function pageRide() {
               <span class="g-rc-bar" aria-hidden><i style="width:${pct}%"></i></span>
             </span>
             <span class="g-rc-price"><b>${money(r.fare)}</b><span>per seat</span></span>
-            <span class="g-trip-lug"><span aria-hidden>🧳</span> ${esc(r.luggage)}</span>
+            <span class="g-trip-lug"><span aria-hidden>${GICON("luggage")}</span> ${esc(r.luggage)}</span>
           </footer>
         </article>
 
@@ -1032,7 +1042,7 @@ function pageRide() {
             }).join("")}
           </ol>
           <div class="g-trip-hop">
-            <span aria-hidden>🚏</span>
+            <span aria-hidden>${GICON("stop")}</span>
             <span><b>Going only as far as ${r.stops[0] ? esc(r.stops[0].city) : "a stop"}?</b> Hop off at any stop and pay only that leg.</span>
           </div>
         </section>
@@ -1049,8 +1059,8 @@ function pageRide() {
               <div class="g-list-s"><span class="g-stars">★ ${r.rating}</span> · ${r.trips} trips</div>
             </div>
           </div>
-          <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${van()}</span><div><div class="g-list-t">${esc(r.vehicle)}</div><div class="g-list-s">${myAcceptedSeat(r) ? `${esc(r.colour)} · ${esc(r.plate)}` : `<span aria-hidden>🔒</span> Plate shared once your seat is confirmed`}</div></div></div>
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>📞</span><div><div class="g-list-t">Number shared after accepting</div><div class="g-list-s">GOGO hides numbers until the driver agrees</div></div></div>
+          <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${van()}</span><div><div class="g-list-t">${esc(r.vehicle)}</div><div class="g-list-s">${myAcceptedSeat(r) ? `${esc(r.colour)} · ${esc(r.plate)}` : `<span aria-hidden>${GICON("lock")}</span> Plate shared once your seat is confirmed`}</div></div></div>
+          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("phone")}</span><div><div class="g-list-t">Number shared after accepting</div><div class="g-list-s">GOGO hides numbers until the driver agrees</div></div></div>
         </section>
 
         <section class="g-card g-mt" id="joinBox"></section>
@@ -1062,11 +1072,11 @@ function pageRide() {
   if (mine) {
     box.innerHTML = `
       <div class="g-head"><span class="g-label">Your request</span><span class="g-stamp ${mine.status === "accepted" ? "g-stamp-full" : "g-stamp-open"}">${esc(mine.status)}</span></div>
-      <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>📍</span><div><div class="g-list-t">${esc(mine.pickup)}</div><div class="g-list-s">Pickup address</div></div></div>
-      <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🏁</span><div><div class="g-list-t">${esc(mine.getOff)}</div><div class="g-list-s">${mine.seats} seat${mine.seats === 1 ? "" : "s"} · ${esc(mine.luggage)}</div></div><div class="g-list-r g-t">${money(mine.fare)}</div></div>
+      <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("pin")}</span><div><div class="g-list-t">${esc(mine.pickup)}</div><div class="g-list-s">Pickup address</div></div></div>
+      <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("flag")}</span><div><div class="g-list-t">${esc(mine.getOff)}</div><div class="g-list-s">${mine.seats} seat${mine.seats === 1 ? "" : "s"} · ${esc(mine.luggage)}</div></div><div class="g-list-r g-t">${money(mine.fare)}</div></div>
       ${feeTable(fareLines(mine.fare, mine.seats), mine.seats > 1 ? `Fare for ${mine.seats} seats, plus ${rands(FEE_CONFIG.pickup)} pickup and ${rands(FEE_CONFIG.platform)} platform fee per passenger.` : `${rands(FEE_CONFIG.pickup)} pickup + ${rands(FEE_CONFIG.platform)} platform fee.`)}
       <p class="g-s g-mt-sm">${mine.status === "accepted" ? "You are in. The driver will pick you up in route order." : "Waiting for the driver to accept. You will be notified here."}</p>
-      <a class="g-btn g-btn-ink g-btn-block g-mt" href="rider"><span aria-hidden>🧍</span> Open my trips</a>`;
+      <a class="g-btn g-btn-ink g-btn-block g-mt" href="rider"><span aria-hidden>${GICON("person")}</span> Open my trips</a>`;
   } else {
     /* nothing is re-asked: the join form comes pre-filled from the draft the
        passenger already typed on the landing page */
@@ -1116,7 +1126,7 @@ function pageRide() {
           </div>
         </div>
         <div id="joinFees"></div>
-        <button class="g-btn g-btn-ink g-btn-block" type="submit" ${left ? "" : "disabled"}><span aria-hidden>📲</span> ${left ? "Send request" : "Trip is full"}</button>
+        <button class="g-btn g-btn-ink g-btn-block" type="submit" ${left ? "" : "disabled"}><span aria-hidden>${GICON("mobile")}</span> ${left ? "Send request" : "Trip is full"}</button>
         <p class="g-s-sm g-mt-sm" style="text-align:center">The driver accepts before anything is confirmed</p>
       </form>`;
 
@@ -1280,7 +1290,7 @@ function pageTicket() {
 
   if (!ref) {
     host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
-      <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🎫</span>
+      <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("ticket")}</span>
         <h3 class="g-h3">Open your ticket</h3>
         <p class="g-s g-mt-sm">Enter the six-character reference from your booking.</p>
         <form id="refForm" class="g-mt" style="max-width:280px;margin-inline:auto;text-align:left">
@@ -1310,7 +1320,7 @@ function pageTicket() {
     .then(out => {
       if (out.status !== 200 || !out.body.booking) {
         host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
-          <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🔍</span>
+          <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("search")}</span>
             <h3 class="g-h3">No ticket with that reference</h3>
             <p class="g-s g-mt-sm">Check the code and try again. It is six characters, and the letters I, O, S, B and Z are never used.</p>
             <a class="g-btn g-btn-ink g-mt" href="ticket">Try another code</a></div></div></div>`;
@@ -1425,7 +1435,7 @@ function pageRider() {
             <span class="g-label">My trips</span>
             <h1 class="g-h2 g-mt-sm">${esc(S.me.name)}</h1>
           </div>
-          <a class="g-btn g-btn-ink g-btn-sm" href="/gogo/"><span aria-hidden>🧭</span> Book a seat</a>
+          <a class="g-btn g-btn-ink g-btn-sm" href="/gogo/"><span aria-hidden>${GICON("compass")}</span> Book a seat</a>
         </div>
       </div>
 
@@ -1458,7 +1468,7 @@ function pageRider() {
                 <div class="g-list-t">${esc(live.r.driver)}</div>
                 <div class="g-list-s">${esc(live.r.vehicle)} · ${esc(live.r.plate)} · ★ ${live.r.rating}</div>
               </div>
-              <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>💬</span> Message</a>
+              <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Message</a>
             </div>
 
             <div class="g-trip-acts">
@@ -1466,7 +1476,7 @@ function pageRider() {
               ${live.q.ref ? `<a class="g-btn g-btn-ghost g-btn-sm" href="ticket?ref=${encodeURIComponent(live.q.ref)}">Boarding pass</a>` : ""}
               <button class="g-btn g-btn-ghost g-btn-sm" id="cancelReq" type="button">Cancel request</button>
             </div>` : `
-            <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🧭</span>
+            <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("compass")}</span>
               <h3 class="g-h3">No active trip</h3>
               <p class="g-s g-mt-sm">Grab a seat on a route leaving your street.</p>
               <a class="g-btn g-btn-ink g-mt" href="rides.html?from=East+London&to=Mthatha">See East London → Mthatha rides</a></div>`}
@@ -1559,7 +1569,7 @@ function pageDriver() {
             <span class="g-s-sm">${capacityLine(r)}</span></div>
           ${(() => {
             const inbox = parcelInbox(r);
-            if (!inbox.length) return `<div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>📦</span>
+            if (!inbox.length) return `<div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("parcel")}</span>
               <h3 class="g-h3">No parcels waiting</h3>
               <p class="g-s g-mt-sm">Senders going your way appear here. A parcel never takes a seat, only boot space.</p></div>`;
             return inbox.map(p => {
@@ -1578,7 +1588,7 @@ function pageDriver() {
                   <div><div class="g-list-t">${rands(Number(r.ratePerKg || 12))}/kg is your rate</div>
                   <div class="g-list-s">Suggested ${rands(suggestCarriage(p, r))} · you agree the final figure with the sender</div></div></div>
                 <div class="g-row g-mt-sm">
-                  <button class="g-btn g-btn-lime g-btn-sm" data-poffer="${p.id}" type="button" ${fits ? "" : "disabled"}><span aria-hidden>💬</span> Open and negotiate</button>
+                  <button class="g-btn g-btn-lime g-btn-sm" data-poffer="${p.id}" type="button" ${fits ? "" : "disabled"}><span aria-hidden>${GICON("chat")}</span> Open and negotiate</button>
                   <button class="g-btn g-btn-ghost g-btn-sm" data-pdec="${p.id}" type="button">Pass</button>
                 </div>
               </div>`;
@@ -1589,19 +1599,19 @@ function pageDriver() {
 
       <div class="g-12 g-anim">
         <div class="g-card">
-          <div class="g-head"><span class="g-label">Parcels you are carrying</span><span class="g-ic g-ic-sm" aria-hidden>📦</span></div>
+          <div class="g-head"><span class="g-label">Parcels you are carrying</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span></div>
           ${(() => {
             const load = (S.parcels || []).filter(p => p.rideId === r.id && ["agreed", "accepted", "booked", "collected", "in_transit"].includes(p.status));
             if (!load.length) return `<p class="g-s">Nothing booked yet. Agreed parcels show here with what you are owed.</p>`;
             return load.map(p => `
               <div class="g-list-row">
-                <span class="g-ic g-ic-sm" aria-hidden>📦</span>
+                <span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span>
                 <div><div class="g-list-t">${p.weightKg}kg → ${esc(p.destinationCity)}</div>
                   <div class="g-list-s">${esc(p.senderName)} · ${esc(PARCEL_LABEL[p.status] || p.status)}</div></div>
                 <div class="g-list-r g-t g-money">${p.agreedPrice != null ? rands(p.agreedPrice) : "—"}</div>
               </div>`).join("");
           })()}
-          <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>🧮</span>
+          <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${GICON("calc")}</span>
             <div><div class="g-list-t">Boot used ${bootUsed(r)}kg of ${bootTotal(r)}kg</div>
             <div class="g-list-s">${bootLeft(r)}kg still sellable on this trip · seats and boot are counted separately</div></div></div>
         </div>
@@ -1620,13 +1630,13 @@ function pageDriver() {
                 <div style="text-align:right"><div class="g-kpi-val g-money" style="font-size:19px">${money(q.fare)}</div>
                   <span class="g-stamp ${q.status === "accepted" ? "g-stamp-full" : q.status === "pending" ? "g-stamp-open" : "g-stamp-idle"}">${esc(q.status)}</span></div>
               </div>
-              <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>📍</span>
+              <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${GICON("pin")}</span>
                 <div><div class="g-list-t">${esc(q.pickup)}</div><div class="g-list-s">Pickup · hop off at ${esc(q.getOff)}</div></div></div>
               ${q.status === "pending" ? `
                 <div class="g-row g-mt-sm">
-                  <button class="g-btn g-btn-lime g-btn-sm" data-acc="${q.id}" type="button"><span aria-hidden>✅</span> Accept seat</button>
+                  <button class="g-btn g-btn-lime g-btn-sm" data-acc="${q.id}" type="button"><span aria-hidden>${GICON("check")}</span> Accept seat</button>
                   <button class="g-btn g-btn-ghost g-btn-sm" data-dec="${q.id}" type="button">Decline</button>
-                </div>` : `<a class="g-btn g-btn-ghost g-btn-sm g-mt-sm" href="#"><span aria-hidden>💬</span> Message ${esc(q.name.split(" ")[0])}</a>`}
+                </div>` : `<a class="g-btn g-btn-ghost g-btn-sm g-mt-sm" href="#"><span aria-hidden>${GICON("chat")}</span> Message ${esc(q.name.split(" ")[0])}</a>`}
             </div>`).join("") : `
             <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>📭</span>
               <h3 class="g-h3">No requests yet</h3>
@@ -1644,7 +1654,7 @@ function pageDriver() {
 
         ${acc.length ? `
         <div class="g-card g-mt">
-          <div class="g-head"><span class="g-label">Pickup run sheet</span><span class="g-ic g-ic-sm" aria-hidden>🧾</span></div>
+          <div class="g-head"><span class="g-label">Pickup run sheet</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("receipt")}</span></div>
           ${order.map((c, i) => {
             const here = acc.filter(q => q.getOff === c || (i === order.length - 1 && q.getOff === r.to));
             const pickups = acc.filter(q => i === 0 || (i > 0 && q.getOff !== order[i - 1]));
@@ -1663,7 +1673,7 @@ function pageDriver() {
             <div class="g-list-row"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${van()}</span>
               <div><div class="g-list-t">${esc(q.name)} · ${q.seats} seat${q.seats === 1 ? "" : "s"}</div>
                 <div class="g-list-s">${esc(q.pickup)}</div></div>
-              <div class="g-list-r"><a class="g-btn g-btn-ink g-btn-sm" href="#"><span aria-hidden>📞</span> Call</a></div></div>`).join("")}
+              <div class="g-list-r"><a class="g-btn g-btn-ink g-btn-sm" href="#"><span aria-hidden>${GICON("phone")}</span> Call</a></div></div>`).join("")}
         </div>` : ""}
       </div>
 
@@ -1682,7 +1692,7 @@ function pageDriver() {
               }).join("");
             })()}
           </div>
-          <div class="g-list-row g-mt"><span class="g-ic g-ic-sm" aria-hidden>🧳</span>
+          <div class="g-list-row g-mt"><span class="g-ic g-ic-sm" aria-hidden>${GICON("luggage")}</span>
             <div><div class="g-list-t">${esc(r.luggage)}</div><div class="g-list-s">Boot space declared on this ride</div></div></div>
           <div class="g-row g-mt">
             <button class="g-btn g-btn-ghost g-btn-sm" id="publishRide" type="button">Share ride link</button>
@@ -1701,7 +1711,7 @@ function pageDriver() {
         <div class="g-card g-mt">
           <div class="g-head"><span class="g-label">Stops on this ride</span><span class="g-ic g-ic-sm" aria-hidden>🛣️</span></div>
           ${r.stops.length ? r.stops.map(s => `
-            <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>🚏</span>
+            <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("stop")}</span>
               <div><div class="g-list-t">${esc(s.city)}</div><div class="g-list-s">around ${esc(s.time)} · ${money(s.fare)} per seat</div></div>
               <div class="g-list-r"><button class="g-btn g-btn-ghost g-btn-sm" data-rm="${esc(s.city)}" type="button">Remove</button></div></div>`).join("")
             : `<p class="g-s">No stops. Add one so commuters on the way can hop in.</p>`}
@@ -1755,7 +1765,7 @@ function pageDriver() {
 
     const cap = document.createElement('div');
     cap.className = 'g-list-row';
-    cap.innerHTML = '<span class="g-ic g-ic-sm" aria-hidden>🧮</span>' +
+    cap.innerHTML = '<span class="g-ic g-ic-sm" aria-hidden>${GICON("calc")}</span>' +
       '<div><div class="g-list-t">' + capacityLine(rideRow) + '</div>' +
       '<div class="g-list-s">Suggested ' + rands(suggested) + ' at ' + rands(rate) + '/kg</div></div>';
 

@@ -335,7 +335,7 @@ const GOGODocs = (() => {
                 <div class="g-list-r"><div class="g-count">${GOGOPay.money(st.closing)}</div><div class="g-list-s">payout due</div></div>
               </div>`;
             }).join("")}
-            <button class="g-btn g-btn-ink g-btn-block g-mt" id="genStatements" type="button"><span aria-hidden>🧾</span> Generate this month's invoices</button>
+            <button class="g-btn g-btn-ink g-btn-block g-mt" id="genStatements" type="button"><span aria-hidden>${GICON("receipt")}</span> Generate this month's invoices</button>
           </div>
 
           <div class="g-card g-mt">
