@@ -15,9 +15,94 @@
   font-display: swap;
 }
 
+/* ── /lv: the Louis Vuitton orange variant ──────────────────────────────────
+   A second landing page that changes ONE thing: the accent. Everything else —
+   ground, ink, radii, type, spacing — is identical, so the two can be compared
+   honestly.
+
+   The orange is LV's house colour, sampled warm rather than neon: #F5A623 is
+   the bright one that reads correctly on charcoal, #C8791A the deeper shade for
+   type on white. Both sit at roughly the same luminance relationship as the lime
+   pair they replace, so contrast and hierarchy hold in every position the accent
+   appears: ring, dot, button fill, and button text.
+
+   Scoped to [data-theme="lv"], which main.tsx sets only on /lv. Nothing here can
+   leak into the default page. */
+html[data-theme="lv"] {
+  --gogo-accent: 245 166 35;      /* #F5A623 */
+  --gogo-accent-deep: 200 121 26; /* #C8791A */
+}
+/* ── native feel ───────────────────────────────────────────────────────────
+   Each rule removes a "this is a web page" tell without breaking a gesture
+   people rely on:
+
+   scrollbar      hidden. A visible bar down the side of a centred 560px column
+                  reads as a browser window, not an app.
+   overscroll     `contain`, NOT `none`. This distinction matters more than it
+                  looks: `none` kills pull-to-refresh outright, which is exactly
+                  the gesture riders use to pick up new hikes. `contain` stops
+                  the page bouncing past its end AND stops the browser's own
+                  refresh firing *over our UI*, while leaving a deliberate
+                  pull-to-refresh we control free to work.
+   tap-highlight  removed — the grey flash on tap is pure browser.
+   touch-action   pan-x pan-y only: kills double-tap and pinch zoom without
+                  killing scrolling.
+   text-size      disabled, so iOS doesn't inflate type on rotate.
+   user-select    off on chrome, ON for real content — disabling it everywhere
+                  would stop riders copying a booking reference, which they do.
+
+   Both the viewport meta (user-scalable=no) and touch-action are needed: the
+   meta handles iOS double-tap, touch-action handles Android. Neither alone
+   covers both. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body {
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Real content stays selectable — a reference number you can't copy is a
+   support ticket waiting to happen. */
+p, h1, h2, h3, h4, li, a, td, th, code, .selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Fields stay fully interactive; 16px is the threshold below which iOS zooms
+   the whole page when a field takes focus. */
+input, textarea, select {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
+}
+
 /* ── GOGO design tokens · one light theme, white ground, ink type, lime accent ── */
 @layer base {
   :root {
+    /* The accent pair as raw RGB triplets, so Tailwind can add alpha to them.
+       Overriding these two values re-skins every `lime-*` utility in the app —
+       which is exactly how the /lv landing page swaps in Louis Vuitton orange
+       without touching a single component. */
+    --gogo-accent: 163 230 53;
+    --gogo-accent-deep: 141 182 0;
     --background: 0 0% 100%;
     --foreground: 0 0% 4%;
     --card: 0 0% 100%;
@@ -28,7 +113,7 @@
     --secondary-foreground: 0 0% 4%;
     --muted: 0 0% 96.5%;
     --muted-foreground: 220 9% 46%;
-    --accent: 74 100% 36%;
+    --accent: 82 85% 55%;
     --accent-foreground: 0 0% 4%;
     --border: 0 0% 90%;
     --input: 0 0% 90%;
@@ -62,16 +147,172 @@
     line-height: 1;
   }
 
-  /* The second line of the headline, set light and italic.
-     This is the one typographic flourish on the page: everything else is
-     upright and heavy, so a single soft italic line carries the whole
-     contrast. It reads as a different voice (a suggestion, not a shout)
-     without introducing another colour or weight. */
+  /* ── the page assembles ───────────────────────────────────────────────────
+     Everything below the hero fades up in sequence rather than being painted
+     all at once. Short (240ms) and close together (60ms apart) so the page feels
+     alive without making anyone wait — anything longer starts to feel slow, which
+     is the opposite of what a "responsive" app should feel like.
+
+     Only transform + opacity, so it runs on the compositor and never blocks
+     input: you can tap a control while its row is still fading in. */
+  .gh-rise {
+    animation: ghRise .24s cubic-bezier(.16, 1, .3, 1) both;
+  }
+
+  @keyframes ghRise {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Stagger, capped: past ~6 steps the delay starts to be felt as lag. */
+  .gh-rise-1 { animation-delay: .03s; }
+  .gh-rise-2 { animation-delay: .06s; }
+  .gh-rise-3 { animation-delay: .09s; }
+  .gh-rise-4 { animation-delay: .12s; }
+  .gh-rise-5 { animation-delay: .15s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gh-rise, .gh-rise-1, .gh-rise-2, .gh-rise-3, .gh-rise-4, .gh-rise-5 {
+      animation: none;
+    }
+  }
+
+  /* ── the loading state ────────────────────────────────────────────────────
+     A flashing seat icon and a shimmering skeleton. Both are deliberately
+     restrained: the chair pulses between 1 and 0.35 opacity on a 1.4s cycle
+     (a pulse, not a blink — a hard on/off reads as a fault), and the skeleton
+     sweeps a soft highlight rather than pulsing the whole card, so nothing
+     large moves while someone is trying to read the page. */
+  .gh-pulse-seat {
+    animation: ghSeatFlash 1.4s ease-in-out infinite;
+  }
+
+  @keyframes ghSeatFlash {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .35; }
+  }
+
+  .gh-skeleton {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gh-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, .85) 50%,
+      transparent
+    );
+    transform: translateX(-100%);
+    animation: ghShimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes ghShimmer {
+    to { transform: translateX(100%); }
+  }
+
+  /* Both loops stop for reduced-motion users; the chair stays fully visible so
+     the "now loading" label still reads. */
+  @media (prefers-reduced-motion: reduce) {
+    .gh-pulse-seat { animation: none; opacity: 1; }
+    .gh-skeleton::after { animation: none; display: none; }
+  }
+
+  /* ── the single-G mark ───────────────────────────────────────────────────
+     The ring around this letter is the brand's O, so the lockup reads GOGO
+     without spelling it. Poppins' G is already round, which is why it can be
+     pushed this large without turning into a slab.
+
+     One optical correction, because a capital sits badly on a circle's true
+     centre: the G's mass sits low, so the glyph is nudged down a hair. Without
+     it the letter looks like it is floating out of the ring. */
+  .gh-g-mark {
+    color: rgb(var(--gogo-accent));
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 0.9;
+    transform: translate(0, 1%);
+    -webkit-font-smoothing: antialiased;
+  }
+
   .gh-quiet {
     font-style: italic;
     font-weight: 300;
     letter-spacing: -0.01em;
     color: #52525B;
+  }
+
+  /* ── light splash ────────────────────────────────────────────────────────
+     Ported from Cleanic's landing splash: the same geometry, timings and
+     easings, in GOGO's colours. Light and calm — a warm white ground with the
+     faintest lime tint in the corners, one hub of slow rings, and a bar that
+     tells the truth about how long it has left. */
+  .ghs-root {
+    background: radial-gradient(120% 90% at 50% 20%, #FFFFFF 0%, #FAFCF4 62%, #F4F9E8 100%);
+  }
+  .ghs-glow {
+    background: radial-gradient(circle, rgba(141, 182, 0, .16), transparent 62%);
+    filter: blur(30px);
+  }
+  .ghs-bub {
+    background: rgba(17, 24, 39, .10);
+    animation-name: ghsBubRise;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .ghs-hub { position: relative; }
+  .ghs-ring-dash {
+    border: 3px dashed rgb(var(--gogo-accent-deep));
+    animation: ghsSpin 10s linear infinite;
+  }
+  .ghs-ring-thin {
+    border: 1px solid rgba(17, 24, 39, .10);
+    animation: ghsSpinBack 7.5s linear infinite;
+  }
+  .ghs-orbit { animation: ghsSpin 10s linear infinite; }
+  .ghs-orbit > span { box-shadow: 0 0 14px rgb(var(--gogo-accent)); }
+  .ghs-ripple {
+    border: 1px solid rgba(17, 24, 39, .08);
+    animation: ghsRipple 2.8s ease-out infinite;
+  }
+  .ghs-r2 { animation-delay: 1.4s; }
+
+  .ghs-badge {
+    box-shadow: 0 12px 28px -10px rgba(17, 24, 39, .28);
+    animation: ghsPop .7s cubic-bezier(.2, 1.5, .4, 1) .1s both;
+  }
+  .ghs-word,
+  .ghs-sub { animation: ghsRise .6s ease .5s both; }
+  .ghs-sub { animation-delay: .75s; }
+
+  .ghs-fill { background: linear-gradient(90deg, rgb(var(--gogo-accent-deep)), rgb(var(--gogo-accent))); }
+
+  @keyframes ghsBubRise {
+    0%   { transform: translateY(0); opacity: 0; }
+    12%  { opacity: .55; }
+    100% { transform: translateY(-560px); opacity: 0; }
+  }
+  @keyframes ghsSpin { to { transform: rotate(360deg); } }
+  @keyframes ghsSpinBack { to { transform: rotate(-360deg); } }
+  @keyframes ghsRipple {
+    0%   { transform: scale(.9); opacity: .5; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+  @keyframes ghsPop {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes ghsRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ghs-root * { animation: none !important; }
   }
 
   /* the strike through "Zero Queue", drawn in lime. Ported from the app's
@@ -82,7 +323,7 @@
     content: "";
     position: absolute; left: -3%; right: -3%; top: 52%; height: 0.08em;
     border-radius: 4px;
-    background: linear-gradient(90deg, #8DB600 0%, #A3E635 55%, #8DB600 100%);
+    background: linear-gradient(90deg, rgb(var(--gogo-accent-deep)) 0%, rgb(var(--gogo-accent)) 55%, rgb(var(--gogo-accent-deep)) 100%);
     box-shadow: 0 0 18px rgba(163, 230, 53, .6), 0 0 2px rgba(255, 255, 255, .8);
     transform: scaleX(0) rotate(-2.4deg); transform-origin: left center;
     animation: ghStrike .9s cubic-bezier(.16, .9, .18, 1) .5s both;

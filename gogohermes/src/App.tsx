@@ -11,11 +11,16 @@ import {
   Route,
   ChevronDown,
   ArrowRight,
+  Armchair,
 } from "lucide-react";
 import { AnimatedNavFramer } from "@/components/animated-nav-framer";
 import { BookingCard, type Mode } from "@/components/booking-card";
 import { GoGoLogo } from "@/components/logo";
+import { LaunchScreen } from "@/components/launch-screen";
+import { PullToRefresh } from "@/components/pull-to-refresh";
 import { cn } from "@/lib/utils";
+import { getActiveCity, getHomeCity, setBookingCity } from "@/lib/city";
+import { displayCity } from "@/lib/towns";
 
 /* =========================================================================
    Home.
@@ -99,6 +104,36 @@ type Ride = {
 
 export default function App() {
   const [rides, setRides] = React.useState<Ride[]>([]);
+  /* Tracks whether /api/rides has answered — success OR failure. Without this the
+     routes section cannot tell "still waiting" from "answered with nothing", and
+     would show the loading skeleton forever on an empty or failed response. */
+  const [ridesLoaded, setRidesLoaded] = React.useState(false);
+  /* Whether the booking form has expanded. Lifted here because the hero has to
+     react to it: once the form opens the card needs the space more than the
+     marketing copy does. */
+  const [formOpen, setFormOpen] = React.useState(false);
+  /* The town the rider is booking from, once their address resolves. Null means
+     "no address chosen yet", which is different from "chose a town we don't
+     serve" — the list shows everything before a choice, and the honest empty
+     state after an unmatched one. */
+  /* The landing page shows the ACTIVE city: the town of the address most
+     recently typed, falling back to the rider's home city. Read on mount so a
+     returning visitor sees their own town before touching anything — and read
+     from the store rather than a default, because "no city" and "their city"
+     produce different ride lists. */
+  const [bookingCity, setBookingCityState] = React.useState<string | null>(
+    () => (typeof window === "undefined" ? null : getActiveCity())
+  );
+  const [homeCity] = React.useState<string | null>(
+    () => (typeof window === "undefined" ? null : getHomeCity())
+  );
+
+  /* A resolved pick-up writes the BOOKING city only. The home city is never
+     touched here: booking a trip from another town is not a change of address. */
+  const rememberCity = React.useCallback((city: string | null) => {
+    setBookingCityState(city);
+    if (city) setBookingCity(city);
+  }, []);
   /* The pickup address is the rider's own street, remembered between visits —
      most people are collected from the same place every time, and retyping it
      on a phone is the slowest part of booking. */
@@ -135,6 +170,10 @@ export default function App() {
       })
       .catch(() => {
         /* leaving the list empty is the honest failure: no invented prices */
+      })
+      .finally(() => {
+        /* answer received either way — stop the skeleton */
+        if (live) setRidesLoaded(true);
       });
     return () => {
       live = false;
@@ -143,6 +182,12 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-white">
+      {/* first paint: the calm launch screen, centred lockup on white. It sits
+          over the page rather than in place of it, so the hero is already laid
+          out underneath and nothing jumps when it leaves. */}
+      <LaunchScreen />
+      <PullToRefresh />
+
       <AnimatedNavFramer />
       <Header />
 
@@ -158,56 +203,76 @@ export default function App() {
              state): on a phone the form is a sheet, and a sheet rises. */}
       <div className="flex flex-1 flex-col justify-end">
         <div className="mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
-          <HeroCopy />
-          <ChooseYourRide pickup={pickup} mode={mode} onMode={setMode} />
+          {/* ── the hero steps aside ──────────────────────────────────────
+              When the booking form opens, the hero is collapsed away. Two
+              reasons: the expanded card plus the phone keyboard needs every
+              pixel, and marketing copy competing with a form the rider is
+              actively filling in is noise.
+
+              Collapsed with a height/opacity transition rather than unmounted —
+              unmounting would drop the `gh-rise` animation state and snap the
+              layout. `overflow-hidden` + `max-h-0` means it takes no space but
+              keeps its box, so the card below glides up instead of jumping. */}
+          <div
+            className={cn(
+              "overflow-hidden transition-[max-height,opacity] duration-300 ease-out",
+              formOpen ? "max-h-0 opacity-0" : "max-h-[520px] opacity-100"
+            )}
+            aria-hidden={formOpen}
+          >
+            <div className="gh-rise"><HeroCopy /></div>
+            <div className="gh-rise gh-rise-1"><ChooseYourRide pickup={pickup} mode={mode} onMode={setMode} /></div>
+          </div>
         </div>
       </div>
 
       {/* the booking card, at the bottom of the column */}
       <div className="relative z-20 mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
-        <BookingCard mode={mode} onMode={setMode} />
+        <div className="gh-rise gh-rise-2"><BookingCard mode={mode} onMode={setMode} onOpenChange={setFormOpen} onCityResolved={rememberCity} /></div>
       </div>
 
       {/* the rest of the page scrolls below the fold */}
       <div className="mx-auto w-full max-w-[520px] scroll-mt-24 px-5 pb-[calc(96px+env(safe-area-inset-bottom))] pt-7 md:max-w-[560px] md:px-6">
-        <ServicesGrid />
-        <RoutesList rides={rides} pickup={pickup} />
+        <div className="gh-rise gh-rise-3"><ServicesGrid /></div>
+        <div className="gh-rise gh-rise-4"><RoutesList rides={rides} pickup={pickup} loaded={ridesLoaded} city={bookingCity} /></div>
+
+        {/* ── the closing call to action ───────────────────────────────────
+               Borrowed from Cleanic's reviews page, where it closes the page
+               with a dark panel and one lime button. On GOGO it does the same
+               job: after someone has scanned hikes and services, give them one
+               obvious next step and tell them what it costs. Colours are taken
+               from that section rather than invented — #1A1A1A ground, white
+               heading, 65%-white supporting line, and the lime reserved for the
+               single button so it is the only thing that glows. */}
+        <section className="mt-9 rounded-[24px] bg-[#1A1A1A] px-5 py-6 text-center">
+          <h2 className="text-[18px] font-bold leading-tight text-white">
+            Join them
+          </h2>
+          <p className="mx-auto mt-1.5 max-w-[19rem] text-[13px] font-normal leading-relaxed text-white/65">
+            First pickup is free. Pay cash or card on the first delivery.
+          </p>
+          <a
+            href="/gogo/rides.html"
+            className="mt-5 inline-flex h-[46px] items-center justify-center rounded-full bg-lime px-7 text-[14px] font-semibold text-[#1A1A1A] transition-opacity hover:opacity-90"
+          >
+            Book your first pickup
+          </a>
+        </section>
       </div>
     </div>
   );
 }
 
 /* ── hero copy ───────────────────────────────────────────────────────────── */
-function HeroCopy() {
-  return (
-    <div className="pb-5">
-      {/* The headline is set in the logo face (Anton) so the type and the
-          wordmark above it read as one brand. "Smart Hike" solid, "Zero Queue"
-          struck through in lime — the promise and the thing it removes. */}
-      <h1 className="gh-impact text-[clamp(2.6rem,11vw,3.6rem)] text-ink">
-        Smart Hike.
-        <br />
-        <span className="gh-strike">Zero Queue.</span>
-      </h1>
-      <p className="mt-3 max-w-[24rem] text-[13.5px] font-normal leading-relaxed text-neutral-500">
-        We fetch you from your door, then carry you between towns — or your parcel
-        in a boot already going there.
-      </p>
-    </div>
-  );
-}
 
 /* ── header ──────────────────────────────────────────────────────────────── */
 function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200/70 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[62px] w-full max-w-[520px] items-center justify-between px-5 md:max-w-[560px] md:px-6">
-        <a href="/gogo/" aria-label="GOGO home" className="shrink-0">
-          {/* The wordmark is the brand on this screen — set large and heavy so
-              it reads as the product name, not a nav label. */}
-          <GoGoLogo size={30} />
-        </a>
-
+    /* No bar, no border, no blur: the controls sit directly on the page's own
+       ground. A header band drew a line across the hero before anyone read a
+       word of it, and on a white page it was a line around nothing. */
+    <header className="relative z-40">
+      <div className="mx-auto flex h-[62px] w-full max-w-[520px] items-center justify-end px-5 md:max-w-[560px] md:px-6">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -219,13 +284,45 @@ function Header() {
           </button>
           <a
             href="/gogo/auth.html"
-            className="flex h-9 items-center rounded-full bg-ink px-4 text-[12.5px] font-semibold text-white"
+            className="flex h-9 items-center rounded-full bg-lime px-4 text-[12.5px] font-semibold text-[#1A1A1A]"
           >
             Sign in
           </a>
         </div>
       </div>
     </header>
+  );
+}
+
+/* The logo is the hero now. Wordmark, then the promise as its tagline, then one
+   supporting line. Nothing else competes with it at the top of the page. */
+function HeroCopy() {
+  return (
+    <div className="pb-5">
+      {/* The mark is back in the hero, centred — the same lockup the launch
+          screen shows, so the load screen and the page read as one thing. */}
+      <div className="flex flex-col items-center text-center">
+        <span className="relative flex h-[84px] w-[84px] items-center justify-center rounded-full border-[3px] border-lime bg-[#1A1A1A] shadow-[inset_0_0_0_4px_#FFFFFF]">
+          {/* 58px, not 66: the inset white ring takes 4px off the inside edge,
+              and at 66 the G's bowl touched it. */}
+          <span className="gh-g-mark select-none text-[58px] leading-none">G</span>
+        </span>
+
+        {/* Smaller but heavier: the promise is a label, not a sentence, so it
+            earns attention through weight and a tight cap-height rather than
+            size. The name keeps its size so the two read as one line. */}
+        <span className="mt-4 whitespace-nowrap text-[15px] leading-none tracking-[-.005em]">
+          <span className="font-bold text-ink">GOGO</span>
+          <span className="mx-1.5 font-normal text-neutral-300">–</span>
+          <span className="font-semibold text-neutral-600">Smart Hike, Zero Queue</span>
+        </span>
+      </div>
+
+      <p className="mt-7 max-w-[24rem] text-center text-[13.5px] font-normal leading-relaxed text-neutral-500">
+        We collect you at your gate and drive you town to town. Sending a parcel
+        works the same way: it goes in a boot that is already heading your way.
+      </p>
+    </div>
   );
 }
 
@@ -305,32 +402,46 @@ function ChooseYourRide({
           its own Passenger / Parcel switch — two different ways to answer one
           question, one of them buried inside the form. The mode now lives here,
           where it is the first thing a rider sees, and the card stays a card. */}
-      <div className="mt-3 grid grid-cols-2 gap-3" role="tablist" aria-label="What are you sending">
+      <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-neutral-100 p-1.5" role="tablist" aria-label="What are you sending">
         <button
           type="button"
           role="tab"
           aria-selected={mode === "passenger"}
           onClick={() => onMode("passenger")}
           className={cn(
-            "group flex flex-col rounded-3xl border p-4 text-left transition-colors",
+            "group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 active:scale-[.97]",
             mode === "passenger"
-              ? "border-ink bg-white"
-              : "border-neutral-200 bg-white hover:border-neutral-400"
+              ? "border-[#1A1A1A] bg-[#1A1A1A] shadow-[0_10px_24px_-12px_rgba(26,26,26,.55)]"
+              : "border-transparent bg-transparent hover:bg-white/70"
           )}
         >
           <span
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-              mode === "passenger" ? "bg-ink text-white" : "bg-neutral-100 text-ink"
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+              mode === "passenger" ? "bg-lime text-[#1A1A1A] shadow-[0_0_0_3px_rgba(163,230,53,.16)]" : "bg-neutral-200/70 text-ink"
             )}
           >
-            <Car className="h-[17px] w-[17px]" strokeWidth={1.9} />
+            <Car className="h-4 w-4" strokeWidth={1.9} />
           </span>
-          <span className="mt-3 text-[15px] font-bold leading-none text-ink">Ride</span>
-          <span className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium leading-tight text-neutral-500">
-            {/* live dot: seats are actually available on a hike leaving today */}
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
-            Next hike 06:30
+          <span className="min-w-0 flex-1">
+            <span
+              className={cn(
+                "block text-[14px] font-bold leading-none",
+                mode === "passenger" ? "text-white" : "text-ink"
+              )}
+            >
+              Ride
+            </span>
+            <span
+              className={cn(
+                "mt-1 flex items-center gap-1.5 text-[11px] font-medium leading-tight",
+                mode === "passenger" ? "text-white/60" : "text-neutral-500"
+              )}
+            >
+              {/* live dot: seats are actually available on a hike leaving today */}
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-lime" />
+              Next hike 06:30
+            </span>
           </span>
         </button>
 
@@ -340,23 +451,37 @@ function ChooseYourRide({
           aria-selected={mode === "parcel"}
           onClick={() => onMode("parcel")}
           className={cn(
-            "group flex flex-col rounded-3xl border p-4 text-left transition-colors",
+            "group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 active:scale-[.97]",
             mode === "parcel"
-              ? "border-ink bg-white"
-              : "border-neutral-200 bg-white hover:border-neutral-400"
+              ? "border-[#1A1A1A] bg-[#1A1A1A] shadow-[0_10px_24px_-12px_rgba(26,26,26,.55)]"
+              : "border-transparent bg-transparent hover:bg-white/70"
           )}
         >
           <span
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-              mode === "parcel" ? "bg-ink text-white" : "bg-neutral-100 text-ink"
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
+              mode === "parcel" ? "bg-lime text-[#1A1A1A] shadow-[0_0_0_3px_rgba(163,230,53,.16)]" : "bg-neutral-200/70 text-ink"
             )}
           >
-            <Package className="h-[17px] w-[17px]" strokeWidth={1.9} />
+            <Package className="h-4 w-4" strokeWidth={1.9} />
           </span>
-          <span className="mt-3 text-[15px] font-bold leading-none text-ink">Parcel</span>
-          <span className="mt-1.5 text-[12px] font-medium leading-tight text-neutral-500">
-            Send in a boot going there
+          <span className="min-w-0 flex-1">
+            <span
+              className={cn(
+                "block text-[14px] font-bold leading-none",
+                mode === "parcel" ? "text-white" : "text-ink"
+              )}
+            >
+              Parcel
+            </span>
+            <span
+              className={cn(
+                "mt-1 block truncate text-[11px] font-medium leading-tight",
+                mode === "parcel" ? "text-white/60" : "text-neutral-500"
+              )}
+            >
+              In a boot going there
+            </span>
           </span>
         </button>
       </div>
@@ -385,13 +510,17 @@ function ServicesGrid() {
           <a
             key={id}
             href={href}
-            className="group flex flex-col items-center gap-1.5 rounded-2xl py-1 text-center"
+            className="group flex flex-col items-center gap-1.5 rounded-2xl py-1 text-center outline-none"
             title={blurb}
           >
-            <span className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl border border-neutral-200 bg-white transition-colors group-hover:border-ink">
-              <Icon className="h-[18px] w-[18px] text-ink" strokeWidth={1.9} />
+            {/* Dark tiles, matching the selected Ride/Parcel state on the booking
+                card. Five white squares in a row read as filler; five charcoal
+                ones read as a set of tools, and the lime icon on dark is the same
+                pairing the rest of the page uses. */}
+            <span className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-ink transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-active:scale-95 group-focus-visible:ring-2 group-focus-visible:ring-lime group-focus-visible:ring-offset-2">
+              <Icon className="h-[18px] w-[18px] text-lime" strokeWidth={1.9} />
             </span>
-            <span className="text-[10.5px] font-semibold leading-none text-neutral-600 group-hover:text-ink">
+            <span className="text-[10.5px] font-semibold leading-none text-neutral-600 transition-colors group-hover:text-ink">
               {label}
             </span>
           </a>
@@ -402,25 +531,79 @@ function ServicesGrid() {
 }
 
 /* ── 6. routes ───────────────────────────────────────────────────────────── */
-function RoutesList({ rides, pickup }: { rides: Ride[]; pickup: string }) {
-  if (!rides.length) return null;
+function RoutesList({
+  rides,
+  pickup,
+  loaded,
+  city,
+}: {
+  rides: Ride[];
+  pickup: string;
+  loaded: boolean;
+  city: string | null;
+}) {
+  /* Filter to the town the rider is booking from. Before an address is chosen
+     (city === null) everything is shown, because the list is still discovery.
+     Once a town is known, only hikes leaving that town are relevant — showing
+     a Mthatha departure to someone standing in East London is noise. */
+  const shown = city ? rides.filter((r) => r.from === city) : rides;
 
   return (
     <section className="mt-8">
-      <SectionHead title="Leaving soon" action={{ label: "See all", href: "/gogo/rides.html" }} />
+      <SectionHead
+        title={city ? `Leaving soon · ${displayCity(city)}` : "Leaving soon"}
+        action={{ label: "See all", href: "/gogo/rides.html" }}
+      />
+
+      {/* ── loading ──────────────────────────────────────────────────────
+          Only while we are actually waiting. Once the request has answered —
+          with rides or with nothing — this clears, so a failed or empty API can
+          never leave a permanent skeleton on screen. */}
+      {!loaded && (
+        <div className="mt-3" role="status" aria-live="polite">
+          <div className="flex items-center gap-2 px-1 pb-2">
+            <span className="gh-pulse-seat h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" />
+            <span className="text-[12px] font-semibold text-ink">Now loading</span>
+            <span className="text-[12px] font-normal text-neutral-400">
+              checking seats
+            </span>
+          </div>
+
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="gh-skeleton mb-2.5 flex items-center gap-3.5 rounded-3xl border border-neutral-100 bg-white p-3.5"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            >
+              <span className="h-11 w-11 shrink-0 rounded-2xl bg-neutral-100" />
+              <span className="flex-1">
+                <span className="block h-3 w-2/3 rounded-full bg-neutral-100" />
+                <span className="mt-2 block h-2.5 w-1/2 rounded-full bg-neutral-100" />
+              </span>
+              <span className="h-7 w-12 rounded-full bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+      )}
 
       <ul className="mt-3 space-y-2.5">
-        {rides.map((r) => {
+        {shown.map((r) => {
           const params = new URLSearchParams({ rideId: r.id });
           if (pickup.trim()) params.set("pickup", pickup.trim());
+          /* Seats are the thing a rider actually needs to decide on, so they get
+             the right-hand slot as a number, not a sentence buried in the meta
+             line. Colour carries the urgency: lime when there is room, amber
+             under four, red for a last seat. */
+          const tight = r.seats <= 1;
+          const filling = r.seats > 1 && r.seats <= 3;
           return (
           <li key={r.id}>
             <a
               href={`/gogo/ride.html?${params.toString()}`}
-              className="flex items-center gap-3.5 rounded-3xl border border-neutral-200 bg-white p-3.5 transition-colors hover:border-ink"
+              className="flex items-center gap-3.5 rounded-3xl border border-neutral-200 bg-white p-3.5 transition-all duration-200 hover:border-ink active:scale-[.99]"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-100">
-                <Car className="h-[19px] w-[19px] text-ink" strokeWidth={1.9} />
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ink">
+                <Car className="h-[19px] w-[19px] text-lime" strokeWidth={1.9} />
               </span>
 
               <span className="min-w-0 flex-1">
@@ -430,18 +613,46 @@ function RoutesList({ rides, pickup }: { rides: Ride[]; pickup: string }) {
                   {r.to}
                 </span>
                 <span className="mt-1 block truncate text-[12px] font-medium text-neutral-500">
-                  {r.depart} · {r.vehicle} · {r.seats} seats
+                  {r.depart} · {r.vehicle}
                 </span>
               </span>
 
-              <span className="flex h-7 items-center rounded-full bg-neutral-100 px-2.5 text-[11px] font-bold text-ink">
-                {r.depart}
+              {/* Seat count with a chair. This is the number a rider is actually
+                  deciding on, so it gets the icon the loading state no longer
+                  uses — the chair means "seat" everywhere on this page, once. */}
+              <span className="flex shrink-0 flex-col items-end">
+                <span
+                  className={cn(
+                    "flex h-8 min-w-[2.6rem] items-center justify-center gap-1 rounded-full px-2 text-[13px] font-bold tabular-nums",
+                    tight
+                      ? "bg-red-50 text-red-600"
+                      : filling
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-lime/15 text-ink"
+                  )}
+                >
+                  <Armchair className="h-[13px] w-[13px]" strokeWidth={2} aria-hidden="true" />
+                  {r.seats}
+                </span>
+                <span className="mt-0.5 text-[9.5px] font-semibold uppercase tracking-[.08em] text-neutral-400">
+                  {r.seats === 1 ? "seat left" : "seats left"}
+                </span>
               </span>
             </a>
           </li>
           );
         })}
       </ul>
+
+      {/* Answered, and genuinely nothing: say so rather than leaving a bare
+          heading that looks like a rendering fault. */}
+      {loaded && shown.length === 0 && (
+        <p className="mt-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-[12.5px] font-medium text-neutral-500">
+          {city
+            ? `No hikes leaving ${displayCity(city)} right now. Check back shortly.`
+            : "No hikes scheduled right now. Check back shortly."}
+        </p>
+      )}
     </section>
   );
 }

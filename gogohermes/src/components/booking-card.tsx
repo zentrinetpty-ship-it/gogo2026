@@ -1,4 +1,5 @@
 import * as React from "react";
+import { displayCity } from "@/lib/towns";
 import {
   MapPin, Armchair, Briefcase, Package,
   ArrowUpDown, ChevronDown, CalendarDays, User,
@@ -60,9 +61,16 @@ const KEY = "gogo_hermes_draft_v1";
 export function BookingCard({
   mode,
   onMode,
+  onOpenChange,
+  onCityResolved,
 }: {
   mode: Mode;
   onMode: (m: Mode) => void;
+  /* tells the page whether the form is expanded, so the hero can step aside */
+  onOpenChange?: (open: boolean) => void;
+  /* reports the town the pick-up resolved to, so the page can filter its ride
+     list to the same corridor the form is offering */
+  onCityResolved?: (city: string | null) => void;
 }) {
   const [d, setD] = React.useState<Draft>(() => {
     try {
@@ -96,6 +104,20 @@ export function BookingCard({
   const [open, setOpen] = React.useState(
     () => typeof window !== "undefined" && window.innerWidth >= 768
   );
+  /* True once a suggestion has been picked from the list, rather than merely
+     typed. The distinction is the whole point of this flow: a typed string is a
+     guess at which town the rider is in, and every destination we show is
+     filtered by that town. So we only act on a resolved address. */
+  const [pickupLocked, setPickupLocked] = React.useState(false);
+  /* ── city resolution ───────────────────────────────────────────────────────
+     Picking a suggestion does NOT open the form. It starts a lookup that asks
+     the server which town this address belongs to, and only when that answers do
+     we open — because until then we don't know which rides are relevant, and
+     showing a destination list built for the wrong town is worse than a moment's
+     wait. `cityLoading` drives the "loading rides in <town>" line. */
+  const [cityLoading, setCityLoading] = React.useState(false);
+  const [resolvedCity, setResolvedCity] = React.useState<string | null>(null);
+  const [cityMatched, setCityMatched] = React.useState(true);
 
   /* live address suggestions for the pick-up field */
   const [focused, setFocused] = React.useState(false);
@@ -161,8 +183,61 @@ export function BookingCard({
     return () => { live = false; clearTimeout(t); };
   }, [d.pickup]);
 
+  /* ── choosing a pick-up ────────────────────────────────────────────────────
+     The one moment the card is allowed to open. Up to here the rider has only
+     typed a string; picking a suggestion resolves it to a real place, which is
+     what tells us the origin town. Only then does the rest of the form — a
+     destination, seats, luggage — make sense, because every destination we offer
+     is filtered by that town.
+
+     Changing the address invalidates the destination: it was chosen against a
+     corridor that no longer applies, and leaving it would let someone search
+     "East London → Mthatha" while actually starting in Queenstown. */
+  const choosePickup = (value: string) => {
+    setD((prev) => ({
+      ...prev,
+      pickup: value,
+      destination: "",
+    }));
+    setCandidates([]);
+    setMatches([]);
+    setAlternatives([]);
+    setNoMatchSuggestion(null);
+    setPickupLocked(true);
+    setResolvedCity(null);
+    setCityMatched(true);
+    setCityLoading(true);
+
+    /* Resolve the town, then open. The form stays collapsed while this runs so
+       the rider sees the lookup rather than an empty destination list.
+       A failed lookup still opens the form: the rider can type a destination and
+       the server-side matcher will do the rest. Blocking them on our geocoder
+       would be the worse failure. */
+    fetch(`/api/address/city?q=${encodeURIComponent(value)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data) => {
+        setResolvedCity(data?.city || null);
+        setCityMatched(Boolean(data?.matched));
+        /* only hand a town upward when we actually matched one — an unmatched
+           address must not filter the page's ride list down to nothing */
+        if (data?.city && data?.matched) onCityResolved?.(data.city);
+        setOpen(true);
+      })
+      .catch(() => {
+        setResolvedCity(null);
+        setCityMatched(false);
+        setOpen(true);
+      })
+      .finally(() => setCityLoading(false));
+  };
+
   /* the mode is owned by the page so the hero buttons can set it too */
   React.useEffect(() => { setD((p) => ({ ...p, mode })); }, [mode]);
+
+  /* Report the expansion upward. The effect (not the handler) is deliberate:
+     `open` can also change on mount at desktop widths, and the hero has to know
+     about that too, not just about the tap that opened it. */
+  React.useEffect(() => { onOpenChange?.(open); }, [open, onOpenChange]);
 
   /* every keystroke is saved, so nothing is ever asked twice */
   React.useEffect(() => {
@@ -253,7 +328,7 @@ export function BookingCard({
     <form
       id="book"
       onSubmit={submit}
-      className="w-full rounded-[24px] bg-white p-5"
+      className="w-full rounded-none border-t-[3px] border-lime bg-white p-5"
     >
       {/* ── the one field that is always visible ─────────────────────────
              Collapsed, the card IS this field: "Where do we get you?". Typing
@@ -268,20 +343,37 @@ export function BookingCard({
           Where do we get you?
         </label>
         <div className="relative">
+          {/* Sharp-edged field with a travelling lime rule.
+
+              Radius 0 on purpose: a crisp rectangle reads as something you type
+              into. Everything else on this card is soft, so the field earns its
+              contrast from hard corners rather than from shouting.
+
+              The accent is a 2px lime rule pinned to the bottom of the field.
+              It scales from zero to full width when the field is focused or has
+              text, so the field reports its own state — a border-colour change
+              is too quiet to notice on a phone in daylight. */}
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left bg-lime transition-transform duration-300 ease-out",
+              focused || d.pickup ? "scale-x-100" : "scale-x-0"
+            )}
+          />
           <input
             id="pickup"
             type="text"
             value={d.pickup}
             onChange={(e) => {
               set("pickup", e.target.value);
-              /* typing is the signal to open: the rider has started telling us
-                 where they are, so the rest of the questions become relevant */
-              if (!open) setOpen(true);
+              /* Deliberately does NOT open the form. Typing an address that
+                 hasn't been resolved yet tells us nothing about which town the
+                 rider is in, so opening here would present destinations from a
+                 corridor we haven't confirmed. The card opens in choosePickup,
+                 once a suggestion is actually picked. */
+              if (pickupLocked) setPickupLocked(false);
             }}
-            onFocus={() => {
-              setFocused(true);
-              if (!open) setOpen(true);
-            }}
+            onFocus={() => setFocused(true)}
             onBlur={() => {
               /* let a tap on a suggestion land before the list unmounts, but
                  do not clobber a field the rider has already returned to —
@@ -294,11 +386,9 @@ export function BookingCard({
             }}
             placeholder="Enter your pick-up address"
             autoComplete="street-address"
-            /* A hairline border marks where the field begins. Without it the
-               text floated on the card with nothing to say it was tappable —
-               invisible on a phone until you happened to press it. Regular
-               weight, not bold: an address is long and bold makes it shout. */
-            className="w-full rounded-full border border-neutral-300 bg-white px-4 py-3.5 text-[16px] font-normal leading-tight text-ink outline-none transition-colors placeholder:font-normal placeholder:text-neutral-400 focus:border-ink"
+            /* Sharp corners and a bottom rule only — no box. Regular weight,
+               not bold: an address is long and bold makes it shout. */
+            className="w-full rounded-none border-0 border-b border-neutral-300 bg-transparent px-0 pb-3 pt-1 text-[16px] font-normal leading-tight text-ink outline-none transition-colors placeholder:font-normal placeholder:text-neutral-400"
           />
 
           {/* live suggestions, anchored under the field */}
@@ -313,7 +403,10 @@ export function BookingCard({
                     type="button"
                     role="option"
                     aria-selected={false}
-                    onMouseDown={(e) => { e.preventDefault(); set("pickup", c); setCandidates([]); }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      choosePickup(c);
+                    }}
                     className="flex w-full items-start gap-2 px-4 py-2.5 text-left text-[13px] font-normal text-neutral-700 hover:bg-neutral-50"
                   >
                     <MapPin className="mt-[2px] h-3.5 w-3.5 shrink-0 text-neutral-400" strokeWidth={2} />
@@ -326,7 +419,34 @@ export function BookingCard({
         </div>
       </div>
 
+      {/* ── resolving the town ────────────────────────────────────────────
+          Sits where the form will be, so the card neither jumps nor shows a
+          half-built form. The town name is spoken once we know it; while the
+          lookup is in flight we say what we are doing without guessing. */}
+      {cityLoading && (
+        <div className="mt-4 flex items-center gap-2 border-t border-neutral-100 pt-4" role="status" aria-live="polite">
+          <span className="gh-pulse-seat inline-block h-1.5 w-1.5 rounded-full bg-lime" aria-hidden="true" />
+          <span className="text-[12.5px] font-semibold text-ink">Loading rides in your city</span>
+          <span className="text-[12.5px] font-normal text-neutral-400">one moment</span>
+        </div>
+      )}
+
       <div className={cn(!open && "hidden")}>
+        {/* The town we resolved, said plainly. If the address is somewhere we do
+            not run, that has to be visible here — otherwise every destination
+            search comes back empty and the rider has no idea why. */}
+        {resolvedCity && (
+          <p className="mb-3 flex items-center gap-1.5 text-[12px] font-medium text-neutral-500">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-lime" strokeWidth={2.2} />
+            Booking from <span className="font-semibold text-ink">{displayCity(resolvedCity)}</span>
+          </p>
+        )}
+        {!cityMatched && !cityLoading && (
+          <p className="mb-3 rounded-xl bg-amber-50 px-3 py-2 text-[12px] font-medium leading-snug text-amber-800">
+            We don't run from this town yet. You can still type a destination and
+            we'll find the nearest hike.
+          </p>
+        )}
         {/* The Passenger / Parcel switch used to live here. It now sits above the
             card as the two big Ride / Parcel buttons, because the question "what
             are you sending" is answered before the form is opened — not inside
@@ -388,7 +508,7 @@ export function BookingCard({
                             {m.from} · leaves {m.depart} · {m.vehicle}
                           </span>
                         </span>
-                        <span className="shrink-0 text-[13px] font-bold text-ink">R{m.fare}</span>
+                        <span className="shrink-0 rounded-full bg-[#1A1A1A] px-2.5 py-1 text-[12px] font-bold text-lime">{m.fare}</span>
                       </button>
                     </li>
                   ))}
@@ -441,16 +561,12 @@ export function BookingCard({
             </div>
           )}
 
-          {/* swap: still useful — it flips the typed address with the chosen
-              town, which is how someone booking a return trip thinks */}
-          <button
-            type="button"
-            onClick={swap}
-            aria-label="Swap pick-up and destination"
-            className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full bg-ink text-white transition-opacity hover:opacity-85"
-          >
-            <ArrowUpDown className="h-[15px] w-[15px]" strokeWidth={2.2} />
-          </button>
+          {/* The swap button is gone. It made sense when both ends of the trip
+              were free text of equal standing; now the pick-up decides which
+              corridor the destination list comes from, so flipping them would
+              need a fresh address resolution before the form meant anything.
+              The field is one tap to retype — cheaper than a control that
+              quietly invalidates the destination. */}
         </div>
 
         {/* ── date + passengers, split by a hairline ─────────────────────── */}
@@ -526,9 +642,13 @@ export function BookingCard({
         </div>
 
         {/* ── search ─────────────────────────────────────────────────────── */}
+        {/* Inverted: charcoal ground with lime type. The lime is the light that
+            comes out of the button rather than the paint on it, which keeps the
+            page's white surface intact and stops the button reading as a slab
+            of green sitting on top of the card. */}
         <button
           type="submit"
-          className="mt-5 flex h-[52px] w-full items-center justify-center rounded-full bg-ink text-[16px] font-semibold text-white transition-opacity hover:opacity-90"
+          className="mt-5 flex h-[52px] w-full items-center justify-center rounded-full bg-[#1A1A1A] text-[16px] font-semibold text-lime transition-[opacity,transform] duration-150 ease-out hover:opacity-90 active:scale-[.98]"
         >
           {done ? "Opening rides…" : "Search"}
         </button>

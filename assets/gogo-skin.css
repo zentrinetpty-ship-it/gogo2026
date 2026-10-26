@@ -343,6 +343,20 @@ a { color: inherit; }
     gap: 8px 14px;
   }
 
+  /* ── the ride list: two up, never three ───────────────────────────────── */
+  /* The ride grid went 3-up above 1180px. Inside a 560px column three cards
+     would be ~170px each — unreadable — and even at full width a third column
+     crowds the card's route, fare and join button. Two is the most this content
+     can hold and still be scannable, so three-up is removed at every width. */
+  .g-hikes {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+  /* below the phone breakpoint the column is narrow again, so one-up */
+  @media (max-width: 640px) {
+    .g-hikes { grid-template-columns: 1fr !important; }
+  }
+
   /* ── the dock: capped to the column, still flush to the bottom ────────── */
   /* The dock is position:fixed with left:50% + translateX(-50%) already, so it
      centres itself. What it must NOT get is a fixed width — it is a shrink-to-fit
@@ -370,4 +384,33 @@ a { color: inherit; }
 
   /* the page must reserve room for the dock, or the last row hides behind it */
   body { padding-bottom: 80px !important; }
+}
+
+/* ── native feel ───────────────────────────────────────────────────────────
+   The same treatment the React landing gets, applied to the inner pages so
+   moving between them feels like one app rather than a site with an app on it.
+   Cleanic does exactly this, which is why theirs reads as installed. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body {
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+  width: 0; height: 0; display: none;
+}
+/* content stays copyable — support needs readable references */
+p, h1, h2, h3, h4, li, a, td, th, code { -webkit-user-select: text; user-select: text; }
+input, textarea, select {
+  -webkit-user-select: text; user-select: text;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
 }

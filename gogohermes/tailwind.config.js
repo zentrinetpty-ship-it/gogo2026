@@ -16,8 +16,18 @@ export default {
         muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
         accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
-        lime: { DEFAULT: "#8DB600", deep: "#6F9100", wash: "rgba(141,182,0,.12)" },
-        ink: { DEFAULT: "#0B0B0B", soft: "#2A2A2E", mute: "#6B7280" },
+        /* The brand pair. The accent is a CSS variable rather than a literal so
+           the same components can be re-skinned by overriding one value — which
+           is exactly what /lv does with the Louis Vuitton orange. `deep` is the
+           text-safe shade on white, `wash` the tint. */
+        lime: {
+          DEFAULT: "rgb(var(--gogo-accent) / <alpha-value>)",
+          deep: "rgb(var(--gogo-accent-deep) / <alpha-value>)",
+          wash: "rgb(var(--gogo-accent) / 0.14)",
+        },
+        /* #1A1A1A is the deep brown-black, not pure black: it reads warm beside
+           the lime, where #000 reads dead. `ink` stays the default text colour. */
+        ink: { DEFAULT: "#1A1A1A", soft: "#2A2A2E", mute: "#6B7280" },
       },
       borderRadius: {
         lg: "var(--radius)",
