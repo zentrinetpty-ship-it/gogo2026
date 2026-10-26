@@ -6,7 +6,7 @@
    GROUND     #FFFFFF with a 46px grid at 5.5%, radially masked (Cleanic)
    SURFACES   #FFFFFF cards, #FAFAFB fields, #F4F4F6 insets
    INK        #26262B on white = 15.4:1 · soft .72 = 8.3:1 · mute = 5.2:1
-   ACTIONS    dark gray #2A2A2F (white text 13.6:1) and lime #8DB600
+   ACTIONS    dark gray #2A2A2F (white text 13.6:1) and lime #A3E635
               (dark gray text on lime = 6.2:1)
    ========================================================================= */
 
@@ -44,10 +44,10 @@
   --black-2:      #3A3A42;
 
   /* ── lime accents ── */
-  --lime:         #8DB600;
+  --lime:         #A3E635;
   --lime-deep:    #5F7A00;   /* 5.0:1 on white, AA for small text */
   --lime-bright:  #A3E635;
-  --lime-wash:    rgba(141, 182, 0, .14);
+  --lime-wash:    rgba(163, 230, 53, .14);
 
   /* ── lines, shadows ── */
   --line:         rgba(38, 38, 43, .16);
@@ -111,7 +111,7 @@ input::placeholder, textarea::placeholder { color: var(--ink-mute); }
   border-color: var(--line-soft);
 }
 .g-req { background: var(--card); }
-.g-req.pending { background: rgba(163, 230, 53, .10); border-color: rgba(141, 182, 0, .40); }
+.g-req.pending { background: rgba(163, 230, 53, .10); border-color: rgba(163, 230, 53, .40); }
 .g-req.accepted { background: var(--lime-wash); border-color: var(--lime); }
 
 /* ── type ─────────────────────────────────────────────────────────────── */
@@ -256,7 +256,7 @@ textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible,
 .g-card-dark .g-btn-lime, .g-card-yellow .g-btn-lime { color: var(--ink); }
 
 /* ── chat: yours is lime, theirs is white ─────────────────────────────── */
-.g-bubble-me { background: var(--lime-wash); border-color: rgba(141, 182, 0, .45); color: var(--ink); }
+.g-bubble-me { background: var(--lime-wash); border-color: rgba(163, 230, 53, .45); color: var(--ink); }
 .g-bubble, .g-msg-system .g-bubble { background: var(--card); color: var(--ink); }
 
 /* ── the one action that carries the energy ───────────────────────────── */

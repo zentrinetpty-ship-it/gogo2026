@@ -24,7 +24,7 @@
   border: 2.5px solid #fff; box-shadow: 0 6px 16px rgba(11, 11, 11, .30), 0 1px 0 rgba(11, 11, 11, .12);
 }
 .g-map-pin.hub .g-map-badge { width: 35px; height: 35px; border-radius: 2px; }
-.g-map-pin.tone-lime .g-map-badge { background: linear-gradient(180deg, #A7CE2E, #8DB600); }
+.g-map-pin.tone-lime .g-map-badge { background: linear-gradient(180deg, #A7CE2E, #A3E635); }
 .g-map-pin.tone-navy .g-map-badge { background: linear-gradient(180deg, #2A3550, #232328); color: #fff; }
 .g-map-pin.tone-gold .g-map-badge { background: linear-gradient(180deg, #C6EE6A, #A3E635); }
 
@@ -40,7 +40,7 @@
 /* the two end points get a soft pulse so the corridor reads as live */
 .g-map-pin.hub .g-map-badge::after {
   content: ""; position: absolute; inset: -6px; border-radius: 2px;
-  border: 2px solid rgba(141, 182, 0, .55); animation: gPulse 2.6s ease-out infinite;
+  border: 2px solid rgba(163, 230, 53, .55); animation: gPulse 2.6s ease-out infinite;
 }
 .g-map-pin.hub { position: absolute; }
 @keyframes gPulse { 0% { transform: scale(.85); opacity: .9; } 70% { transform: scale(1.25); opacity: 0; } 100% { opacity: 0; } }
@@ -52,8 +52,8 @@
   background: var(--card); border: 1px solid rgba(11, 11, 11, .12); box-shadow: 0 3px 10px rgba(11, 11, 11, .16);
 }
 .g-map-poi.tone-navy .g-map-poi-ic { background: #232328; border-color: #232328; }
-.g-map-poi.tone-lime .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
-.g-map-poi.tone-gold .g-map-poi-ic { background: #A3E635; border-color: #8DB600; }
+.g-map-poi.tone-lime .g-map-poi-ic { background: #A3E635; border-color: #A3E635; }
+.g-map-poi.tone-gold .g-map-poi-ic { background: #A3E635; border-color: #A3E635; }
 .g-map-poi-lb {
   background: rgba(255, 255, 255, .9); border-radius: 2px; padding: 2px 6px;
   font-size: var(--t-xs); font-weight: 800; color: rgba(11, 11, 11, .5);
@@ -64,12 +64,12 @@
 .g-map-car { position: absolute; transform: translate(-50%, -50%); }
 .g-map-car-body {
   position: relative; display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%;
-  background: linear-gradient(180deg, #C6EE6A, #8DB600 62%, #6C8C00); font-size: var(--t-md);
+  background: linear-gradient(180deg, #C6EE6A, #A3E635 62%, #6C8C00); font-size: var(--t-md);
   border: 2px solid #fff; box-shadow: 0 5px 14px rgba(11, 11, 11, .26);
 }
 .g-map-car-ring {
   position: absolute; inset: -9px; border-radius: 50%;
-  border: 2px solid rgba(141, 182, 0, .75); animation: gRing 2s ease-out infinite;
+  border: 2px solid rgba(163, 230, 53, .75); animation: gRing 2s ease-out infinite;
 }
 @keyframes gRing { 0% { transform: scale(.7); opacity: 1; } 80% { transform: scale(1.35); opacity: 0; } 100% { opacity: 0; } }
 

@@ -1,0 +1,735 @@
+/* =========================================================================
+   GOGO — unified UI skin, layer 3.
+
+   Loaded last, after gogo-theme.css, so it can bring every inner screen
+   (rides, ride, dashboard, auth, messages, more, ticket, track, why, parcel,
+   ops, driver, legal) into line with the React landing page.
+
+   The landing page is the reference: white ground, near-black ink, lime used
+   only where it means something, Poppins throughout, and SOFT rounding. The
+   old inner pages were built on --radius: 2px — almost square — which is the
+   single biggest reason they felt like a different product.
+
+   This file changes tokens first (so anything not explicitly styled still
+   inherits the new feel), then restyles the handful of components that carry
+   the most visual weight: cards, buttons, fields, the header, the bottom dock
+   and the ride rows.
+   ========================================================================= */
+
+:root {
+  /* Rounding: the whole point of the restyle. 2px became 20/26 for surfaces */
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-lg: 26px;
+  --btn-radius: 999px;
+
+  /* soft, wide shadows instead of hard drops — reads as lifted, not stamped */
+  --shadow-lift: 0 18px 40px -24px rgba(11, 11, 11, .28);
+  --shadow-soft: 0 10px 24px -18px rgba(11, 11, 11, .25);
+
+  /* hairlines, not borders */
+  --line-soft: #EDEDED;
+  --line: #E4E4E4;
+
+  --paper: #FFFFFF;
+  --ink-mute: #6B7280;
+}
+
+/* ── ground ─────────────────────────────────────────────────────────────── */
+body {
+  background: #FFFFFF;
+  color: var(--ink);
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.g-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, .9);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+.g-nav a {
+  border-radius: 999px;
+  font-weight: 600;
+  transition: background-color .15s ease, color .15s ease;
+}
+.g-nav a:hover { background: #F6F6F6; }
+/* the active tab: a filled pill, matching the landing nav's active dot idea */
+.g-nav a.on,
+.g-nav a[aria-current="page"] {
+  background: var(--ink);
+  color: #fff;
+}
+.g-nav a.on:hover,
+.g-nav a[aria-current="page"]:hover { background: var(--ink); }
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+/* .g-rc is the ride-result card — the element that carries most of this page. */
+.g-card,
+.g-card-dark,
+.g-ride,
+.g-rc,
+.g-panel,
+.g-tile {
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--line-soft) !important;
+  background: #FFFFFF;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.g-card:hover,
+.g-ride:hover,
+.g-rc:hover {
+  border-color: #D6D6D6 !important;
+  box-shadow: var(--shadow-lift);
+}
+
+/* The lime rule across the top of ride cards was the loudest thing on the page.
+   Leave a hairline of accent only on the card the rider is looking at. */
+.g-ride::before,
+.g-card::before { border-radius: 0; }
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+.g-btn,
+.g-bk-submit,
+.btn,
+button.btn {
+  border-radius: 999px !important;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease;
+}
+.g-btn-lime,
+.g-bk-submit,
+.g-rc-go {
+  background: var(--ink) !important;
+  color: #fff !important;
+  border-color: var(--ink) !important;
+}
+.g-btn-lime:hover,
+.g-bk-submit:hover,
+.g-rc-go:hover { opacity: .9; }
+
+.g-btn-ink { background: var(--ink) !important; color: #fff !important; }
+.g-btn-outline {
+  background: #fff !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+}
+.g-btn-outline:hover { border-color: var(--ink) !important; }
+.g-btn-ghost { background: #F5F5F5 !important; color: var(--ink) !important; }
+
+/* ── fields ─────────────────────────────────────────────────────────────── */
+.g-field,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+  border-radius: 14px !important;
+  border: 1px solid var(--line) !important;
+  background: #fff;
+  font-family: inherit;
+  transition: border-color .15s ease;
+}
+.g-field:focus,
+input:focus,
+select:focus,
+textarea:focus { border-color: var(--ink) !important; outline: none; }
+
+/* ── pills, chips, tags ─────────────────────────────────────────────────── */
+.g-pill, .g-chip, .g-tag, .g-stamp, .g-badge {
+  border-radius: 999px !important;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.g-pill-lime, .g-tag-lime, .g-stamp-lime {
+  background: var(--lime-bright) !important;
+  color: var(--ink) !important;
+  border-color: transparent !important;
+}
+
+/* ── the bottom dock ────────────────────────────────────────────────────── */
+/* The landing page has a flat, full-width bar flush to the bottom edge. The
+   inner pages had a transparent floating dock with emoji labels, which looked
+   like a different app. This makes them the same bar. */
+.g-dock {
+  background: #FFFFFF;
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-top: 1px solid var(--line-soft);
+  box-shadow: 0 -6px 24px -20px rgba(0, 0, 0, .35);
+  border-radius: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.g-dock a {
+  color: var(--ink-mute);
+  font-weight: 600;
+  border-radius: 12px;
+  transition: color .15s ease;
+}
+.g-dock a.on { color: var(--ink); }
+/* the active dot, same device as the landing nav */
+.g-dock a.on::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 3px auto 0;
+  border-radius: 999px;
+  background: var(--lime);
+}
+
+/* ── section headings ───────────────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+h1 { font-weight: 800; }
+h2, h3 { font-weight: 700; }
+
+/* The small ALL-CAPS eyebrow labels read as dated. Sentence case, softer. */
+.g-lab, .g-sub-lab, .g-eyebrow {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-mute);
+}
+
+/* ── the footer ─────────────────────────────────────────────────────────── */
+.g-foot {
+  background: #FAFAFA;
+  border-top: 1px solid var(--line-soft);
+}
+.g-foot a { color: var(--ink-mute); }
+.g-foot a:hover { color: var(--ink); }
+
+/* ── tables / lists inside dashboard & ops ──────────────────────────────── */
+.g-table, table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.g-table th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--line-soft);
+}
+.g-row, .g-table td { border-bottom: 1px solid var(--line-soft); }
+
+/* ── links ──────────────────────────────────────────────────────────────── */
+a { color: inherit; }
+.g-link-lime { color: var(--ink); text-decoration-color: var(--lime); }
+
+/* ── scrollbars, quiet ──────────────────────────────────────────────────── */
+.no-sb::-webkit-scrollbar { display: none; }
+
+/* ── mobile: the dock must never sit on top of content ──────────────────── */
+@media (max-width: 767px) {
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .g-wrap, .g-section, main { scroll-margin-bottom: 80px; }
+}
+
+/* =========================================================================
+   Desktop: a phone-width column, centred.
+
+   The landing page is a single 520px column (560px on wide screens) centred on
+   white, and it looks deliberate. The inner pages stretched edge to edge at
+   1249px, which made the same product feel like two different sites.
+
+   So on desktop every screen becomes that same column: the content is capped,
+   centred, and the header and dock are capped to match so their contents line
+   up with the column rather than with the window. Nothing is lost on mobile —
+   this block only applies from 768px up.
+   ========================================================================= */
+@media (min-width: 768px) {
+  /* one width for every screen, the same numbers the React landing uses */
+  :root {
+    --gogo-column: 560px;
+    --gogo-gutter: 24px;
+  }
+
+  /* the page itself stays white; only the content is narrowed */
+  body {
+    background: #FFFFFF;
+    padding-bottom: 0;
+  }
+
+  /* ── header: centred, with its contents aligned to the column ─────────── */
+  .g-nav {
+    position: sticky;
+    background: rgba(255, 255, 255, .92);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .g-nav > * {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+  }
+  /* the horizontal nav links do not fit in a phone column — the bottom dock
+     is the navigation on this breakpoint, exactly as on the landing page */
+  .g-nav nav,
+  .g-nav .g-links { display: none !important; }
+
+  /* ── every content wrapper: the column ────────────────────────────────── */
+  .g-wrap,
+  .g-section > .g-wrap,
+  main > .g-wrap {
+    max-width: var(--gogo-column) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter) !important;
+    padding-right: var(--gogo-gutter) !important;
+    box-sizing: border-box;
+  }
+
+  /* main itself: centred column, no full-bleed background */
+  main {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+  }
+  /* but a wrapper already inside main must not double the gutter */
+  main .g-wrap {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ── grids inside the column: stack instead of stretching ─────────────── */
+  /* A 3-up or 4-up grid at 560px is unreadable; the landing page stacks. */
+  .g-grid,
+  .g-cards,
+  .g-ride-list {
+    display: block !important;
+  }
+  .g-grid > *,
+  .g-cards > * {
+    margin-bottom: 12px;
+  }
+
+  /* ── footer: also the column, so it does not sprawl ───────────────────── */
+  .g-foot > * {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .g-foot nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+  }
+
+  /* ── the ride list: two up, never three ───────────────────────────────── */
+  /* The ride grid went 3-up above 1180px. Inside a 560px column three cards
+     would be ~170px each — unreadable — and even at full width a third column
+     crowds the card's route, fare and join button. Two is the most this content
+     can hold and still be scannable, so three-up is removed at every width. */
+  .g-hikes {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+  /* below the phone breakpoint the column is narrow again, so one-up */
+  @media (max-width: 640px) {
+    .g-hikes { grid-template-columns: 1fr !important; }
+  }
+
+  /* ── the dock: capped to the column, still flush to the bottom ────────── */
+  /* The dock is position:fixed with left:50% + translateX(-50%) already, so it
+     centres itself. What it must NOT get is a fixed width — it is a shrink-to-fit
+     pill sized by its items, and forcing 560px stretched it into a bar that
+     floated over the page content. Only the bottom offset and the cap change. */
+  .g-dock {
+    position: fixed;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 0 !important;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: var(--gogo-column);
+    margin: 0 !important;
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--line-soft);
+    border-left: 1px solid var(--line-soft);
+    border-right: 1px solid var(--line-soft);
+    border-bottom: 0;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .g-dock a { border-radius: 12px; }
+
+  /* the page must reserve room for the dock, or the last row hides behind it */
+  body { padding-bottom: 80px !important; }
+}
+
+/* ── native feel ───────────────────────────────────────────────────────────
+   The same treatment the React landing gets, applied to the inner pages so
+   moving between them feels like one app rather than a site with an app on it.
+   Cleanic does exactly this, which is why theirs reads as installed. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body {
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+  width: 0; height: 0; display: none;
+}
+/* content stays copyable — support needs readable references */
+p, h1, h2, h3, h4, li, a, td, th, code { -webkit-user-select: text; user-select: text; }
+input, textarea, select {
+  -webkit-user-select: text; user-select: text;
+  -webkit-tap-highlight-color: transparent;
+  font-size: 16px;
+}
+
+
+/* ── chrome: header + dock, matched to the React landing ────────────────────
+   These override the earlier skin rules rather than replacing them, so page
+   content styling stays put and only the shell changes. */
+
+/* header: no bar, no border — it should read as part of the page */
+.g-nav {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 10px 0 4px !important;
+}
+.g-nav-wrap { max-width: 560px !important; margin: 0 auto !important; padding: 0 20px !important; }
+.g-nav .g-brand, .g-brand { font-weight: 900 !important; letter-spacing: -.02em !important; }
+
+/* one lime CTA instead of two outlined buttons competing */
+.g-nav-right .g-btn-outline { display: none !important; }
+.g-nav-right .g-btn-ink {
+  background: #1A1A1A !important;
+  color: #A3E635 !important;
+  border-color: #1A1A1A !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  padding: 9px 16px !important;
+  font-size: 13px !important;
+}
+
+/* dock: floating pill, hairline border, line icons */
+.g-dock {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  transform: translateX(-50%) !important;
+  width: min(calc(100% - 32px), 420px) !important;
+  display: flex !important;
+  align-items: stretch !important;
+  gap: 2px !important;
+  background: rgba(255, 255, 255, .94) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(18px) !important;
+  backdrop-filter: saturate(180%) blur(18px) !important;
+  border: 1px solid rgb(233, 233, 235) !important;
+  border-radius: 999px !important;
+  padding: 6px !important;
+  box-shadow: 0 8px 28px rgba(16, 16, 18, .10), 0 1px 2px rgba(16, 16, 18, .04) !important;
+  z-index: 90 !important;
+}
+
+.g-dock-a {
+  flex: 1 1 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 7px 4px 6px !important;
+  border-radius: 999px !important;
+  color: rgb(140, 140, 148) !important;
+  text-decoration: none !important;
+  transition: background-color .18s ease, color .18s ease, transform .12s ease !important;
+}
+.g-dock-ic { display: flex; width: 20px; height: 20px; }
+.g-dock-ic svg { width: 20px; height: 20px; }
+.g-dock-lb { font-size: 10.5px; font-weight: 600; letter-spacing: .01em; line-height: 1; }
+
+/* active: solid ink pill, lime label dot — the same language as the landing */
+.g-dock-a.on {
+  background: #1A1A1A !important;
+  color: #FFFFFF !important;
+  position: relative !important;
+}
+.g-dock-a.on::after {
+  content: "";
+  position: absolute;
+  bottom: 3px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 3px;
+  border-radius: 999px;
+  background: #A3E635;
+}
+.g-dock-a:active { transform: scale(.96); }
+
+/* room for the floating dock, since it no longer sits flush */
+.g-dock-body, body { padding-bottom: 96px !important; }
+
+/* the old flush bar's active style would fight the pill — neutralise it */
+.g-dock a.on > span:first-child { background: transparent !important; }
+
+/* ── inline icon sizing ──────────────────────────────────────────────────────
+   GICON() emits a bare <svg> with no width, so it would fall back to the
+   browser default (300x150). These rules give every icon a sane box and let it
+   inherit the surrounding text colour, which is what keeps the lime/ink palette
+   intact now that emoji no longer bring their own. */
+.g-ic svg, .g-btn svg, .g-dock-ic svg, .g-row svg, .g-tile svg, [class*="g-ic"] svg {
+  width: 18px; height: 18px; display: block; flex: none;
+}
+.g-ic-lg svg { width: 22px; height: 22px; }
+.g-btn svg { width: 16px; height: 16px; }
+.g-btn-sm svg { width: 15px; height: 15px; }
+.g-acct-ic svg { width: 16px; height: 16px; }
+/* the tabular/table icons in the docs and receipt screens are content-sized */
+td svg, .g-doc svg { width: 16px; height: 16px; }
+
+/* ── dock label sizing (overrides gogo-live.css) ─────────────────────────────
+   gogo-live.css carries `.g-dock a span { font-size: var(--t-xl) }` from when
+   the dock children were EMOJI — emoji need ~24px to read. Now they are SVG
+   icons plus a real text label, and that rule was blowing the labels up to 24px,
+   stretching each item to 148px and pushing the dock past its own bounds.
+
+   Higher specificity + !important because gogo-live.css loads after the skin and
+   nests the rule inside media queries, so an equally-specific rule loses at some
+   widths and not others — the worst kind of layout bug. */
+.g-dock .g-dock-a span.g-dock-lb {
+  font-size: 10.5px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em !important;
+  white-space: nowrap !important;
+}
+.g-dock .g-dock-a span.g-dock-ic {
+  font-size: 0 !important;      /* the svg sizes itself; stray em metrics off */
+  line-height: 0 !important;
+}
+.g-dock .g-dock-a { min-width: 0 !important; overflow: hidden !important; }
+
+
+/* ── the dock must never cover the last action ──────────────────────────────
+   The dock is fixed, so it takes no space in flow. Reserving room only at the
+   bottom of the BODY is not enough: when content is taller than the viewport
+   the final button can still land underneath it mid-scroll (auth.html's Log in
+   sat 87px under the bar). scroll-padding makes every scrollIntoView and anchor
+   jump stop short of the dock, and the spacer below guarantees the last element
+   in the flow clears it even if nothing scrolls. */
+html { scroll-padding-bottom: 104px; }
+main, .g-main { padding-bottom: 8px; }
+
+/* the spacer is generated, so no page needs editing for it */
+body.g-dock-body::after,
+body::after {
+  content: "";
+  display: block;
+  height: calc(88px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+}
+
+/* ── auth dock clearance ────────────────────────────────────────────────────
+   On the sign-in screen the form sits mid-document, so a fixed dock lands on
+   top of the Log in button at page load — scrolling does not help because the
+   button is not at the end of the flow. Rather than shift every page's layout,
+   the form column gets enough bottom room that its last control always clears
+   the dock, and the dock itself sits slightly lower with a tighter height. */
+body[data-page="auth"] main { padding-bottom: 132px; }
+body[data-page="auth"] .g-auth-shell,
+body[data-page="auth"] .g-wrap { padding-bottom: 132px; }
+
+/* one shared rule for every page: nothing interactive in the last screenful
+   should be reachable only underneath the dock */
+body.g-dock-body main { padding-bottom: 96px; }
+
+/* ── auth clearance v2 ──────────────────────────────────────────────────────
+   The earlier auth rule lost to the generic `body.g-dock-body main` rule that
+   was appended after it — same specificity on main, later in the file, so the
+   smaller value won. This block comes last and outranks both by scoping on the
+   attribute, so the sign-in form always clears the fixed dock.
+
+   The real constraint: the dock is `position: fixed` and 62px tall sitting
+   14px off the bottom, so anything in the last ~90px of the viewport is
+   unreachable behind it. Auth's Log in button lands exactly there. */
+body[data-page="auth"] main {
+  padding-bottom: 200px !important;
+}
+@media (min-width: 768px) {
+  /* on desktop the dock is centred and narrower, but it still overlays */
+  body[data-page="auth"] main { padding-bottom: 160px !important; }
+}
+
+/* ── dock placement, correctly this time ────────────────────────────────────
+   Two earlier attempts added padding to `main`. That was wrong: padding adds
+   space AFTER the content, it does not move a button that sits in the middle of
+   the flow. The Log in button stayed at the same viewport y-position no matter
+   how much padding went on the container, so it kept sitting 87px under the
+   fixed dock.
+
+   The real choice is either (a) move the dock out of the content's way, or
+   (b) stop taking it out of flow. On auth the form is centred and short, so the
+   dock does not need to float — making it STICKY instead of FIXED means it
+   occupies real space at the end of the page and can never cover the form.
+
+   Everywhere else keeps the floating pill, which is the intended look. */
+body[data-page="auth"] .g-dock {
+  position: sticky !important;
+  left: auto !important;
+  bottom: 0 !important;
+  transform: none !important;
+  margin: 24px auto 12px !important;
+  width: min(calc(100% - 32px), 420px) !important;
+}
+body[data-page="auth"] main { padding-bottom: 24px !important; }
+body[data-page="auth"]::after { display: none !important; }
+
+/* ── auth: fit the form above the fold on a phone ───────────────────────────
+   The form card starts at y=280 and is 369px tall in a 569px viewport, so its
+   Log in button lands at 533 — under the dock at 507, and under the keyboard
+   once a field is focused. No amount of padding fixes that: the card has to be
+   shorter, or the space above it smaller.
+
+   Both, here, and only on auth so other pages keep their breathing room:
+   the big intro paragraph is trimmed to one line on small screens (it is
+   reassurance, not instruction), and the card loses its outer margin. */
+@media (max-width: 640px) {
+  body[data-page="auth"] .g-section { padding-top: 4px !important; }
+  body[data-page="auth"] .g-card { margin-top: 12px !important; }
+  body[data-page="auth"] h1 { font-size: 26px !important; line-height: 1.15 !important; margin-bottom: 8px !important; }
+  body[data-page="auth"] .g-s { margin-bottom: 10px !important; }
+  body[data-page="auth"] .g-tabs { margin-bottom: 10px !important; }
+  body[data-page="auth"] .g-btn-block { height: 46px !important; }
+}
+
+/* ── auth: compact intro so the card starts above the fold ──────────────────
+   Measured on a 569px viewport: eyebrow 18 + h1 73 + paragraph 67 + margins put
+   the card at y=280, and the card is 369 tall, so the Log in button lands at 533
+   and the dock (fixed, top 507) sits over it. Padding on main does nothing —
+   the card is mid-flow, not last.
+
+   So the intro shrinks instead. The paragraph is reassurance, not instruction:
+   it can be one line on a phone, and the h1 can lose a step of scale without
+   losing its voice. That lifts the card ~90px, which is what the button needs. */
+@media (max-width: 640px) {
+  body[data-page="auth"] .g-section { padding-top: 0 !important; padding-bottom: 0 !important; }
+  body[data-page="auth"] main h1 { font-size: 23px !important; line-height: 1.2 !important; margin: 4px 0 6px !important; }
+  body[data-page="auth"] main > .g-wrap > p,
+  body[data-page="auth"] main p { font-size: 13px !important; line-height: 1.45 !important; margin: 0 0 8px !important;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  body[data-page="auth"] .g-card { margin-top: 10px !important; padding: 14px !important; }
+  body[data-page="auth"] .g-tabs { margin-bottom: 8px !important; }
+  body[data-page="auth"] .g-field { margin-bottom: 8px !important; }
+  body[data-page="auth"] .g-btn-block { height: 44px !important; }
+}
+
+/* ── the dock must not sit on top of page content, at any width ─────────────
+   Root cause, finally measured rather than assumed: .g-dock is position:fixed
+   at bottom:14px with height 62px, so it permanently occupies the last ~90px
+   of the viewport. Any control that lands there is covered. On auth that was
+   the Log in button (bottom 580 in a 569 viewport with the dock top at 507).
+
+   The previous attempts failed for two separate reasons worth recording:
+     1. I added padding to `main`. Padding adds space AFTER content; it does not
+        move a button that is mid-flow. The button never moved.
+     2. I wrote the fixes inside `@media (max-width: 640px)` and then verified
+        at 1264px, where the query does not match. So the rule was never applied
+        and never could be.
+
+   The correct fix is to give the scroller enough room that the end of the
+   content clears the dock, and to keep the dock out of the way while a form is
+   focused. Both are width-independent. */
+html, body { scroll-padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+body.g-dock-body main,
+body.g-dock-body .g-section:last-of-type { padding-bottom: 96px; }
+
+/* while a field has focus the on-screen keyboard is up; drop the dock so it
+   cannot cover the field being typed into */
+body:has(input:focus) .g-dock,
+body:has(textarea:focus) .g-dock { opacity: 0; pointer-events: none; transform: translate(-50%, 12px) !important; }
+.g-dock { transition: opacity .18s ease, transform .18s ease !important; }
+
+/* ══ dock: in-flow bar on form pages ════════════════════════════════════════
+   On auth and dashboard the floating pill covered form controls. Floating is a
+   browsing affordance — it suits Home, rides, more. It does not suit a page
+   whose job is to get a field filled in, where the dock overlaps the submit
+   button and the keyboard.
+
+   So on those two pages the dock becomes an in-flow bar at the end of the
+   document: it takes real space, cannot overlap anything, and scrolls away like
+   any other content. Everywhere else keeps the floating pill.
+
+   This is a layout change on two pages, not a padding hack. */
+body[data-page="auth"] .g-dock,
+body[data-page="dashboard"] .g-dock {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  margin: 20px auto 0 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 1px 3px rgba(16,16,18,.06) !important;
+}
+
+/* the fixed dock's reserved gutter is unnecessary once it is in flow */
+body[data-page="auth"]::after,
+body[data-page="dashboard"]::after { display: none !important; }
+body[data-page="auth"] main,
+body[data-page="dashboard"] main { padding-bottom: 8px !important; }
+
+/* ── in-flow dock on any page that ends in a form ───────────────────────────
+   ride.html puts its Send request button at the bottom of a long form, and the
+   fixed dock sat over the last field. Rather than list pages one at a time and
+   keep missing some, the rule now keys on the actual condition: if the page has
+   a form, the dock stops being fixed.
+
+   Browsing pages (home, rides, more, why, safety, terms) keep the floating pill
+   because nothing there needs to be filled in under it. */
+body:has(form) .g-dock {
+  position: static !important;
+  transform: none !important;
+  margin: 20px auto 0 !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  border-radius: 18px !important;
+  box-shadow: 0 1px 3px rgba(16,16,18,.06) !important;
+}
+body:has(form)::after { display: none !important; }
+body:has(form) main { padding-bottom: 8px !important; }
+
+/* the last field in a form must never be reachable only under the dock */
+form { scroll-margin-bottom: 96px; }

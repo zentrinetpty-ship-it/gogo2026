@@ -281,7 +281,7 @@ const GOGODocs = (() => {
                   <span class="g-stamp g-stamp-open">review</span>
                 </div>
                 <div class="g-row g-mt-sm">
-                  <button class="g-btn g-btn-lime g-btn-sm" data-ok="${q.driver}|${q.key}" type="button">✅ Verify</button>
+                  <button class="g-btn g-btn-lime g-btn-sm" data-ok="${q.driver}|${q.key}" type="button">${GICON("check")} Verify</button>
                   <button class="g-btn g-btn-ghost g-btn-sm" data-no="${q.driver}|${q.key}" type="button">Reject</button>
                 </div>
               </div>`).join("") : `<p class="g-s">Nothing waiting. Documents appear here the moment a driver uploads.</p>`}

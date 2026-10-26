@@ -64,9 +64,9 @@ body.g2 .g-nav {
   body.g2 .g-nav #acct { pointer-events: auto; }
   /* the bar was built for a dark strip, so put the mark on the light palette */
   body.g2 .g-nav .g-brand .g-brand-p1 { color: #26262B; }
-  body.g2 .g-nav .g-brand .g-brand-p2 { color: #8DB600; }
+  body.g2 .g-nav .g-brand .g-brand-p2 { color: #A3E635; }
   body.g2 .g-nav .g-brand .g-brand-dot { background: #A3E635; }
-  body.g2 .g-nav .g-lamp { fill: #8DB600 !important; }
+  body.g2 .g-nav .g-lamp { fill: #A3E635 !important; }
   body.g2 .g-nav .g-nav-links { display: none !important; }
   body.g2 .g-nav .g-nav-right > a:not(#acct) { display: none !important; }
   body.g2 .g-nav .g-brand { font-size: var(--t-xl); }

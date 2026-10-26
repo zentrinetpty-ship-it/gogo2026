@@ -63,8 +63,8 @@
 }
 .g-form .g-input::placeholder { color: rgba(11, 11, 11, .34); font-weight: 500; }
 .g-form .g-input:focus {
-  border-color: var(--lime, #8DB600);
-  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+  border-color: var(--lime, #A3E635);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .18);
 }
 /* a select needs its own chevron now that it is a plain box */
 .g-form select.g-input {
@@ -81,7 +81,7 @@
 /* ── a field the app fills in for you ────────────────────────────────────
    Read-only, greyed, and clearly not yours to type in. */
 .g-form .g-input[readonly] {
-  background: #F4F6FB;
+  background: #FAFAFA;
   color: rgba(11, 11, 11, .62);
   cursor: default;
 }
@@ -133,8 +133,8 @@
 }
 .g-form .g-addr-u:focus,
 .g-form .g-addr-t:focus {
-  border-color: var(--lime, #8DB600);
-  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+  border-color: var(--lime, #A3E635);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .18);
 }
 
 /* ── section headings inside the form ────────────────────────────────────
@@ -207,8 +207,8 @@
   text-overflow: ellipsis;
 }
 #fromArea:focus {
-  border-color: var(--lime, #8DB600);
-  box-shadow: 0 0 0 3px rgba(141, 182, 0, .18);
+  border-color: var(--lime, #A3E635);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .18);
 }
 /* the placeholder row reads as a prompt, not a value */
 #fromArea:invalid { color: rgba(11, 11, 11, .42); font-weight: 500; }

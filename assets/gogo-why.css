@@ -23,7 +23,7 @@
 @media (max-width: 760px) { .g-vs { grid-template-columns: 1fr; } }
 .g-vs-col { border-radius: 2px; padding: 15px 16px; border: 1px solid rgba(11, 11, 11, .10); }
 .g-vs-col.bad { background: rgba(11, 11, 11, .035); }
-.g-vs-col.good { background: rgba(141, 182, 0, .10); border-color: rgba(141, 182, 0, .45); }
+.g-vs-col.good { background: rgba(163, 230, 53, .10); border-color: rgba(163, 230, 53, .45); }
 .g-vs-head { font-size: var(--t-sm); font-weight: 900; display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
 .g-vs-col.good .g-vs-head { color: #4F6800; }
 .g-vs-col ul { margin: 0; padding-left: 18px; }
@@ -51,7 +51,7 @@
   display: flex; align-items: center; gap: 14px; font-size: var(--t-sm); font-weight: 800; color: var(--ink);
 }
 .g-faq-item summary::-webkit-details-marker { display: none; }
-.g-faq-item summary:hover { background: rgba(141, 182, 0, .08); }
+.g-faq-item summary:hover { background: rgba(163, 230, 53, .08); }
 .g-faq-plus { margin-left: auto; font-size: var(--t-lg); font-weight: 900; color: rgba(11, 11, 11, .35); transition: transform .2s ease; }
 .g-faq-item[open] .g-faq-plus { transform: rotate(45deg); color: #CF9B00; }
 .g-faq-item p { padding: 0 17px 16px; margin: 0; }
