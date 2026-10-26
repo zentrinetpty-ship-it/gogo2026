@@ -50,7 +50,7 @@ const GOGOAuth = (() => {
        rider has stopped using is revoked on the next request anyway. */
     const t = token();
     if (t) {
-      fetch("/gogo/api/auth/logout", {
+      fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + t },
       }).catch(() => {});
@@ -123,7 +123,7 @@ const GOGOAuth = (() => {
      The account record is NOT written locally any more — it lives on the
      server, which is the whole point: a rider cannot forge an account. */
   function api(path, body, token) {
-    return fetch("/gogo/api" + path, {
+    return fetch("/api" + path, {
       method: body ? "POST" : "GET",
       headers: Object.assign({ "Content-Type": "application/json" },
                              token ? { Authorization: "Bearer " + token } : {}),

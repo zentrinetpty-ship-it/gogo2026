@@ -13,7 +13,7 @@
    ========================================================================= */
 
 window.GOGOBook = (function () {
-  const API = "/gogo/api";
+  const API = "/api";
   const TIMEOUT = 9000;
 
   /* the last catalogue we were given, so the UI can render without inventing */

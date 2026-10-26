@@ -1139,7 +1139,7 @@ function pageRide() {
          the payment sheet has no __paintPay and must not get a jump. */
     const showFees = () => {
       const off = seatSel.value, seats = Number($('#jSeats').value);
-      $('#joinFees').innerHTML = feeTable(fareLines(fareFor(off) * seats, seats), `${rands(FEE_CONFIG.pickup)} pickup + ${rands(FEE_CONFIG.platform)} platform fee per passenger.`);
+      $('#joinFees').innerHTML = feeTable(fareLines(fareFor(off) * seats, seats), `${rands(FEE_CONFIG.pickup)} pickup + ${rands(FEE_CONFIG.platform)} platform fee per passenger.`);
         /* repaint the pay panel too: it renders the SAME seats value but has
            its own renderer, and nothing was calling it. */
         const jf = box.querySelector('#joinForm');
@@ -1170,7 +1170,7 @@ function pageRide() {
       };
 
       const send = (attempt) => {
-        fetch("/gogo/api/book", {
+        fetch("/api/book", {
           method: "POST",
           headers: Object.assign({ "Content-Type": "application/json" },
             (window.GOGOAuth && GOGOAuth.token) ? { Authorization: "Bearer " + GOGOAuth.token() } : {}),
@@ -1303,7 +1303,7 @@ function pageTicket() {
   host.innerHTML = `<div class="g-wrap g-section"><div class="g-card">
     <p class="g-s" style="text-align:center">Looking up <b>${esc(ref)}</b>…</p></div></div>`;
 
-  fetch("/gogo/api/booking/" + encodeURIComponent(ref), {
+  fetch("/api/booking/" + encodeURIComponent(ref), {
     headers: (window.GOGOAuth && GOGOAuth.token) ? { Authorization: "Bearer " + GOGOAuth.token() } : {},
   })
     .then(r => r.json().then(j => ({ status: r.status, body: j })))

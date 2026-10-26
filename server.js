@@ -33,12 +33,23 @@ http.createServer((req, res) => {
 
   /* ── everything is one tree now: /gogo/ resolves to index.html, and the
      landing's _app/ and fonts/ sit alongside the inner pages ── */
-  if (url === "/") url = "/gogo/";
+  if (url === "/") url = "/index.html";
   let file = path.join(ROOT, path.normalize(url).replace(/^([/\\])+/, ""));
   if (!file.startsWith(ROOT)) { res.writeHead(403).end("forbidden"); return; }
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) {
-    const alt = path.join(ROOT, url.replace(/\/$/, "") + ".html");
-    file = fs.existsSync(alt) ? alt : path.join(ROOT, "404.html");
+    /* The landing build uses base "/gogo/", so its assets are requested at
+       /gogo/_app/* and /gogo/assets/*. Those already live at the root of this
+       folder, so strip the prefix rather than maintaining a duplicate copy. */
+    const stripped = url.replace(/^\/gogo(?=\/)/, "");
+    const candidates = [
+      path.join(ROOT, url.replace(/\/$/, "") + ".html"),
+      path.join(ROOT, url.replace(/\/$/, ""), "index.html"),
+      path.join(ROOT, path.normalize(stripped).replace(/^([/\\])+/, "")),
+      path.join(ROOT, stripped.replace(/\/$/, "") + ".html"),
+      path.join(ROOT, stripped.replace(/\/$/, ""), "index.html"),
+    ];
+    file = candidates.find((p) => p.startsWith(ROOT) && fs.existsSync(p) && !fs.statSync(p).isDirectory())
+      || path.join(ROOT, "404.html");
   }
   send(res, file);
 }).listen(PORT, "127.0.0.1", () => console.log("GOGO running on http://127.0.0.1:" + PORT));

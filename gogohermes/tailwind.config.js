@@ -3,7 +3,7 @@ export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
-    container: { center: true, padding: "1.25rem", screens: { "2xl": "1280px" } },
+    container: { center: true, padding: "1.25rem", screens: { "2xl": "1080px" } },
     extend: {
       colors: {
         border: "hsl(var(--border))",

@@ -25,7 +25,7 @@ const GOGOAddress = (() => {
      through our domain means one honest server-side identity, a shared cache,
      and a request the browser can always make. Falls back to the direct host
      only if the proxy is not deployed yet. */
-  const PROXY = "/gogo/api/address";
+  const PROXY = "/api/address";
   const DIRECT = "https://nominatim.openstreetmap.org/search";
   const MIN_CHARS = 4;          /* below this a lookup is just noise */
   const DEBOUNCE_MS = 450;      /* keeps us under Nominatim's 1 req/sec */

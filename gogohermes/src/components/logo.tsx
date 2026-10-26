@@ -67,8 +67,19 @@ export function GoGoLogo({
   const lime = dark ? "#A3E635" : "#8DB600";
   return (
     <div className={cn("flex items-center", className)}>
+      {/* Wordmark: GO + GO set as one lockup.
+       *
+       * A heavy condensed face (Anton) carries generous sidebearings, so simply
+       * placing the two words next to each other leaves an optical gap that
+       * looks unresolved at header size. The pair is pulled together by a
+       * negative margin on the second word — a hair of negative tracking, the
+       * same technique used to kern a logotype. The two GO's then read as one
+       * mark while the colour split still separates them.
+       *
+       * No spacer element: the only horizontal distance is the margin, so the
+       * value is exact and cannot drift with font metrics. */}
       <span
-        className="font-display uppercase leading-none tracking-[-.01em]"
+        className="font-display uppercase leading-none"
         style={{
           fontSize: size,
           fontWeight: 900,
@@ -77,10 +88,7 @@ export function GoGoLogo({
           color: ink,
         }}
       >
-        GO
-        <span style={{ width: ".075em" }} />
-        <SwapMark color={lime} />
-        <span style={{ width: ".075em" }} />
+        <span style={{ marginRight: "0.02em" }}>GO</span>
         <span style={{ color: lime }}>GO</span>
       </span>
     </div>

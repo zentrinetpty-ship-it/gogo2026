@@ -82,7 +82,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
      the content's own height on desktop — 500px in a 569px viewport — leaving
      the map short. A flex column that grows with the viewport fixes it. */
   return (
-    <section className="gh-hero relative flex min-h-[calc(100dvh-68px)] flex-1 flex-col overflow-hidden pb-[30rem] pt-4 sm:pb-[32rem] md:min-h-[calc(100svh-68px)] md:pb-12 md:pt-6">
+    <section className="gh-hero relative flex min-h-[calc(100dvh-68px)] flex-1 flex-col overflow-hidden pb-[calc(58px+env(safe-area-inset-bottom))] pt-4 md:min-h-[calc(100svh-68px)] md:pb-[calc(58px+env(safe-area-inset-bottom))] md:pt-6">
       {/* the live map is the background, under a soft scrim so copy stays legible */}
       <LiveMap />
 
@@ -110,7 +110,7 @@ function Hero({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void }) {
         </div>
       </div>
 
-      <div className="container relative grid items-start gap-12 lg:grid-cols-[1.05fr_minmax(0,27rem)] lg:gap-16">
+      <div className="container relative grid items-start gap-10 lg:grid-cols-[1.05fr_minmax(0,25rem)] lg:gap-12">
         <motion.div
           variants={STAGGER}
           initial="hidden"
