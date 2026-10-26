@@ -241,3 +241,133 @@ a { color: inherit; }
   body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
   .g-wrap, .g-section, main { scroll-margin-bottom: 80px; }
 }
+
+/* =========================================================================
+   Desktop: a phone-width column, centred.
+
+   The landing page is a single 520px column (560px on wide screens) centred on
+   white, and it looks deliberate. The inner pages stretched edge to edge at
+   1249px, which made the same product feel like two different sites.
+
+   So on desktop every screen becomes that same column: the content is capped,
+   centred, and the header and dock are capped to match so their contents line
+   up with the column rather than with the window. Nothing is lost on mobile —
+   this block only applies from 768px up.
+   ========================================================================= */
+@media (min-width: 768px) {
+  /* one width for every screen, the same numbers the React landing uses */
+  :root {
+    --gogo-column: 560px;
+    --gogo-gutter: 24px;
+  }
+
+  /* the page itself stays white; only the content is narrowed */
+  body {
+    background: #FFFFFF;
+    padding-bottom: 0;
+  }
+
+  /* ── header: centred, with its contents aligned to the column ─────────── */
+  .g-nav {
+    position: sticky;
+    background: rgba(255, 255, 255, .92);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .g-nav > * {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+  }
+  /* the horizontal nav links do not fit in a phone column — the bottom dock
+     is the navigation on this breakpoint, exactly as on the landing page */
+  .g-nav nav,
+  .g-nav .g-links { display: none !important; }
+
+  /* ── every content wrapper: the column ────────────────────────────────── */
+  .g-wrap,
+  .g-section > .g-wrap,
+  main > .g-wrap {
+    max-width: var(--gogo-column) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter) !important;
+    padding-right: var(--gogo-gutter) !important;
+    box-sizing: border-box;
+  }
+
+  /* main itself: centred column, no full-bleed background */
+  main {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+  }
+  /* but a wrapper already inside main must not double the gutter */
+  main .g-wrap {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ── grids inside the column: stack instead of stretching ─────────────── */
+  /* A 3-up or 4-up grid at 560px is unreadable; the landing page stacks. */
+  .g-grid,
+  .g-cards,
+  .g-ride-list {
+    display: block !important;
+  }
+  .g-grid > *,
+  .g-cards > * {
+    margin-bottom: 12px;
+  }
+
+  /* ── footer: also the column, so it does not sprawl ───────────────────── */
+  .g-foot > * {
+    max-width: var(--gogo-column);
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--gogo-gutter);
+    padding-right: var(--gogo-gutter);
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .g-foot nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+  }
+
+  /* ── the dock: capped to the column, still flush to the bottom ────────── */
+  /* The dock is position:fixed with left:50% + translateX(-50%) already, so it
+     centres itself. What it must NOT get is a fixed width — it is a shrink-to-fit
+     pill sized by its items, and forcing 560px stretched it into a bar that
+     floated over the page content. Only the bottom offset and the cap change. */
+  .g-dock {
+    position: fixed;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 0 !important;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: var(--gogo-column);
+    margin: 0 !important;
+    border-radius: 18px 18px 0 0;
+    border-top: 1px solid var(--line-soft);
+    border-left: 1px solid var(--line-soft);
+    border-right: 1px solid var(--line-soft);
+    border-bottom: 0;
+    box-sizing: border-box;
+    background: #FFFFFF;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .g-dock a { border-radius: 12px; }
+
+  /* the page must reserve room for the dock, or the last row hides behind it */
+  body { padding-bottom: 80px !important; }
+}
