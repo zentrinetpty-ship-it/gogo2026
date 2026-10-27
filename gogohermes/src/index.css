@@ -1296,3 +1296,32 @@ input, textarea, select {
   stroke-linejoin: round;
   fill: none;
 }
+
+
+/* ══ the G mark ════════════════════════════════════════════════════════════
+   Defined here as well as in the static theme because the landing is a React
+   bundle and loads neither gogo.css nor gogo-theme.css. Without this the mark
+   rendered as a bare dark "G" with no ring at all.
+
+   Same lockup as the hero: lime ring, white inner ring, ink disc, lime G. */
+.g-mark {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2.5px solid rgb(var(--gogo-accent, 163 230 53));
+  background: #1A1A1A;
+  box-shadow: inset 0 0 0 2px #FFFFFF;
+  text-decoration: none;
+}
+
+.g-mark-ring {
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 0.9;
+  color: rgb(var(--gogo-accent, 163 230 53));
+  transform: translateY(1%);
+}

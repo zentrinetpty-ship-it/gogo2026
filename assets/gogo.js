@@ -144,95 +144,86 @@ function feeTable(L, note) {
    Built here rather than written into 18 pages, so the mark has ONE definition
    and the pages cannot drift apart. */
 var BRAND_MARK = '<svg viewBox="0 0 34 24" width=".72em" height=".51em" aria-hidden="true" style="display:block;flex:0 0 auto"><g fill="none" stroke-width="5.8" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="6"><path d="M3 7h26" stroke="currentColor"/><path d="M23 3l6 4-6 4" stroke="currentColor"/><path d="M31 17H5" stroke="currentColor"/><path d="M11 13l-6 4 6 4" stroke="currentColor"/></g></svg>';
+/* The landing page's mark is a single G inside a ringed disc. The old swap
+   wordmark is retired — keeping it here made every inner page look like the
+   previous design. */
 function brandWord() {
-  return '<span class="g-brand-word"><span class="g-brand-a">GO</span>' +
-         '<span class="g-brand-mk">' + BRAND_MARK + '</span>' +
-         '<span class="g-brand-b">GO</span></span>';
+  return '<span class="g-mark" aria-hidden="true">' +
+           '<span class="g-mark-ring">G</span>' +
+         '</span>';
 }
 
 /* ── chrome: nav, dock, toast, reveal ───────────────────────────────────── */
-function paintChrome(active) {
-  const nav = $('#nav'); if (nav) nav.removeAttribute('style');
-  const links = [["/gogo/", "Book a ride", "home"], ["why", "Why GOGO", "why"], ["rides", "Find rides", "rides"], ["messages", "Chats", "messages"], ["rider", "My trips", "rider"], ["driver", "Drive with GOGO", "driver"], ["more", "More", "more"], ["ops", "Ops", "ops"]];
-  if (nav) nav.innerHTML = `
-    <a class="g-brand" href="/gogo/" aria-label="GO GO, home">${brandWord()}</a>
-    <nav class="g-nav-links">
-      ${links.map(([h, t, k]) => `<a href="${h}" class="${k === active ? "on" : ""}">${t}</a>`).join("")}
-    </nav>
-    <div class="g-nav-right">
-      <a class="g-btn g-btn-outline g-btn-sm" href="rides"><span aria-hidden>${GICON("search")}</span> Find a hike</a>
-      <a class="g-btn g-btn-ink g-btn-sm" href="driver">${van()} List a ride</a>
-    </div>`;
+/* ── chrome: matches the landing page exactly ──────────────────────────────
+   The landing has no top navigation. It has a floating bell + Sign in, and a
+   flat full-width bottom bar with four items. Every inner page had an 8-link
+   top nav and a floating pill dock instead, which is why they read as a
+   different product no matter how much the palette was corrected.
 
-/* Line icons, not emoji. Emoji render differently on every platform and read
-     as a hobby project; these match the React landing's lucide set exactly:
-     same 24 viewBox, same 1.75 stroke, same round caps. */
+   This emits the landing's structure. The top nav element is removed outright
+   rather than styled away, so nothing can drift back. */
+function paintChrome(active) {
+  /* Grab both containers first, then rebuild them.
+     There is exactly ONE header per page — <header class="g-nav" id="nav"> —
+     so removing it deleted the only place a logo could live. It is reused as
+     the new floating top bar instead of being thrown away. */
+  const bar  = document.getElementById("dock") || document.querySelector(".g-dock, .g-tabbar");
+  const head = document.getElementById("nav") || document.querySelector("header.g-nav, .g-head, header");
+
+  const items = [
+    ["/gogo/",           "Home",      "home"],
+    ["/gogo/dashboard",  "Dashboard", "grid"],
+    ["/gogo/messages",   "Messages",  "chat"],
+    ["/gogo/more",       "More",      "dots"],
+  ];
+
   const IC = {
-    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>',
-    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
-    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.65L4 21l1.2-4.2A8.5 8.5 0 1 1 20.5 12Z"/></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.65L4 21l1.2-4.2A8.5 8.5 0 1 1 20.5 12Z"/></svg>',
     dots: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
   };
 
-const dock = $('#dock');
-  if (dock) {
-    /* The same four items as the landing, so the nav never changes shape.
-       Parcel has no tab of its own — it is a mode on the booking card and a
-       section of the dashboard, and parcel.html / track.html / driver.html all
-       live under Dashboard along with the trips and the ride pages. */
-    const dockItems = [
-      ["/gogo/", ["landing"], IC.home, "Home"],
-      ["dashboard", ["dashboard", "home", "rides", "ride", "parcel", "track", "driver"], IC.grid, "Dashboard"],
-      ["messages", ["messages"], IC.chat, "Messages"],
-      ["more", ["more", "why", "safety", "terms", "privacy", "ops", "rider", "auth"], IC.dots, "More"],
-    ];
-    dock.innerHTML = dockItems.map(([h, keys, e, t]) =>
-      `<a href="${h}" class="g-dock-a${keys.includes(active) ? " on" : ""}"><span class="g-dock-ic" aria-hidden="true">${e}</span><span class="g-dock-lb">${t}</span></a>`
-    ).join("");
+  /* data-page gives a PAGE name; the tabs are keyed by ICON name. Without this
+     translation only Home ever lit up and the bar looked broken everywhere
+     else. Rider maps to Dashboard because that is where trips live. */
+  const PAGE_TO_TAB = {
+    index: "home", home: "home", app: "home",
+    dashboard: "grid", rider: "grid", ride: "grid", rides: "grid", ticket: "grid",
+    messages: "chat", chats: "chat", parcel: "chat",
+    more: "dots", why: "dots", safety: "dots", auth: "dots", driver: "dots",
+    ops: "dots", terms: "dots", privacy: "dots", "404": "dots", track: "grid",
+  };
+  const current = PAGE_TO_TAB[active] || "home";
+
+  if (bar) {
+    bar.className = "g-tabbar";
+    bar.innerHTML = items.map(([href, label, icon]) => {
+      const on = icon === current;
+      return '<a href="' + href + '" class="g-tab' + (on ? " on" : "") + '"' +
+             (on ? ' aria-current="page"' : "") + '>' +
+             IC[icon] +
+             '<span class="g-tab-lb">' + label + '</span>' +
+             '<i class="g-tab-dot" aria-hidden="true"></i>' +
+             '</a>';
+    }).join("");
   }
 
-  const WA_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.54 2 2.08 6.46 2.08 11.96c0 1.76.46 3.42 1.27 4.86L2 22l5.3-1.38c1.4.76 3 1.2 4.74 1.2 5.5 0 9.96-4.46 9.96-9.96S17.54 2 12.04 2Zm5.8 14.06c-.24.68-1.4 1.3-1.94 1.34-.54.05-1.03.24-3.5-.72-2.98-1.18-4.86-4.24-5-4.44-.15-.2-1.2-1.6-1.2-3.05 0-1.44.76-2.15 1.03-2.44.27-.29.58-.36.78-.36h.55c.18 0 .42-.07.65.5.24.58.8 1.98.87 2.12.07.15.12.32.02.51-.1.2-.15.32-.29.49l-.44.51c-.15.15-.3.31-.13.6.17.29.75 1.24 1.61 2.01 1.11.99 2.04 1.29 2.33 1.44.29.15.46.12.63-.07.17-.2.73-.85.93-1.14.19-.29.39-.24.65-.15.27.1 1.68.79 1.97.94.29.15.48.22.55.34.07.12.07.7-.17 1.38Z"/></svg>';
-  const X_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.53 3h3.02l-6.6 7.54L21.75 21h-5.9l-4.62-6.04L5.9 21H2.87l7.06-8.07L2.25 3h6.05l4.18 5.52L17.53 3Zm-1.06 16.2h1.67L7.6 4.71H5.8l10.67 14.49Z"/></svg>';
-  const IG_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="8.91" stroke-linecap="round" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>';
-  const MAIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="8.91" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.6" y="4.6" width="18.8" height="14.8" rx="3"/><path d="m3.4 6.6 8.6 6.2 8.6-6.2"/></svg>';
-  const SOCIAL = [
-    ["https://wa.me/27780472090", "WhatsApp", WA_SVG],
-    ["https://x.com/gogohike", "X", X_SVG],
-    ["https://instagram.com/gogohike", "Instagram", IG_SVG],
-    ["mailto:order@cleanic.co.za", "Email", MAIL_SVG],
-  ];
-  const f = $('#footer');
-  if (f) f.innerHTML = `
-    <div class="g-wrap g-f1">
-      <div class="g-f1-top">
-        <a class="g-brand g-brand-foot" href="/gogo/" aria-label="GOGO, home">${brandWord()}</a>
-        <p class="g-f1-tag">Long-distance seats and parcels, door to door.</p>
-      </div>
-      <nav class="g-f1-nav" aria-label="Footer">
-        ${[["/gogo/", "Home"], ["rides", "Find rides"], ["driver", "List a ride"], ["why", "Why GOGO"],
-           ["safety", "Safety"], ["terms", "Terms"], ["privacy", "Privacy"], ["more", "More"]].map(([h, t]) =>
-          `<a class="g-f1-link" href="${h}"><span>${t}</span></a>`).join("")}
-      </nav>
-      <div class="g-f1-bottom">
-        <div class="g-f1-social">
-          ${SOCIAL.map(([h, t, i]) => `<a class="g-f1-soc" href="${h}" aria-label="${t}" title="${t}"${h.indexOf("http") === 0 ? ' target="_blank" rel="noopener"' : ""}>${i}</a>`).join("")}
-        </div>
-        <p class="g-f1-legal">© ${new Date().getFullYear()} GOGO · <a href="terms">Terms</a> · <a href="privacy">Privacy</a></p>
-      </div>
-    </div>`;
-
-  /* reveal the footer the first time it scrolls into view */
-  const f1 = f && f.querySelector('.g-f1');
-  if (f1) {
-    if (!('IntersectionObserver' in window)) f1.classList.add('in');
-    else {
-      const io = new IntersectionObserver(rows => {
-        rows.forEach(r => { if (r.isIntersecting) { f1.classList.add('in'); io.disconnect(); } });
-      }, { rootMargin: '0px 0px -60px 0px' });
-      io.observe(f1);
-    }
+  /* the floating bell + Sign in, matching the landing's header. The old header
+     had two competing buttons and a wordmark; the landing has one action. */
+  if (head) {
+    head.className = "g-topbar";
+    head.innerHTML =
+      '<a class="g-brand" href="/gogo/" aria-label="GOGO, home">' + brandWord() + '</a>' +
+      '<div class="g-topright">' +
+        '<button class="g-bell" aria-label="Notifications" type="button">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.8a6 6 0 1 0-12 0c0 4.6-2 5.6-2 5.6h16s-2-1-2-5.6Z"/><path d="M13.7 18.4a2 2 0 0 1-3.4 0"/></svg>' +
+        '</button>' +
+        '<a class="g-signin" href="auth"><span aria-hidden="true">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>' +
+        '</span>Log in</a>' +
+      '</div>';
   }
-
 }
 
 let toastT;

@@ -281,7 +281,13 @@ function Header() {
        ground. A header band drew a line across the hero before anyone read a
        word of it, and on a white page it was a line around nothing. */
     <header className="relative z-40">
-      <div className="mx-auto flex h-[62px] w-full max-w-[520px] items-center justify-end px-5 md:max-w-[560px] md:px-6">
+      <div className="mx-auto flex h-[62px] w-full max-w-[520px] items-center justify-between px-5 md:max-w-[560px] md:px-6">
+        {/* The mark lives here so the landing and every inner page share one
+            header shape. Inner pages always had a logo and the landing did not,
+            which made the landing look like the odd one out. */}
+        <a href="/gogo/" aria-label="GOGO, home" className="g-mark">
+          <span className="g-mark-ring">G</span>
+        </a>
         <div className="flex items-center gap-2">
           <button
             type="button"
