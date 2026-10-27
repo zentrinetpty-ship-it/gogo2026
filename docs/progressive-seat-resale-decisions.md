@@ -156,15 +156,20 @@ If the ride is cancelled entirely:
 | 2 | Boarding points per driver per town | Set once, reused, pinned to a landmark |
 | 3 | Chat bound to (rideId, boardTown, rider), openable before a booking exists | The negotiation happens here |
 | 4 | Request → pending → driver accept/decline | The only confirmation path |
-| 5 | Deposits and fees (hold, release, forfeit) | Needs a payments path; see risk below |
+| 5a | Provider interface + mock adapter + truthful UI | Ships now, no merchant account needed |
+| 5b | Stripe adapter | One file, when the account is ready |
 | 6 | Driver "not here, move on" | One tap, frees the seat, rider's deposit behaves as a no-show |
+
+Steps 1–4 are the product and none of them need money to move. That is the point of
+splitting 5: the request/accept habit forms, the occupancy logic is proven, and Stripe
+plugs into a seam that already exists rather than being bolted onto booking code.
 
 ---
 
 ## Risks this model creates
 
-**Deposits need a real payment provider, and there is not one.** This was checked,
-not assumed:
+**Deposits need a real payment provider, and there is not one yet. Stripe comes
+later.** This was checked, not assumed:
 
 ```
 gogo-pay.js:2   GOGO — Payments & settlement (Phase 0: mock provider, real arithmetic)
@@ -174,21 +179,31 @@ gogo-pay.js:118 provider: "mock", intentId: "pi_mock_..."
 
 There is no Stripe, PayFast, Yoco, Ozow or Paystack anywhere on the box, for either
 site. GOGO's payment layer records *intent* and does settlement arithmetic against a
-mock. So the R50 hold and the R9.99 fee are, today, records rather than money.
+mock.
 
-A hold and a release is a **card authorisation**, which is precisely the thing a mock
-cannot do. Two honest ways forward:
+**Decision: Stripe is the provider, and it is deferred.** So the build must be shaped
+to accept it without rework, and must not pretend it is already there.
 
-- **Wire a provider first** (Yoco and PayFast are the sensible South African choices,
-  both support auth-and-capture). Step 5 then ships as designed.
-- **Or ship the request flow with no money moving**, collect the deposit cash at
-  boarding, and add the card hold once a provider is live.
+What this means concretely:
 
-What must not happen is the UI *telling* a rider they have been charged R50 when the
-provider is a stub. That is the kind of thing that ends in a chargeback and a
-reputation problem, and it is worse than shipping later.
+- The deposit and fee logic is written against a small provider interface
+  (`authorise`, `capture`, `release`, `refund`), not against Stripe's SDK. When
+  Stripe is wired, one adapter file changes; the booking, refund and state logic does
+  not.
+- Until then the mock adapter records the same events in the ledger, so the arithmetic,
+  the refund matrix and the UI states are all exercisable end to end without a card.
+- **Every place a rider sees money must tell the truth.** While the provider is a mock,
+  the R50 hold and R9.99 fee are shown as *due at boarding* (cash), not as charged. A
+  UI that says "you have been charged" against a stub is a chargeback and a reputation
+  problem, and worse than shipping later.
+- Nothing hard-codes Stripe's shape today. No `pi_` ids in our own records, no Stripe
+  currency units leaking into storage. The booking stores cents and a provider-neutral
+  reference.
 
-This is a business decision, not a technical one.
+So step 5 splits into 5a (provider interface + mock adapter + truthful UI) and 5b
+(Stripe adapter), and 5a can ship now without waiting for a merchant account.
+
+This is a sequencing decision, not a technical risk.
 
 **Held seats versus driver trust.** If pending requests hold intervals, a busy town
 could show a van as full of *unconfirmed* riders. The driver needs to see
