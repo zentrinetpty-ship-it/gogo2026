@@ -255,11 +255,14 @@ export default function App() {
         <div className="gh-rise gh-rise-2 relative z-20">
           <BookingCard mode={mode} onMode={setMode} onOpenChange={setFormOpen} onCityResolved={rememberCity} />
         </div>
+
+        {/* Quick links sit tight under the pickup field: they are a shortcut
+            strip for the form directly above them, not a separate section. */}
+        <div className="gh-rise gh-rise-3"><ServicesGrid /></div>
       </div>
 
       {/* the rest of the page scrolls below the fold */}
       <div className="mx-auto w-full max-w-[520px] scroll-mt-24 px-5 pb-[calc(96px+env(safe-area-inset-bottom))] pt-7 md:max-w-[560px] md:px-6">
-        <div className="gh-rise gh-rise-3"><ServicesGrid /></div>
         <div className="gh-rise gh-rise-4"><RoutesList rides={rides} pickup={pickup} loaded={ridesLoaded} city={bookingCity} /></div>
 
         {/* ── the closing call to action ───────────────────────────────────
@@ -553,10 +556,17 @@ function ChooseYourRide({
 /* ── 5. services ─────────────────────────────────────────────────────────── */
 function ServicesGrid() {
   return (
-    <section className="mt-8">
-      <SectionHead title="Services" action={{ label: "See all", href: "/gogo/why.html" }} />
+    <section className="mt-2.5">
+      {/* "Quick links", not "Services": this row sits directly under the pickup
+          field as a shortcut strip, and "Services" made it read like a separate
+          marketing section. The label follows what the row actually is.
 
-      <div className="mt-3 grid grid-cols-5 gap-2">
+          mt-2.5 (10px), not mt-8: the form already carries its own bottom
+          padding, so anything more pushed this row far enough down to read as a
+          new section instead of a strip attached to the field above it. */}
+      <SectionHead title="Quick links" action={{ label: "See all", href: "/gogo/why.html" }} />
+
+      <div className="mt-2 grid grid-cols-5 gap-2">
         {SERVICES.map(({ id, label, blurb, Icon, href }) => (
           <a
             key={id}
