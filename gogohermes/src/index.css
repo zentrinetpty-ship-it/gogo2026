@@ -1117,6 +1117,9 @@ input, textarea, select {
   display: block;
   width: 100%;
   height: 100%;
+  /* the viewBox (220x66) is tuned to the hero band's own aspect (3.3:1 vs
+     3.6:1) so `slice` crops only a hair off the sides instead of throwing away
+     most of the street field the way a square viewBox did. */
   /* the map is a backdrop: it must never intercept a tap meant for the card */
   pointer-events: none;
 }
@@ -1194,8 +1197,16 @@ input, textarea, select {
    content, fading out where the booking card overlaps it so the card stays
    readable without needing a solid panel over the whole thing. */
 .gh-mapfield {
+  /* Hero only. It was `inset: 0` on a page whose document is 1170px tall, so
+     the map stretched over the whole landing page including the ride list and
+     the footer. Clamping it to 62vh keeps it inside the hero band where it
+     belongs and lets everything below sit on plain white. */
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 62vh;
+  max-height: 620px;
   overflow: hidden;
   z-index: 0;
   /* pure backdrop: never intercept a tap meant for the card above it */
@@ -1203,20 +1214,17 @@ input, textarea, select {
 }
 
 .gh-mapfield::after {
-  /* The first attempt faded from 38% to 88% of the screen, which erased the
-     whole lower half of the map and made it read as a faint stain rather than
-     a map. The reference keeps its map visible right down to the sheet, so this
-     fade is short and low: it only softens the last quarter, where the content
-     column sits, and never goes fully opaque. */
+  /* fades to white at the map's own bottom edge, so the map dissolves into the
+     page rather than ending on a hard line */
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 55%,
-    rgba(255, 255, 255, 0.42) 78%,
-    rgba(255, 255, 255, 0.78) 100%
+    rgba(255, 255, 255, 0) 52%,
+    rgba(255, 255, 255, 0.55) 80%,
+    #FFFFFF 100%
   );
   pointer-events: none;
 }
@@ -1232,12 +1240,12 @@ input, textarea, select {
    so they add texture without becoming something the eye tries to read. */
 .ghm-label {
   font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
-  font-size: 1.55px;
   font-weight: 500;
   fill: #8A8A83;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   user-select: none;
+  /* no font-size here: the JS sets it per label in viewBox units */
 }
 
 /* ── roads: three tiers, because two read as a diagram ───────────────────────
@@ -1247,20 +1255,20 @@ input, textarea, select {
    actually reads as "city". */
 .ghm-side line {
   stroke: #FFFFFF;
-  stroke-width: 0.55;
+  stroke-width: 1.35;
   stroke-linecap: round;
   opacity: 0.9;
 }
 
 .ghm-minor line {
   stroke: #FFFFFF;
-  stroke-width: 1.5;
+  stroke-width: 3.7;
   stroke-linecap: round;
 }
 
 .ghm-major line {
   stroke: #FFFFFF;
-  stroke-width: 3.6;
+  stroke-width: 8.8;
   stroke-linecap: round;
 }
 
@@ -1279,11 +1287,11 @@ input, textarea, select {
 .ghm-poi circle {
   fill: #FFFFFF;
   stroke: #C9C9C2;
-  stroke-width: 0.3;
+  stroke-width: 0.7;
 }
 .ghm-poi path {
   stroke: #7A7A73;
-  stroke-width: 0.34;
+  stroke-width: 0.8;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
