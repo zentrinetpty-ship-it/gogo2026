@@ -148,6 +148,77 @@ If the ride is cancelled entirely:
 
 ---
 
+## Build status
+
+Steps 1–4 are **built and verified**. 5a/5b (payments) and 6 (driver "move on") are
+not.
+
+### What exists now
+
+`seat-intervals.js` — the occupancy engine, the only place a seat decision is made:
+
+- `stopSequence(ride)` — the ordered towns, origin implicit
+- `aboardPerLeg(ride, bookings)` — passengers on each leg, derived, never stored
+- `canBook(ride, bookings, from, to, seats)` — checks **only the legs touched**,
+  refuses wrong direction, and reports *which stretch* was full
+- `seatsFromTown(ride, bookings, town)` — what a rider standing there can see
+- `sameTown` — Queenstown ≡ Komani, PE ≡ Gqeberha, KWT ≡ Bhisho
+
+New endpoints:
+
+| method | path | does |
+|---|---|---|
+| GET | `/ride/:id/legs` | every boarding town, `dueAt`, `seatsFree`, `bookable` |
+| GET | `/match/midroute?from=&to=` | rides still coming through `from` toward `to`, leading with `dueAtTheirTown` |
+| POST | `/join/request` | creates a **pending** booking that holds an interval |
+| POST | `/join/decide` | driver accepts/declines; the only confirmation path |
+| GET | `/join/requests?rideId=` | the driver's queue, with the rider's number |
+
+`/book` now checks intervals and stores `boardIdx`/`alightIdx`.
+
+### Two bugs fixed on the way
+
+**Capacity grew on cancel.** `cancelBooking` did `RIDES[rideId].seats += seats`, so
+two cancels turned a 4-seat Quantum into an 8-seat one. Capacity is now a constant;
+occupancy is derived, so cancelling frees the interval automatically.
+
+**Old bookings could not be placed.** A booking with no `boardIdx` was invisible to
+occupancy and would have double-sold a seat. The engine falls back to resolving towns
+from `city`/`stop`, and `/book` now always stores the indices.
+
+### Verified
+
+```
+Ride g1: East London → Komani → Butterworth → Idutywa → Mthatha, 4 seats
+
+2 riders to Komani + 2 joining at Komani, all confirmed:
+  occupancy per leg = [2, 2, 2, 2]      never above 4
+  3 more from East London -> refused: "only 2 seats free on the East London to Komani stretch"
+  seats free from each town            = 2, 2, 2, 2
+  cancel one booking -> its interval frees automatically, capacity stays 4
+```
+
+Live against the API:
+
+```
+Komani rider requests 2 seats to Mthatha at R150
+  -> {"status":"pending","dueAt":"07:15","bookingFeeCents":999,"depositCents":5000}
+driver queue -> shows riderPhone 0821234567 and boardPoint "Opposite Spar, Cathcart Rd"
+driver accepts -> {"status":"confirmed"} + riderPhone returned
+```
+
+### Availability is the clock, not the odometer
+
+Mid-route seats are searchable **from the moment the ride is listed**, which is what
+you asked for. There is no GPS, so "when does it reach Komani" comes from the
+timetable: `depart + legIndex × 45min`. Every response is labelled
+`dueAt is from the timetable, not live tracking`, because presenting an estimate as a
+live position is how someone waits at a rank for a van that already passed.
+
+A boarding town stops being bookable once the clock is past its `dueAt`.
+
+---
+
 ## What this changes in the build
 
 | # | Step | Note |

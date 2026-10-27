@@ -26,6 +26,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const intervals = require("./seat-intervals");
 const agent = require("./support-agent");
 
 const PORT = 3050;
@@ -280,6 +281,47 @@ function matchDestination(q, fromFilter) {
   };
 }
 
+/* ── timetable ─────────────────────────────────────────────────────────────
+   No GPS. The van's progress is inferred from its departure time and how long
+   each leg usually takes. That is a schedule, not a position, and the UI must
+   never present it as live tracking.
+
+   Leg minutes are a rough road estimate at ~70km/h with town stops. They exist
+   so "when will it reach Komani" has an answer better than the departure time. */
+const LEG_MINUTES = 45;
+
+function minutesOfDay(hhmm) {
+  const p = String(hhmm || "00:00").split(":");
+  return (Number(p[0]) || 0) * 60 + (Number(p[1]) || 0);
+}
+
+function hhmmOf(min) {
+  const m = ((Math.round(min) % 1440) + 1440) % 1440;
+  return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+}
+
+/**
+ * When is the van due at each stop, and which stops are still reachable today?
+ * Returns [{ town, idx, eta, reachable }].
+ */
+function scheduleFor(ride) {
+  const stops = intervals.stopSequence(ride);
+  const start = minutesOfDay(ride.depart);
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  return stops.map(function (town, i) {
+    const eta = start + i * LEG_MINUTES;
+    return {
+      town: town,
+      idx: i,
+      eta: hhmmOf(eta),
+      /* still sellable if the van is not yet due past this stop. A minute of
+         grace so a rider is not refused as the van rolls in. */
+      reachable: eta > nowMin - 1,
+    };
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   // The server used to live under cleanic.co.za/gogo/api. On go-go.city the
@@ -288,6 +330,54 @@ const server = http.createServer(async (req, res) => {
   const route = url.pathname.replace(/^\/gogo\/api/, "").replace(/^\/api/, "") || "/";
 
   /* destination matching -- see matchDestination above */
+  /* ══ mid-route search ═══════════════════════════════════════════════════
+     A rider standing in Komani asks "what is still coming through here toward
+     Mthatha". This is a different question from "book from East London", and the
+     answer must lead with the time the van reaches THEIR town, not the time it
+     left the origin. */
+  if (req.method === "GET" && route === "/match/midroute") {
+    const from = url.searchParams.get("from") || "";
+    const to = url.searchParams.get("to") || "";
+    if (!from || !to) return json(res, 400, { error: "from and to are required" });
+
+    const db = load();
+    const out = [];
+
+    Object.keys(RIDES).forEach(function (rideId) {
+      const ride = RIDES[rideId];
+      const full = Object.assign({ id: rideId }, ride);
+      const sched = scheduleFor(ride);
+      const here = sched.find(function (x) { return intervals.sameTown(x.town, from); });
+      const there = sched.find(function (x) { return intervals.sameTown(x.town, to); });
+      if (!here || !there || there.idx <= here.idx) return;   // wrong direction
+      if (!here.reachable) return;                            // van already due past
+
+      const free = intervals.seatsFromTown(full, db.bookings, from);
+      out.push({
+        rideId: rideId,
+        from: here.town,
+        to: there.town,
+        /* the number that matters to someone standing in Komani */
+        dueAtTheirTown: here.eta,
+        originDepart: ride.depart,
+        seatsFree: free,
+        vehicle: ride.vehicle,
+        bookable: free > 0,
+      });
+    });
+
+    out.sort(function (a, b) {
+      return minutesOfDay(a.dueAtTheirTown) - minutesOfDay(b.dueAtTheirTown);
+    });
+
+    return json(res, 200, {
+      from: from,
+      to: to,
+      rides: out,
+      note: "dueAtTheirTown is from the timetable, not live tracking",
+    });
+  }
+
   if (req.method === "POST" && route === "/match") {
     let body = "";
     req.on("data", function (c) { body += c; if (body.length > 4096) req.destroy(); });
@@ -378,12 +468,25 @@ const server = http.createServer(async (req, res) => {
       payMethod: b.payMethod === "cash" ? "cash" : "card",
     };
 
-    /* a ride cannot be oversold */
-    const taken = db.bookings
-      .filter((x) => x.rideId === booking.rideId && x.status !== "cancelled")
-      .reduce((s, x) => s + (x.seats || 0), 0);
-    if (booking.kind === "passenger" && taken + booking.seats > (RIDES[b.rideId] || {}).seats) {
-      return json(res, 409, { error: "not enough seats left" });
+    /* a ride cannot be oversold ON ANY LEG IT TOUCHES.
+       The old check summed every booking on the ride and compared it to the
+       vehicle total, which is only right when everybody rides the whole route.
+       Once a passenger alights early, the freed interval can be sold to someone
+       boarding further along, and that is the entire point of this feature. */
+    if (booking.kind === "passenger") {
+      const ride = Object.assign({ id: b.rideId }, RIDES[b.rideId] || {});
+      const fromTown = booking.city || (RIDES[b.rideId] || {}).from;
+      const check = intervals.canBook(ride, db.bookings, fromTown, booking.stop, booking.seats);
+      if (!check.ok) {
+        return json(res, 409, {
+          error: check.error,
+          detail: check.detail || null,
+          seatsFree: check.seatsFree != null ? check.seatsFree : null,
+        });
+      }
+      /* stored so occupancy survives a restart without re-resolving towns */
+      booking.boardIdx = check.boardIdx;
+      booking.alightIdx = check.alightIdx;
     }
 
     db.bookings.push(booking);
@@ -518,10 +621,13 @@ const server = http.createServer(async (req, res) => {
         if (!b) return false;
         b.status = "cancelled";
         b.cancelledAt = new Date().toISOString();
-        /* a cancelled seat is a seat again */
-        if (b.rideId && RIDES[b.rideId] && b.seats) {
-          RIDES[b.rideId].seats += Number(b.seats) || 0;
-        }
+        /* NO capacity mutation.
+           This used to do RIDES[b.rideId].seats += b.seats, which permanently
+           enlarged the van: two cancels turned a 4-seat Quantum into an 8-seat
+           one, because the "freed" seat was added back to the vehicle's total
+           instead of simply no longer being counted. Capacity is a constant from
+           the ride definition; occupancy is derived from bookings, so cancelling
+           frees the interval automatically. */
         save(db);
         return true;
       },
@@ -546,6 +652,214 @@ const server = http.createServer(async (req, res) => {
         degraded: true,
       });
     }
+  }
+
+
+  /* ══ mid-route availability ═════════════════════════════════════════════
+     Every boarding town on a ride, with how many seats are free from there and
+     when the van is due. This is what makes a listed ride visible to someone in
+     Komani before it has left East London. */
+  if (req.method === "GET" && route.startsWith("/ride/") && route.endsWith("/legs")) {
+    const rideId = route.slice(6, -5);
+    const ride = RIDES[rideId];
+    if (!ride) return json(res, 404, { error: "no such ride" });
+
+    const db = load();
+    const full = Object.assign({ id: rideId }, ride);
+    const sched = scheduleFor(ride);
+
+    const boarding = sched.slice(0, -1).map(function (stop, i) {
+      const free = intervals.seatsFromTown(full, db.bookings, stop.town);
+      return {
+        town: stop.town,
+        dueAt: stop.eta,
+        reachable: stop.reachable,
+        seatsFree: free,
+        /* a rider can board here only while the van is still to come, and only
+           if there is somewhere ahead to go */
+        bookable: stop.reachable && free > 0 && i < sched.length - 1,
+      };
+    });
+
+    return json(res, 200, {
+      rideId: rideId,
+      from: ride.from,
+      to: ride.to,
+      depart: ride.depart,
+      vehicle: ride.vehicle,
+      capacity: ride.seats,
+      boarding: boarding,
+      note: "dueAt is from the timetable, not live tracking",
+    });
+  }
+
+  /* ══ join a ride mid-route ══════════════════════════════════════════════
+     Creates a PENDING booking that HOLDS an interval. Holding on request is
+     deliberate: without it, two riders can both request the last seat and the
+     driver accepts both, and one of them is standing at a rank with no van. */
+  if (req.method === "POST" && route === "/join/request") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const ride = RIDES[b.rideId];
+    if (!ride) return json(res, 404, { error: "no such ride" });
+
+    const seatCount = Number(b.seats) || 1;
+    const db = load();
+    const full = Object.assign({ id: b.rideId }, ride);
+
+    /* direction and capacity, on the legs this rider would actually occupy */
+    const check = intervals.canBook(full, db.bookings, b.from, b.to, seatCount);
+    if (!check.ok) {
+      return json(res, 409, { error: check.error, detail: check.detail || null, seatsFree: check.seatsFree });
+    }
+
+    /* has the van already passed their town? */
+    const sched = scheduleFor(ride);
+    const boarding = sched.find(function (x) { return intervals.sameTown(x.town, b.from); });
+    if (boarding && !boarding.reachable) {
+      return json(res, 409, {
+        error: "too_late",
+        detail: "the " + ride.depart + " van is already due past " + boarding.town + " (" + boarding.eta + ")",
+      });
+    }
+
+    const agreed = Number(b.agreedCents);
+    if (!Number.isInteger(agreed) || agreed < 0) {
+      return json(res, 400, { error: "agreedCents is required: the fare the rider and driver agreed" });
+    }
+
+    const join = {
+      id: crypto.randomUUID(),
+      at: new Date().toISOString(),
+      /* PENDING until the driver accepts. This is the only unconfirmed state. */
+      status: "pending",
+      kind: "passenger",
+      midRoute: true,
+      rideId: b.rideId,
+      seats: seatCount,
+      city: String(b.from || "").slice(0, 80),
+      stop: String(b.to || "").slice(0, 80),
+      boardIdx: check.boardIdx,
+      alightIdx: check.alightIdx,
+      /* the negotiated fare, kept apart from any server-priced total */
+      fareSource: "negotiated",
+      agreedCents: agreed,
+      /* GOGO's flat fee, ADDED on top, never deducted from the driver's fare */
+      bookingFeeCents: 999,
+      depositCents: 5000,
+      depositState: "held",
+      boardPoint: String(b.boardPoint || "").slice(0, 200),
+      riderPhone: String(b.phone || "").slice(0, 30),
+      riderName: String(b.name || "").slice(0, 80),
+      paidAtBoarding: true,
+    };
+
+    db.bookings.push(join);
+    db.audit.push({ at: join.at, kind: "JOIN_REQUESTED", id: join.id, rideId: b.rideId, agreed: agreed });
+    save(db);
+
+    return json(res, 201, {
+      request: {
+        id: join.id,
+        status: join.status,
+        rideId: join.rideId,
+        from: join.city,
+        to: join.stop,
+        seats: join.seats,
+        agreedCents: join.agreedCents,
+        bookingFeeCents: join.bookingFeeCents,
+        depositCents: join.depositCents,
+        dueAt: boarding ? boarding.eta : null,
+      },
+      note: "pending until the driver accepts. The fare is paid to the driver at boarding.",
+    });
+  }
+
+  /* ══ driver decision ════════════════════════════════════════════════════
+     The only path that confirms a join. A general "yes I will stop" in chat does
+     NOT confirm, because it is not bound to a seat. */
+  if (req.method === "POST" && route === "/join/decide") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const db = load();
+    const j = (db.bookings || []).find(function (x) { return x.id === b.id && x.midRoute; });
+    if (!j) return json(res, 404, { error: "no such request" });
+    if (j.status !== "pending") {
+      return json(res, 409, { error: "already " + j.status });
+    }
+
+    if (b.action === "accept") {
+      /* re-check at the moment of acceptance: someone else may have taken the
+         interval while this request sat in the queue */
+      const ride = RIDES[j.rideId];
+      const full = Object.assign({ id: j.rideId }, ride || {});
+      const still = intervals.canBook(full, db.bookings, j.city, j.stop, j.seats,
+        { ignoreBookingId: j.id });
+      /* canBook has no ignore option, so recompute without this booking */
+      const others = db.bookings.filter(function (x) { return x.id !== j.id; });
+      const recheck = intervals.canBook(full, others, j.city, j.stop, j.seats);
+      if (!recheck.ok) {
+        j.status = "declined";
+        j.declinedAt = new Date().toISOString();
+        j.declineReason = "seat_taken";
+        j.depositState = "refunded";
+        save(db);
+        return json(res, 409, { error: "seat no longer free", detail: recheck.detail });
+      }
+
+      j.status = "confirmed";
+      j.acceptedAt = new Date().toISOString();
+      /* the deposit stops being a hold and is applied to the fare or returned */
+      j.depositState = "held";
+      db.audit.push({ at: j.acceptedAt, kind: "JOIN_ACCEPTED", id: j.id });
+      save(db);
+      return json(res, 200, {
+        request: { id: j.id, status: j.status },
+        riderPhone: j.riderPhone,
+        note: "confirmed. Fare is collected at boarding.",
+      });
+    }
+
+    if (b.action === "decline") {
+      j.status = "declined";
+      j.declinedAt = new Date().toISOString();
+      j.declineReason = String(b.reason || "driver_declined").slice(0, 80);
+      /* declined riders get everything back */
+      j.depositState = "refunded";
+      j.feeState = "refunded";
+      db.audit.push({ at: j.declinedAt, kind: "JOIN_DECLINED", id: j.id });
+      save(db);
+      return json(res, 200, { request: { id: j.id, status: j.status } });
+    }
+
+    return json(res, 400, { error: "action must be accept or decline" });
+  }
+
+  /* ══ the driver's queue ═════════════════════════════════════════════════ */
+  if (req.method === "GET" && route === "/join/requests") {
+    const rideId = url.searchParams.get("rideId");
+    const db = load();
+    const rows = (db.bookings || []).filter(function (x) {
+      return x.midRoute && (!rideId || x.rideId === rideId);
+    }).map(function (x) {
+      return {
+        id: x.id,
+        status: x.status,
+        rideId: x.rideId,
+        from: x.city,
+        to: x.stop,
+        seats: x.seats,
+        agreedCents: x.agreedCents,
+        boardPoint: x.boardPoint,
+        /* the driver may need to call: "I am at the Spar, where are you" */
+        riderPhone: x.status === "pending" || x.status === "confirmed" ? x.riderPhone : null,
+        riderName: x.riderName,
+        requestedAt: x.at,
+      };
+    });
+    return json(res, 200, { requests: rows });
   }
 
   return json(res, 404, { error: "no such endpoint" });
