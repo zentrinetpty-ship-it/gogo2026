@@ -1,154 +1,215 @@
-# Progressive Seat Resale — decisions locked
+# Progressive Seat Resale — decisions locked (v2)
 
-Supersedes the open questions in `progressive-seat-resale.md`. Four answers given by
-the owner, and each one changes the design in a way worth writing down, because two
-of them remove complexity and two add real risk that has to be engineered around.
-
----
-
-## 1. Price is negotiated in chat, not computed
-
-**Decision:** the passenger and driver agree the price between themselves for a
-mid-route pickup.
-
-**What this removes:** the whole per-km pricing model. No `priceLeg()`, no fill
-discount, no defensible-rate argument. That was the most fiddly part of the plan and
-it is gone.
-
-**What it adds:** the price becomes a *negotiated value stored on the booking*, and
-the platform can no longer claim the fare is its own. Three consequences:
-
-- The booking needs `fareSource: "negotiated"` and `agreedCents`, distinct from the
-  server-priced `totalCents`. They are different numbers with different provenance
-  and must not be stored in one field, or a dispute has no evidence.
-- The service fee is added **on top of the agreed price**, not taken out of it. The
-  driver agreed a number with the rider; silently deducting the fee from it would
-  break that agreement.
-- The chat record is the contract. If a rider says "you said R150" and the driver
-  says "R200", the thread is the evidence. It must be server-stored and not
-  deletable by either party.
-
-**The risk this creates:** negotiating off-platform then disputing. Mitigated by
-storing the agreed figure on the booking at the moment both sides accept, not by
-trusting the conversation alone.
+Supersedes `progressive-seat-resale-decisions.md`. Seven decisions now, and the
+last four change the payment model enough that the earlier "R9.99 on accept" flow is
+dead. Rewriting rather than appending, because a stale section that contradicts a
+newer one is worse than no document.
 
 ---
 
-## 2. Sell before departure — with agreement, not assumption
-
-**Decision:** sell mid-route seats *before* the ride leaves, and let passenger and
-driver agree in chat beforehand.
-
-This is the money-making choice and it is the right one, but it makes the dangerous
-case from the original plan (§6 #1) the *normal* path rather than an edge case. Every
-mid-route seat is now sold on a promise.
-
-**Therefore the chat is not a convenience feature, it is the control.** The sequence
-has to be:
+## The flow, end to end
 
 ```
-rider finds a van passing their town
-  → opens chat with that driver
-  → they agree a price and a boarding point
-  → driver taps ACCEPT on that specific booking
-  → booking becomes confirmed, fee is charged
+1. Rider standing in Komani searches for vans passing through toward Mthatha.
+2. Sees a van that left East London at 06:30 and reaches Komani ~07:40.
+3. Opens chat. They negotiate the fare between themselves.
+4. Rider taps "REQUEST SEAT" on that van, naming the boarding point the driver set.
+5. Rider pays a R50 no-show deposit and the R9.99 booking fee. Booking = PENDING.
+6. Driver sees the request, sees the rider's number, and can call if needed.
+7. Driver taps ACCEPT or DECLINE.
+8. On ACCEPT -> booking becomes CONFIRMED. The agreed fare is paid to the DRIVER
+   in cash or card at the point of boarding, not through GOGO.
+9. Rider boards. At the town, the van stops at the driver's boarding point.
+10. Fare settled. Deposit is returned (or applied to the fare, rider's choice).
 ```
 
-Nothing is confirmed until the driver explicitly accepts **that** booking. A general
-"yes I'll stop" in chat is not an acceptance, because it does not bind to a seat.
-The accept button carries the booking id.
-
-**What happens if the rider is not there.** The plan's alight-reconfirmation idea
-inverts: now the risk is a *boarding* no-show, so the driver needs a one-tap "not
-here, move on" that cancels without penalty and frees the seat for anyone else on
-the route. That must be as easy as accepting, or drivers will just stop using it.
-
-**Deposit question (see open items).** Selling before departure means a no-show costs
-the driver real money in an empty seat. Whether to hold a deposit is the one thing
-still undecided.
+**Nothing is sold until the driver accepts. Nothing is paid in full until boarding.**
+The deposit is the only money that moves before the van arrives, and it exists solely
+to make a request mean something.
 
 ---
 
-## 3. The driver sets the boarding point
+## 1. Seats are intervals, not numbers
 
-**Decision:** driver defines where in each town he picks up.
+Unchanged from the original plan and still the foundation. Occupancy is computed per
+leg, and a booking is checked only across the legs it touches.
 
-**Why this is the right call:** the driver knows which corners a Quantum can reach
-and where it is safe to stop. A platform-chosen point on a street he cannot enter is
-worse than no point at all.
+```
+Passenger A: East London → Komani   (legs 0)
+Passenger B: Komani  → Mthatha      (legs 1,2,3)
+```
 
-**What it needs to be safe:**
-
-- Set **once per town**, saved on the driver's profile, reused on every trip. Not
-  re-entered per booking, or he will type "town" and the rider is stranded.
-- Shown to the rider **with a map pin and a landmark** ("opposite Spar, Cathcart
-  Road"), not just a street name.
-- Editable, with the old value kept if a trip already sold against it, so an edit
-  does not retroactively move a booking that has already been agreed.
-- Confirmed in chat as part of acceptance, so the rider has the point in writing.
+Valid, because they overlap in time but not in space.
 
 ---
 
-## 4. Driver keeps the fare; GOGO takes R9.99
+## 2. Price is negotiated in chat
 
-**Decision:** the negotiated price is the driver's. GOGO charges a flat **R9.99
-booking fee**.
+The rider and driver agree a number. The platform does not price a mid-route seat.
 
-**This is a clean model and it is worth stating precisely** because the fee has to be
-charged exactly once and attributed correctly:
-
-| party | gets | from |
-|---|---|---|
-| driver | the full agreed price | rider, cash or card |
-| GOGO | R9.99 per mid-route seat | rider, at acceptance |
-
-Rules that follow:
-
-- **R9.99 is charged on acceptance, and refunded if the driver cancels** the stop.
-  A driver who accepts then changes his mind must not cost the rider money.
-- If the **rider** no-shows after accepting, the fee is **not** refunded. That is
-  what makes the accept button meaningful; otherwise a rider can block a seat for
-  free.
-- The fee is a **constant**, not a percentage of the negotiated fare, so it cannot be
-  gamed by inflating the agreed price.
-- It is **separate from** the existing platform fee on full-route bookings. Those are
-  server-priced and unchanged; this is the mid-route product.
-
-**Why a flat R9.99 is better than a percentage here:** the fare is negotiated, so a
-percentage would let two parties agree a huge number and split it while the platform
-carries the risk. A flat fee is honest, predictable, and easy to explain to a driver.
+- Stored as `agreedCents` with `fareSource: "negotiated"`, separate from any
+  server-priced total. Two numbers, two provenances, or a dispute has no evidence.
+- **The chat thread is the contract.** Server-stored, not deletable by either party.
+- GOGO's fee is added **on top**, never deducted from the agreed price.
 
 ---
 
-## What this changes in the build order
+## 3. Sell before departure, as a request the driver controls
 
-The original six steps were priced around computing fares. They become:
+This is the decision that makes the whole thing safe, and it is better than the
+previous version:
 
-1. **Interval occupancy** (`aboardPerLeg`, `canBook`) — unchanged, still first, and
-   still fixes the live capacity bug where cancelling enlarges the van.
-2. **Negotiated booking record** — `agreedCents`, `fareSource`, `boardPoint`,
-   `driverAcceptedAt`. No pricing maths.
-3. **Driver ↔ rider chat bound to a booking** — reuses the existing ride chat, but
-   the thread must be openable *before* a booking exists, keyed to
-   (rideId, boardTown, riderSession).
-4. **Accept / decline on the booking** — the only thing that confirms. Charge R9.99
-   on accept.
-5. **Boarding points per driver per town** — set once, editable, pinned to a landmark.
-6. **Driver "not here, move on"** — one tap, cancels without penalty, frees the seat.
+**The booking is PENDING until the driver accepts.** A rider can request a seat
+before the van even leaves East London, but nothing is guaranteed and no seat is
+withheld from the driver's own judgement until he says yes.
 
-Steps 1–4 are the product. 5 and 6 are what stop it from being a support burden.
+Why this is the right shape:
+
+- The driver is the only person who knows if he can actually stop at that town today
+  (roadworks, a full boot, running late). A pending request lets him decide with
+  facts, not a system that sold a seat on his behalf.
+- A pending request cannot be double-sold. The interval is *held* against the
+  request, but the driver sees how many holds exist so he can decline ones he cannot
+  serve.
+- If he declines, the seat is free again and the rider is refunded automatically.
 
 ---
 
-## Still open
+## 4. Payment: deposit now, fare at the town
 
-1. **Deposit or no deposit.** Selling before departure means a rider no-show leaves
-   the driver with an empty seat he turned nobody else away for. Options: no deposit
-   (trust, simplest), a small refundable hold, or the R9.99 acts as the only stake
-   (my recommendation: start here, add a hold only if no-shows are common).
-2. **Does the driver see the rider's phone number** once accepted? The existing model
-   hides numbers until a seat is confirmed. Mid-route is a confirmed seat, so the
-   current rule would reveal them. Worth an explicit decision rather than inheriting
-   it.
-3. **What happens to the R9.99 if the ride is cancelled entirely** (van breaks down)?
-   Refund to the rider, and GOGO absorbs it.
+**The people joining mid-route pay only after boarding confirmation.** So:
+
+| what | when | how much | refundable |
+|---|---|---|---|
+| no-show deposit | on request | **R50** | yes, on decline/cancel |
+| booking fee | on request | **R9.99** | yes if driver declines or cancels |
+| agreed fare | at boarding, to the driver | negotiated | n/a, goes to driver |
+
+**The fare never passes through GOGO.** The driver keeps it, as decided. GOGO takes
+only the R9.99.
+
+**What the R50 deposit is for:** it is not revenue. It exists so a request has a cost
+and a rider cannot block a seat for free. It is returned in full unless the rider
+no-shows.
+
+**The refund matrix, which has to be explicit or support will not know:**
+
+| who cancels | deposit R50 | fee R9.99 | seat |
+|---|---|---|---|
+| Driver declines | refunded | refunded | freed |
+| Driver cancels after accepting | refunded | refunded | freed |
+| Rider cancels before accept | refunded | refunded | freed |
+| Rider cancels after accept, before boarding | refunded | **kept** | freed |
+| Rider no-shows | **forfeited** | kept | freed |
+| Van breaks down / ride cancelled | refunded | refunded | — |
+| Rider boards normally | returned or applied to fare | charged | taken |
+
+The asymmetry is deliberate: the deposit protects the *driver's* time, the fee
+protects the *platform's*. A rider who cancels after acceptance has cost the driver a
+seat he could have sold, so the fee stays. A rider who is simply declined has cost
+nothing and gets everything back.
+
+**R50 is held, not charged.** It is an authorisation, released on the outcome above.
+If it were a charge, refunds would take days and the driver would look like the
+villain while the money sat with GOGO.
+
+---
+
+## 5. The driver sees the rider's number
+
+Once a rider requests a seat, the driver gets the number.
+
+**Why this is right:** he is about to stop in a town for a stranger. He may need to
+call: "I am at the Spar, where are you", "I am running 20 minutes late", "I cannot
+get into that street, meet me at the corner". Without the number, every one of those
+becomes a support ticket and a missed seat.
+
+**What protects the rider:** the number is revealed only on *request*, tied to a real
+booking, and it is not visible in search results or to other riders. The existing rule
+of hiding numbers until a seat is confirmed needs updating explicitly, because a
+request is not yet a confirmed seat. This decision overrides it for mid-route.
+
+**Recommendation to build in from day one:** a masked relay number rather than the
+raw one. Same experience for the driver, and the rider's real number is never handed
+to someone who has not yet been through a completed ride.
+
+---
+
+## 6. Van breaks down: refund the rider, GOGO absorbs it
+
+If the ride is cancelled entirely:
+
+- R50 deposit refunded in full.
+- R9.99 fee refunded in full.
+- GOGO eats the R9.99. It is the cost of the failure, and charging a rider for a van
+  that never came is indefensible.
+- The rider is told immediately and offered the next van on the corridor, with the
+  agent escalating rather than leaving them to search again.
+
+---
+
+## What this changes in the build
+
+| # | Step | Note |
+|---|------|------|
+| 1 | Interval occupancy (`aboardPerLeg`, `canBook`) | Also fixes the live bug where cancelling enlarges the van |
+| 2 | Boarding points per driver per town | Set once, reused, pinned to a landmark |
+| 3 | Chat bound to (rideId, boardTown, rider), openable before a booking exists | The negotiation happens here |
+| 4 | Request → pending → driver accept/decline | The only confirmation path |
+| 5 | Deposits and fees (hold, release, forfeit) | Needs a payments path; see risk below |
+| 6 | Driver "not here, move on" | One tap, frees the seat, rider's deposit behaves as a no-show |
+
+---
+
+## Risks this model creates
+
+**Deposits need a real payment provider, and there is not one.** This was checked,
+not assumed:
+
+```
+gogo-pay.js:2   GOGO — Payments & settlement (Phase 0: mock provider, real arithmetic)
+gogo-pay.js:8   No real card data is ever collected here: the provider is mocked.
+gogo-pay.js:118 provider: "mock", intentId: "pi_mock_..."
+```
+
+There is no Stripe, PayFast, Yoco, Ozow or Paystack anywhere on the box, for either
+site. GOGO's payment layer records *intent* and does settlement arithmetic against a
+mock. So the R50 hold and the R9.99 fee are, today, records rather than money.
+
+A hold and a release is a **card authorisation**, which is precisely the thing a mock
+cannot do. Two honest ways forward:
+
+- **Wire a provider first** (Yoco and PayFast are the sensible South African choices,
+  both support auth-and-capture). Step 5 then ships as designed.
+- **Or ship the request flow with no money moving**, collect the deposit cash at
+  boarding, and add the card hold once a provider is live.
+
+What must not happen is the UI *telling* a rider they have been charged R50 when the
+provider is a stub. That is the kind of thing that ends in a chargeback and a
+reputation problem, and it is worse than shipping later.
+
+This is a business decision, not a technical one.
+
+**Held seats versus driver trust.** If pending requests hold intervals, a busy town
+could show a van as full of *unconfirmed* riders. The driver needs to see
+"2 requested, 1 confirmed" so he can decide, and the rider-facing count should show
+confirmed seats, not requests.
+
+**A declined rider has already paid a fee.** Even with an automatic refund, there is a
+window where money moved and the seat did not happen. The copy has to be clear before
+they request: "you will be charged R9.99 and a R50 hold, both returned if the driver
+declines."
+
+---
+
+## One thing worth saying plainly
+
+Five of these seven decisions make the product more trustworthy and also more
+expensive to build: pending state, deposits, refunds, number sharing, breakdown
+handling. All of that is the cost of selling a seat that does not exist yet.
+
+If launch speed matters more than that, there is a smaller version: **requests only,
+no money on the platform at all.** Rider requests, driver accepts, fare and any
+deposit are settled face to face, GOGO earns nothing on mid-route but the feature
+exists and the habit forms. That version is maybe a third of the work and validates
+whether people use it before building a payments rail for it.
