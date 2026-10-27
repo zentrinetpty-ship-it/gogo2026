@@ -132,12 +132,34 @@ const GOGOChat = (() => {
         </div>
 
         <div class="g-8 g-anim">
-          <div class="g-card" id="threadPane"></div>
+          <!-- the support agent mounts here; the driver thread still
+               uses renderThread into #threadPane when a ride is open -->
+          <div class="g-card g-mt" id="agentPane"></div>
+          <div class="g-card g-mt" id="threadPane" hidden></div>
         </div>
       </div>
     </div>`;
 
-    $('#newSupport').onclick = () => { const t = support(); openThreadId = t.id; renderThread(t.id); };
+    /* The support button no longer creates a keyword thread. It opens the
+       agent, which can check a booking, quote a real fare and raise a ticket. */
+    const supportBtn = $('#newSupport');
+    if (supportBtn) {
+      supportBtn.onclick = () => {
+        const mount = document.getElementById("agentPane");
+        if (mount && window.GOGOSupport) {
+          window.GOGOSupport.boot(mount);
+          mount.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+    }
+
+    /* mount the agent straight away so support is reachable without a tap */
+    (function mountAgent() {
+      const mount = document.getElementById("agentPane");
+      if (mount && window.GOGOSupport) {
+        try { window.GOGOSupport.boot(mount); } catch (e) { /* leaves the card empty */ }
+      }
+    })();
 
     /* seats fill up: whoever is already on the ride hears about it */
     function renderUpdates() {
