@@ -134,6 +134,15 @@ const GogoHeroMap = (() => {
     { x: 32.1, y: 41.7 }, { x: 174.9, y: 39.6 },
   ];
 
+  /* every street segment, collected for the car animation. Cars drive along
+       these exact lines, so motion follows the road grid instead of drifting
+       across blocks. */
+    const CAR_SEGMENTS = [];
+    const addSegs = (list) => list.forEach(([x1, y1, x2, y2], i) => {
+      if (Math.hypot(x2 - x1, y2 - y1) > 6) CAR_SEGMENTS.push({ x1, y1, x2, y2 });
+    });
+    addSegs(ARTERIAL); addSegs(SECONDARY); addSegs(SIDE); addSegs(DIAG);
+
   const el = (t, cls) => {
     const n = document.createElementNS("http://www.w3.org/2000/svg", t);
     if (cls) n.setAttribute("class", cls);
@@ -226,19 +235,124 @@ const GogoHeroMap = (() => {
       svg.appendChild(t);
     });
 
-    CARS.forEach(({ x, y }, i) => {
+    /* ── cars: these drive ────────────────────────────────────────────────
+       Built here so they share CAR_SEGMENTS with the street grid. Each pin is
+       a disc plus a rotated saloon glyph; the loop below moves them.
+
+       The pin count is derived from how much world is on screen: a zoomed-in
+       phone window shows a small slice, so 5 pins would look sparse and 12
+       would look like a traffic jam. */
+    const carLayer = el("g", "ghm-cars");
+    svg.appendChild(carLayer);
+
+    const CAR_COUNT = Math.max(4, Math.min(9, Math.round(width / 26)));
+    const carState = [];
+    for (let i = 0; i < CAR_COUNT; i++) {
       const g = el("g", "ghm-car");
-      g.setAttribute("transform", `translate(${x} ${y})`);
-      g.style.animationDelay = `${i * 0.6}s`;
-      const c = el("circle");
-      c.setAttribute("r", 4.6);
-      g.appendChild(c);
-      const car = el("path");
-      car.setAttribute("d", "M-2.32.2 0.0.0.0.0.77h4.62M-2.2.87 0.77v-2.09a1.21 1.21 0 0 1 1.21-1.21h1.32a1.21 1.21 0 0 1 1.21 1.21v2.09M-1.32 0.77v0.88M1.32 0.77v0.88");
-      car.setAttribute("class", "ghm-car-glyph");
-      g.appendChild(car);
-      svg.appendChild(g);
-    });
+      const disc = el("circle");
+      disc.setAttribute("r", 4.6);
+      g.appendChild(disc);
+      const glyph = el("path");
+      glyph.setAttribute("d", "M-2.2 0.85h4.4M-2.1 0.85v-1.05a1.15 1.15 0 0 1 1.15-1.15h1.05a1.15 1.15 0 0 1 1.15 1.15v1.05M-1.25 0.85v0.85M1.25 0.85v0.85");
+      glyph.setAttribute("class", "ghm-car-glyph");
+      g.appendChild(glyph);
+      carLayer.appendChild(g);
+      carState.push({ g, seg: null, t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1,
+                      speed: 9 + Math.random() * 12 });
+    }
+
+    /* the window we are showing, so cars only animate where they can be seen */
+    const viewX0 = vbX, viewX1 = vbX + width;
+
+    const segLen = (sg) => Math.hypot(sg.x2 - sg.x1, sg.y2 - sg.y1) || 1;
+
+    const inView = (sg) =>
+      (sg.x1 >= viewX0 - 12 && sg.x1 <= viewX1 + 12) ||
+      (sg.x2 >= viewX0 - 12 && sg.x2 <= viewX1 + 12);
+
+    const pickSeg = (nearX, nearY, exclude) => {
+      const pool = CAR_SEGMENTS.filter(sg => inView(sg) && sg !== exclude);
+      const list = pool.length ? pool : CAR_SEGMENTS;
+      if (nearX == null) return list[Math.floor(Math.random() * list.length)];
+      let best = list[0], bestD = Infinity;
+      for (const sg of list) {
+        for (const [px, py] of [[sg.x1, sg.y1], [sg.x2, sg.y2]]) {
+          const d = Math.hypot(px - nearX, py - nearY);
+          if (d < bestD) { bestD = d; best = sg; }
+        }
+      }
+      return best;
+    };
+
+    const assignCar = (car) => {
+      const old = car.seg;
+      if (!old) {
+        car.seg = pickSeg();
+        car.t = Math.random();
+        return;
+      }
+      /* continue from the end we reached, onto a road that touches it, so the
+         hand-off reads as turning a corner rather than teleporting */
+      const ex = car.dir > 0 ? old.x2 : old.x1;
+      const ey = car.dir > 0 ? old.y2 : old.y1;
+      const next = pickSeg(ex, ey, old);
+      car.seg = next;
+      const d1 = Math.hypot(next.x1 - ex, next.y1 - ey);
+      const d2 = Math.hypot(next.x2 - ex, next.y2 - ey);
+      if (d1 <= d2) { car.t = 0; car.dir = 1; }
+      else { car.t = 1; car.dir = -1; }
+    };
+
+    const placeCar = (car) => {
+      const sg = car.seg;
+      const x = sg.x1 + (sg.x2 - sg.x1) * car.t;
+      const y = sg.y1 + (sg.y2 - sg.y1) * car.t;
+      const ang = Math.atan2(sg.y2 - sg.y1, sg.x2 - sg.x1) * 180 / Math.PI;
+      const facing = car.dir > 0 ? ang : ang + 180;
+      car.g.setAttribute("transform",
+        `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${facing.toFixed(1)})`);
+    };
+
+    carState.forEach((car) => { assignCar(car); placeCar(car); });
+
+    /* ── the loop ──────────────────────────────────────────────────────────
+       One rAF for every car, one transform write each. Nothing here triggers
+       layout. Pauses on tab hide; parks entirely under reduced-motion. */
+    const reduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!reduced && CAR_SEGMENTS.length) {
+      let last = 0, raf = 0, live = true;
+
+      const tick = (now) => {
+        if (!live) return;
+        if (!last) last = now;
+        const dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        for (const car of carState) {
+          const len = segLen(car.seg);
+          car.t += car.dir * (car.speed * dt) / len;
+          if (car.t > 1 || car.t < 0) {
+            car.t = car.t > 1 ? 1 : 0;
+            assignCar(car);
+          }
+          placeCar(car);
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          live = false;
+          cancelAnimationFrame(raf);
+        } else if (!live) {
+          live = true;
+          last = 0;
+          raf = requestAnimationFrame(tick);
+        }
+      });
+    }
 
     /* ── points of interest ────────────────────────────────────────────────
        Two landmarks and a station. Without these the map is a pattern; with
@@ -250,9 +364,10 @@ const GogoHeroMap = (() => {
       { x: 55, y: 76, icon: "stop" },
     ];
     const POI_PATHS = {
-      pin:  "M0.0.0.0.0.0.0.0.0.0.0.0.0.0 -2.32.2a2.32.2 2.32.2 0 0 2.2 2.32.2 2.32.2c0 .171.6 -2.31 4.62 -2.31 4.62s-2.31-2.9-2.31-4.62A2.31 2.31 0 0 1 0 -2.31Zm0 3.41a.11.0 .11.0 0 1 1 0 -2.2 .11.0 .11.0 0 0 1 0 1Z",
-      flag: "M-2.641 1.2V-2.64M-1.21 -2.31h4.117.6l-1.1 .17.6 .11.0 .8H-1.21",
-      stop: "M-4.4.2 -.119.8.8h2v3.96h-4.4Zm.99.0 3.96v.165.0M.121.0 .9v.165.0",
+      pin:  "M0 -3.2a3.2 3.2 0 0 1 3.2 3.2c0 2.4-3.2 6-3.2 6s-3.2-3.6-3.2-6A3.2 3.2 0 0 1 0-3.2Zm0 4.6a1.4 1.4 0 1 1 0-2.8 1.4 1.4 0 0 1 0 2.8Z",
+      flag: "M-2.2 4V-4M-2.2 -3.6h7.4l-2 2.6 2 2.6h-7.4",
+      stop: "M-3.6 -3h7.2v6h-7.2Zm1.6 6v2.4M2 3v2.4",
+
     };
     POIS.forEach(({ x, y, icon }) => {
       const g = el("g", "ghm-poi");
