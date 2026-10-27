@@ -27,6 +27,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const intervals = require("./seat-intervals");
+const payments = require("./payments");
 const agent = require("./support-agent");
 
 const PORT = 3050;
@@ -729,11 +730,40 @@ const server = http.createServer(async (req, res) => {
       return json(res, 400, { error: "agreedCents is required: the fare the rider and driver agreed" });
     }
 
+    /* Authorise the deposit and fee NOW, not at acceptance. A request that costs
+       nothing is a request that blocks a seat for free. On the mock provider this
+       writes ledger rows; on Stripe it puts a real hold on a card. */
+    const bookingId = crypto.randomUUID();
+    let depositAuth, feeAuth;
+    try {
+      depositAuth = await payments.provider().authorise({
+        bookingId,
+        cents: payments.DEPOSIT_CENTS,
+        description: "GOGO no-show deposit, " + b.from + " to " + b.to,
+      });
+      feeAuth = await payments.provider().authorise({
+        bookingId,
+        cents: payments.FEE_CENTS,
+        description: "GOGO booking fee, " + b.from + " to " + b.to,
+      });
+    } catch (e) {
+      /* a failed authorisation must not create a seat hold */
+      console.error("payment authorise failed:", e && e.message);
+      return json(res, 402, {
+        error: "payment_failed",
+        detail: "We could not hold the deposit. Try again, or pay cash at boarding.",
+      });
+    }
+
     const join = {
-      id: crypto.randomUUID(),
+      id: bookingId,
       at: new Date().toISOString(),
       /* PENDING until the driver accepts. This is the only unconfirmed state. */
       status: "pending",
+      depositReference: depositAuth.reference,
+      feeReference: feeAuth.reference,
+      paymentProvider: payments.provider().name,
+      paymentIsMock: payments.provider().isMock,
       kind: "passenger",
       midRoute: true,
       rideId: b.rideId,
@@ -747,8 +777,9 @@ const server = http.createServer(async (req, res) => {
       agreedCents: agreed,
       /* GOGO's flat fee, ADDED on top, never deducted from the driver's fare */
       bookingFeeCents: 999,
-      depositCents: 5000,
+      depositCents: payments.DEPOSIT_CENTS,
       depositState: "held",
+      feeState: "held",
       boardPoint: String(b.boardPoint || "").slice(0, 200),
       riderPhone: String(b.phone || "").slice(0, 30),
       riderName: String(b.name || "").slice(0, 80),
@@ -772,6 +803,7 @@ const server = http.createServer(async (req, res) => {
         depositCents: join.depositCents,
         dueAt: boarding ? boarding.eta : null,
       },
+      payment: payments.honesty(),
       note: "pending until the driver accepts. The fare is paid to the driver at boarding.",
     });
   }
@@ -811,8 +843,8 @@ const server = http.createServer(async (req, res) => {
 
       j.status = "confirmed";
       j.acceptedAt = new Date().toISOString();
-      /* the deposit stops being a hold and is applied to the fare or returned */
-      j.depositState = "held";
+      /* The holds STAY held. They are only captured when the rider actually
+         boards, and released if either side backs out. */
       db.audit.push({ at: j.acceptedAt, kind: "JOIN_ACCEPTED", id: j.id });
       save(db);
       return json(res, 200, {
@@ -826,12 +858,11 @@ const server = http.createServer(async (req, res) => {
       j.status = "declined";
       j.declinedAt = new Date().toISOString();
       j.declineReason = String(b.reason || "driver_declined").slice(0, 80);
-      /* declined riders get everything back */
-      j.depositState = "refunded";
-      j.feeState = "refunded";
+      /* a rider the driver turned away pays nothing, and the seat frees */
+      await payments.settle(j, "DRIVER_DECLINED");
       db.audit.push({ at: j.declinedAt, kind: "JOIN_DECLINED", id: j.id });
       save(db);
-      return json(res, 200, { request: { id: j.id, status: j.status } });
+      return json(res, 200, { request: { id: j.id, status: j.status }, payment: payments.honesty() });
     }
 
     return json(res, 400, { error: "action must be accept or decline" });
@@ -860,6 +891,118 @@ const server = http.createServer(async (req, res) => {
       };
     });
     return json(res, 200, { requests: rows });
+  }
+
+
+  /* ══ step 6: "not here, move on" ════════════════════════════════════════
+     The driver is at the boarding point and the rider is not. One tap, and it
+     has to be as easy as accepting or drivers will stop using the feature.
+
+     This is the ONLY endpoint that keeps the rider's money, so it is separate
+     from decline and writes its own audit row. A no-show means the driver lost a
+     seat he could have sold, which is exactly what the deposit is for. */
+  if (req.method === "POST" && route === "/join/no-show") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const db = load();
+    const j = (db.bookings || []).find(function (x) { return x.id === b.id && x.midRoute; });
+    if (!j) return json(res, 404, { error: "no such request" });
+    if (j.status === "no_show") {
+      return json(res, 200, { request: { id: j.id, status: j.status }, alreadyMarked: true });
+    }
+    if (j.status !== "confirmed") {
+      return json(res, 409, { error: "only a confirmed booking can be a no-show, this is " + j.status });
+    }
+
+    j.status = "no_show";
+    j.noShowAt = new Date().toISOString();
+    j.noShowBy = String(b.by || "driver").slice(0, 20);
+
+    /* deposit forfeited, fee kept. The seat frees immediately because the status
+       is no longer counted by the interval engine. */
+    const settled = await payments.settle(j, "RIDER_NO_SHOW", "driver marked not present");
+
+    db.audit.push({
+      at: j.noShowAt, kind: "JOIN_NO_SHOW", id: j.id,
+      deposit: j.depositState, fee: j.feeState,
+    });
+    save(db);
+
+    return json(res, 200, {
+      request: { id: j.id, status: j.status },
+      money: { deposit: j.depositState, fee: j.feeState },
+      seatFreed: true,
+      payment: payments.honesty(),
+      note: settled.isMock
+        ? "the deposit was recorded as forfeited; no card was charged because no provider is connected"
+        : "the deposit has been taken",
+    });
+  }
+
+  /* ══ the rider got on ═══════════════════════════════════════════════════
+     Captures the deposit and the fee. The agreed fare is paid to the driver
+     directly, and never passes through GOGO. */
+  if (req.method === "POST" && route === "/join/board") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const db = load();
+    const j = (db.bookings || []).find(function (x) { return x.id === b.id && x.midRoute; });
+    if (!j) return json(res, 404, { error: "no such request" });
+    if (j.status === "boarded") {
+      return json(res, 200, { request: { id: j.id, status: j.status }, alreadyBoarded: true });
+    }
+    if (j.status !== "confirmed") {
+      return json(res, 409, { error: "only a confirmed booking can board, this is " + j.status });
+    }
+
+    j.status = "boarded";
+    j.boardedAt = new Date().toISOString();
+    await payments.settle(j, "BOARDED");
+    db.audit.push({ at: j.boardedAt, kind: "JOIN_BOARDED", id: j.id });
+    save(db);
+
+    return json(res, 200, {
+      request: { id: j.id, status: j.status },
+      money: { deposit: j.depositState, fee: j.feeState },
+      payment: payments.honesty(),
+    });
+  }
+
+  /* ══ rider changes their mind ═══════════════════════════════════════════
+     Before acceptance: everything back. After acceptance: deposit back, fee kept,
+     because the driver has already committed a seat. */
+  if (req.method === "POST" && route === "/join/cancel") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const db = load();
+    const j = (db.bookings || []).find(function (x) { return x.id === b.id && x.midRoute; });
+    if (!j) return json(res, 404, { error: "no such request" });
+    if (["cancelled", "declined", "no_show"].includes(j.status)) {
+      return json(res, 200, { request: { id: j.id, status: j.status }, alreadyClosed: true });
+    }
+
+    const wasAccepted = j.status === "confirmed" || j.status === "boarded";
+    j.status = "cancelled";
+    j.cancelledAt = new Date().toISOString();
+    j.cancelledBy = "rider";
+    const outcome = wasAccepted ? "RIDER_CANCELLED_LATE" : "RIDER_CANCELLED_EARLY";
+    await payments.settle(j, outcome, "rider cancelled");
+    db.audit.push({ at: j.cancelledAt, kind: "JOIN_CANCELLED", id: j.id, outcome: outcome });
+    save(db);
+
+    return json(res, 200, {
+      request: { id: j.id, status: j.status },
+      money: { deposit: j.depositState, fee: j.feeState },
+      payment: payments.honesty(),
+    });
+  }
+
+  /* ══ what may the UI claim about money? ═════════════════════════════════ */
+  if (req.method === "GET" && route === "/payments/status") {
+    return json(res, 200, payments.honesty());
   }
 
   return json(res, 404, { error: "no such endpoint" });

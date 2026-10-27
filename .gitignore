@@ -43,3 +43,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# payment ledger: contains real money events once Stripe is live
+payments-ledger.json

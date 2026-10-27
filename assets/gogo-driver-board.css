@@ -1,0 +1,322 @@
+/* ══ driver board ═══════════════════════════════════════════════════════════
+   Styles for GOGODriverBoard. GOGO palette: white, hairline borders, charcoal
+   ink, lime only for the accepting action and a live count.
+
+   The layout is a single column at every width — a driver glances at this on a
+   phone in a van, often in sunlight. Two columns on a big screen would look
+   tidier and read worse. */
+
+.gd {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(14px, 4vw, 22px) clamp(14px, 5vw, 26px) calc(90px + env(safe-area-inset-bottom, 0px));
+  color: #1A1A1A;
+}
+
+.gd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: clamp(16px, 4vw, 22px);
+}
+
+.gd-eyebrow {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: #A3A3A3;
+}
+
+.gd-h1 {
+  font-size: clamp(20px, 5.4vw, 26px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.022em;
+  margin: 6px 0 0;
+}
+
+.gd-sub {
+  font-size: 12.5px;
+  color: #737373;
+  margin: 4px 0 0;
+}
+
+.gd-refresh {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #EAEAE7;
+  border-radius: 999px;
+  background: #FFFFFF;
+  color: #525252;
+  cursor: pointer;
+}
+
+.gd-refresh svg { width: 15px; height: 15px; }
+.gd-refresh:active { background: #F5F5F2; }
+
+/* ── seat strip ───────────────────────────────────────────────────────────
+   One cell per stretch. The bar shows free seats against capacity, so a full
+   leg is obvious without reading a number. */
+.gd-section { margin-bottom: clamp(18px, 4.5vw, 26px); }
+
+.gd-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #A3A3A3;
+  margin-bottom: 10px;
+}
+
+.gd-strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 7px;
+}
+
+.gd-stop {
+  border: 1px solid #EAEAE7;
+  border-radius: 12px;
+  padding: 9px 9px 8px;
+  background: #FFFFFF;
+  min-width: 0;
+}
+
+.gd-stop-town {
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gd-stop-eta {
+  font-size: 10.5px;
+  color: #8A8A83;
+  margin-top: 1px;
+}
+
+.gd-stop-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: #F0F0EB;
+  margin: 7px 0 5px;
+  overflow: hidden;
+}
+
+.gd-stop-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: rgb(var(--gogo-accent-deep, 141 182 0));
+  transition: width .3s ease;
+}
+
+.gd-stop-free {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #525252;
+}
+
+.gd-stop.is-tight .gd-stop-bar i { background: #E0A422; }
+.gd-stop.is-full .gd-stop-bar i { background: #C9563F; }
+.gd-stop.is-full .gd-stop-free { color: #C9563F; }
+
+.gd-stop.is-past { opacity: .5; }
+
+.gd-hint {
+  font-size: 10.5px;
+  color: #B4B4AE;
+  margin: 8px 0 0;
+}
+
+/* ── request cards ──────────────────────────────────────────────────────── */
+.gd-req {
+  border: 1px solid #EAEAE7;
+  border-radius: 15px;
+  padding: 13px;
+  background: #FFFFFF;
+  margin-bottom: 10px;
+}
+
+/* a pending request is the job, so it gets the accent edge */
+.gd-req.is-pending {
+  border-color: rgba(141, 182, 0, .40);
+  box-shadow: 0 1px 0 rgba(141, 182, 0, .08);
+}
+
+.gd-req.is-no_show,
+.gd-req.is-declined,
+.gd-req.is-cancelled { opacity: .62; }
+
+.gd-req-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gd-req-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.gd-req-who b {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.gd-req-who span {
+  font-size: 11.5px;
+  color: #737373;
+}
+
+.gd-req-fare {
+  flex: 0 0 auto;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.gd-req-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 9px;
+}
+
+.gd-pin,
+.gd-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #525252;
+  text-decoration: none;
+}
+
+.gd-pin svg, .gd-call svg { width: 13px; height: 13px; flex: 0 0 auto; color: #8A8A83; }
+.gd-call { color: #1A1A1A; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ── actions ─────────────────────────────────────────────────────────────── */
+.gd-req-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.gd-btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+}
+
+.gd-btn svg { width: 14px; height: 14px; }
+.gd-btn:active { transform: scale(.97); }
+.gd-btn:disabled { opacity: .45; cursor: default; }
+
+/* accept is the one lime action on the screen */
+.gd-accept {
+  background: rgb(var(--gogo-accent, 163 230 53));
+  color: #1A1A1A;
+}
+
+.gd-decline {
+  background: #FFFFFF;
+  border-color: #E4E4DE;
+  color: #525252;
+}
+
+.gd-board {
+  background: #1A1A1A;
+  color: #FFFFFF;
+}
+
+/* destructive, so it is outlined rather than filled: it should not look like the
+   tempting button */
+.gd-noshow {
+  background: #FFFFFF;
+  border-color: #E8D6D1;
+  color: #B2492F;
+}
+
+.gd-flag {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #8A8A83;
+}
+
+.gd-empty {
+  font-size: 12.5px;
+  color: #A3A3A3;
+  border: 1px dashed #EAEAE7;
+  border-radius: 13px;
+  padding: 18px 14px;
+  text-align: center;
+  margin: 0;
+}
+
+.gd-money {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #B4B4AE;
+  text-align: center;
+  margin: 18px 0 0;
+}
+
+/* ── toast ──────────────────────────────────────────────────────────────── */
+.gd-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  transform: translate(-50%, 12px);
+  max-width: calc(100vw - 40px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 70;
+}
+
+.gd-toast.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* narrow phones: the seat strip scrolls rather than squashing to unreadable */
+@media (max-width: 380px) {
+  .gd-strip {
+    grid-auto-flow: column;
+    grid-auto-columns: 88px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .gd-strip::-webkit-scrollbar { display: none; }
+  .gd-btn { font-size: 12px; height: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gd-stop-bar i, .gd-toast, .gd-btn { transition: none; }
+}
