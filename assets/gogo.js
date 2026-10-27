@@ -951,12 +951,33 @@ function pageRides() {
 }
 
 /* ── PAGE: ride detail + join ───────────────────────────────────────────── */
+/* ── AUTOCOMPLETE MOUNT ────────────────────────────────────────────────────
+   gogo-address-ui.js exposes mountAll() but nothing ever called it, and the
+   pickup input did not carry the g-addr-in class its selector looks for — so
+   every ride page shipped with a plain text box where the address suggestions
+   should be. Both halves are fixed here: the input is tagged, and this mounts
+   after the form exists (the form is injected, so a DOMContentLoaded-time call
+   would run before the input is in the document).
+
+   The direct #jPickup fallback is deliberate: if a future template change drops
+   the class again, suggestions still attach rather than silently vanishing. */
+function mountAddressAutocomplete() {
+  const ui = window.GOGOAddressField;
+  if (!ui) return;
+  try {
+    if (ui.mountAll) ui.mountAll(document);
+    const el = document.getElementById("jPickup");
+    if (el && ui.mount) ui.mount(el);
+  } catch (e) { /* a suggestion failure must never break the booking form */ }
+}
+
 function pageRide() {
   const id = parseQuery().id || S.rides[0].id;
   const r = ride(id);
   if (!r) { $('#main').innerHTML = `<div class="g-wrap g-section"><div class="g-card"><div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>🤷</span><h3 class="g-h3">That ride is gone</h3><a class="g-btn g-btn-ink g-mt" href="rides">Back to rides</a></div></div></div>`; return; }
 
   const dep = townCodeOf(r.from), arr = townCodeOf(r.to);
+
   const dur = tripDuration(r);
   const mine = (r.requests || []).find(q => q.phone === S.me.phone && q.status !== "declined");
   const taken = seatsTaken(r), left = seatsLeft(r);
@@ -1096,7 +1117,7 @@ function pageRide() {
 
         <div class="g-field">
           <label class="g-f-k" for="jPickup">Pick me up at</label>
-          <input class="g-input" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
+          <input class="g-input g-addr-in" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
         </div>
 
         <div class="g-form-sec">Your hike</div>
@@ -1121,9 +1142,17 @@ function pageRide() {
         <p class="g-s-sm g-mt-sm" style="text-align:center">The driver accepts before anything is confirmed</p>
       </form>`;
 
-    /* The pickup is a plain field now, exactly like Suburb and City. No
-       geocoder: whatever the rider types is the address, and nothing pops up
-       to compete with it. The driver reads it and comes to the street. */
+    /* form is live: wrap the address field now */
+    mountAddressAutocomplete();
+
+    /* The pickup carries live suggestions again (Mapbox, via the proxy).
+
+       This was previously reduced to a plain text box on the argument that
+       "whatever the rider types is the address". In practice riders could not
+       give a house number at all, so the driver got a street with no number.
+       Mapbox returns the full address including the number, which is the whole
+       point of the field. mountAddressAutocomplete() runs below, after this
+       form is in the DOM — mounting earlier finds nothing to wrap. */
     const seatSel = $('#jOff');
     const fareFor = off => { const s = r.stops.find(x => x.city === off); return s ? s.fare : r.fare; };
     /* the breakdown updates live as they change seats or drop-off.

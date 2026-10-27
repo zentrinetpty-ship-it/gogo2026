@@ -218,7 +218,7 @@ const GOGOAddressField = (() => {
       list.innerHTML = rows.map((r, i) => `
         <button type="button" class="g-addr-row${i === active ? " on" : ""}" role="option"
                 aria-selected="${i === active}" data-i="${i}">
-          <span class="g-addr-ic" aria-hidden>' + GEMO("pin") + '</span>
+          <span class="g-addr-ic" aria-hidden>${GEMO("pin")}</span>
           <span class="g-addr-txt">
             <b>${fullLine(r)}</b>
             <span>${subLine(r)}</span>
@@ -234,8 +234,31 @@ const GOGOAddressField = (() => {
        and city. They are dropped straight into the editable fields, so they can
        correct any part by tapping it — no separate confirmation step, and
        nothing they already typed is lost. */
+    /* Mapbox rows arrive flat: { address: "131 Oxford Street", town: "..." }.
+       choose() below was written for the Nominatim nested shape, so a Mapbox row
+       left p.street undefined and the address line collapsed back to what the
+       rider typed. This rebuilds the nested form from whichever shape we got. */
+    const normaliseRow = (r) => {
+      if (!r) return r;
+      if (r.parts && typeof r.parts === "object") return r;
+      const line = String(r.address || r.label || "").trim();
+      const m = line.match(/^(\d+[A-Za-z]?(?:\s*[-/]\s*\d+[A-Za-z]?)?)\s+(.*)$/);
+      const house = m ? m[1] : "";
+      const street = m ? m[2] : line;
+      return {
+        ...r,
+        parts: {
+          street,
+          house,
+          suburb: "",
+          town: r.town || "",
+          postcode: "",
+        },
+      };
+    };
+
     const choose = (i) => {
-      const r = rows[i];
+      const r = normaliseRow(rows[i]);
       if (!r) return;
       const p = r.parts || {};
       const typed = splitTyped(input.value);

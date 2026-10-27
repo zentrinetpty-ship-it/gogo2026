@@ -26,6 +26,8 @@ const GOGOAddress = (() => {
      and a request the browser can always make. Falls back to the direct host
      only if the proxy is not deployed yet. */
   const PROXY = "/api/address";
+  /* Mapbox-backed suggestions: the only source with SA house numbers */
+  const SUGGEST = "/api/address/suggest";
   const DIRECT = "https://nominatim.openstreetmap.org/search";
   const MIN_CHARS = 4;          /* below this a lookup is just noise */
   const DEBOUNCE_MS = 450;      /* keeps us under Nominatim's 1 req/sec */
@@ -122,25 +124,52 @@ const GOGOAddress = (() => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 14000);
       try {
-        /* The proxy takes one query and applies the South Africa bias itself. */
-        const res = await fetch(PROXY + "?q=" + encodeURIComponent(full), {
+        /* Mapbox via the proxy. This is the only source that returns South
+           African house numbers, which is the whole point of the field: a
+           rider must be able to give "131 Oxford Street", not just the street.
+           The proxy keeps the token server-side and resolves the result to a
+           GOGO town at the same time. */
+        const res = await fetch(SUGGEST + "?q=" + encodeURIComponent(full), {
           signal: ctrl.signal,
           headers: { Accept: "application/json" },
         });
         if (res.status === 429) { throttled = true; return null; }
         if (!res.ok) {
-          /* the proxy is not deployed on this host, or is down: fall back to
-             the map service directly so the field still works */
+          /* proxy down: fall back to the map service directly so the field
+             still works, just without house numbers */
           return await askDirect();
         }
         const json = await res.json();
-        return (json || []).map(r => ({
-          display: shorten(r.display_name),
-          raw: r.display_name,
-          parts: label(r),
-          lat: Number(r.lat),
-          lon: Number(r.lon),
-        }));
+
+        /* Two shapes arrive here. Mapbox payloads come wrapped as
+           { suggestions: [...] }; the Nominatim fallback comes as a bare array
+           of rows with display_name. Sniff rather than branch on the URL, so a
+           degraded proxy still fills the field. */
+        const rows = Array.isArray(json) ? json : (json && json.suggestions) || [];
+
+        return rows.map((r) => {
+          if (r && r.label !== undefined) {
+            /* Mapbox shape: label is the full readable address, address is the
+               number+street pair, town is already resolved to a GOGO town */
+            return {
+              display: shorten(r.label),
+              raw: r.label,
+              parts: r.address || shorten(r.label),
+              lat: Number(r.lat),
+              lon: Number(r.lng),
+              town: r.town || null,
+              served: r.served !== false,
+            };
+          }
+          /* Nominatim fallback shape */
+          return {
+            display: shorten(r.display_name),
+            raw: r.display_name,
+            parts: label(r),
+            lat: Number(r.lat),
+            lon: Number(r.lon),
+          };
+        });
       } finally {
         clearTimeout(timer);
       }
