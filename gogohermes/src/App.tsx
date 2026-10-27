@@ -230,14 +230,31 @@ export default function App() {
             aria-hidden={formOpen}
           >
             <div className="gh-rise"><HeroCopy /></div>
-            <div className="gh-rise gh-rise-1"><ChooseYourRide pickup={pickup} mode={mode} onMode={setMode} /></div>
           </div>
         </div>
       </div>
 
-      {/* the booking card, at the bottom of the column */}
-      <div className="relative z-20 mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
-        <div className="gh-rise gh-rise-2"><BookingCard mode={mode} onMode={setMode} onOpenChange={setFormOpen} onCityResolved={rememberCity} /></div>
+      {/* ── hero: blank map only ─────────────────────────────────────────────
+             Nothing sits in the hero band. The map is the whole hero, so the
+             street field reads as a stage rather than a widget on top of a
+             lockup. The band is given real height here: without an element
+             occupying it, the card would slide up under the header and there
+             would be no hero at all. */}
+      <div className="gh-hero-band relative z-10" aria-hidden="true" />
+
+      {/* ── content column ───────────────────────────────────────────────────
+             Order is deliberate and is what the layout was asked for:
+                 brand promise -> mode switch -> See all hikes -> THE CARD
+             The pickup field sits below "See all hikes", not above it, so the
+             first thing under the blank hero is what GOGO is, then the choice
+             of ride or parcel, then the hike list entry point, then the form
+             itself. */}
+      <div className="mx-auto w-full max-w-[520px] px-5 md:max-w-[560px] md:px-6">
+        <div className="gh-rise gh-rise-1"><ChooseYourRide pickup={pickup} mode={mode} onMode={setMode} /></div>
+
+        <div className="gh-rise gh-rise-2 relative z-20">
+          <BookingCard mode={mode} onMode={setMode} onOpenChange={setFormOpen} onCityResolved={rememberCity} />
+        </div>
       </div>
 
       {/* the rest of the page scrolls below the fold */}
@@ -309,17 +326,23 @@ function Header() {
   );
 }
 
-/* The logo is the hero now. Wordmark, then the promise as its tagline, then one
-   supporting line. Nothing else competes with it at the top of the page. */
+/* The hero is deliberately empty.
+
+   The map is the hero now: a blank band lets the street field read as the whole
+   stage instead of competing with a lockup sitting on top of it. The mark still
+   lives in the header and the promise moved down to the section heading, so
+   nothing was lost — it is just not repeated twice on one screen. */
 function HeroCopy() {
+  return null;
+}
+
+/* Kept for reference only, not mounted. If the lockup is ever wanted back, swap
+   HeroCopy's body for this one's. */
+function HeroCopyLegacy() {
   return (
     <div className="pb-5">
-      {/* The mark is back in the hero, centred — the same lockup the launch
-          screen shows, so the load screen and the page read as one thing. */}
       <div className="flex flex-col items-center text-center">
         <span className="relative flex h-[84px] w-[84px] items-center justify-center rounded-full border-[3px] border-lime bg-[#1A1A1A] shadow-[inset_0_0_0_4px_#FFFFFF]">
-          {/* 58px, not 66: the inset white ring takes 4px off the inside edge,
-              and at 66 the G's bowl touched it. */}
           <span className="gh-g-mark select-none text-[58px] leading-none">G</span>
         </span>
 
@@ -410,14 +433,27 @@ function ChooseYourRide({
 
   return (
     <section className="pb-5">
-      <SectionHead title="What are you sending?" />
+      {/* This is the brand promise, not a section label. SectionHead renders at
+          15.5px — correct for "Services" or "Leaving soon", but it made the
+          promise read as another list header. It gets its own treatment: bigger,
+          tighter tracking, the name in ink and the promise in grey beneath, so
+          it reads as a statement at the top of the content. */}
+      <div className="mt-1">
+        <h2 className="text-[26px] font-extrabold leading-[1.06] tracking-[-.025em] text-ink">
+          GOGO
+          <span className="mx-1.5 font-normal text-neutral-300">-</span>
+        </h2>
+        <p className="mt-1 text-[15px] font-semibold leading-none text-neutral-500">
+          Smart Hike, Zero Queue
+        </p>
+      </div>
 
       {/* Two big choices, acting as the segmented control for the booking card
           below. Previously this pair was Ride / Schedule, and the card carried
           its own Passenger / Parcel switch — two different ways to answer one
           question, one of them buried inside the form. The mode now lives here,
           where it is the first thing a rider sees, and the card stays a card. */}
-      <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-neutral-100 p-1.5" role="tablist" aria-label="What are you sending">
+      <div className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-neutral-100 p-1.5" role="tablist" aria-label="Choose what to send">
         <button
           type="button"
           role="tab"

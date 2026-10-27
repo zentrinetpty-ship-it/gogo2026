@@ -1325,3 +1325,26 @@ input, textarea, select {
   color: rgb(var(--gogo-accent, 163 230 53));
   transform: translateY(1%);
 }
+
+
+/* ══ hero band ══════════════════════════════════════════════════════════════
+   An empty element that reserves the hero's height. Without it the content
+   column starts immediately under the header and the map has no visible band
+   above it — the "blank hero" would just be a 0px strip.
+
+   Height is tuned against the map field (which fades out around 62vh): the band
+   ends roughly where the road pattern has faded to white, so the first card
+   lands on clean ground rather than half-on a street. */
+.gh-hero-band {
+  height: 34vh;
+  min-height: 190px;
+  max-height: 300px;
+}
+
+@media (min-width: 768px) {
+  .gh-hero-band {
+    height: 30vh;
+    min-height: 200px;
+    max-height: 320px;
+  }
+}
