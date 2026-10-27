@@ -174,7 +174,7 @@ function paintChrome(active) {
     ["/gogo/",           "Home",      "home"],
     ["/gogo/dashboard",  "Dashboard", "grid"],
     ["/gogo/messages",   "Messages",  "chat"],
-    ["/gogo/more",       "More",      "dots"],
+    ["/gogo/why.html",   "More",      "dots"],
   ];
 
   const IC = {

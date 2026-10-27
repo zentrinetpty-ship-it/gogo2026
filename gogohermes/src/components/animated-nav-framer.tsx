@@ -22,7 +22,12 @@ const navItems = [
   { name: "Home", href: "/gogo/", Icon: Home },
   { name: "Dashboard", href: "/gogo/dashboard", Icon: LayoutGrid },
   { name: "Messages", href: "/gogo/messages", Icon: ReceiptText },
-  { name: "More", href: "/gogo/more", Icon: User },
+  /* More points at How it works, not the /gogo/more nav shell. That shell was a
+     menu of links with no content of its own; the explainer is the page people
+     actually want when they tap "more" on a service they do not understand yet.
+     It is also where the landing's own "How it works" link goes, so the tab and
+     the link now agree. */
+  { name: "More", href: "/gogo/why.html", Icon: User },
 ];
 
 export function AnimatedNavFramer({ pathname }: { pathname?: string }) {
