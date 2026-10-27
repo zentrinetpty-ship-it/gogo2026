@@ -18,6 +18,7 @@ import { BookingCard, type Mode } from "@/components/booking-card";
 import { GoGoLogo } from "@/components/logo";
 import { LaunchScreen } from "@/components/launch-screen";
 import { PullToRefresh } from "@/components/pull-to-refresh";
+import { GogoHeroMap } from "@/components/gogo-hero-map";
 import { cn } from "@/lib/utils";
 import { getActiveCity, getHomeCity, setBookingCity } from "@/lib/city";
 import { displayCity } from "@/lib/towns";
@@ -182,11 +183,19 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-white">
-      {/* first paint: the calm launch screen, centred lockup on white. It sits
-          over the page rather than in place of it, so the hero is already laid
-          out underneath and nothing jumps when it leaves. */}
       <LaunchScreen />
       <PullToRefresh />
+
+      {/* ── map backdrop ────────────────────────────────────────────────
+             A street map behind the whole hero, in the reference's treatment:
+             white roads on pale ground, flat mint parks, no depth cues. It sits
+             at z-0 and is pointer-events:none, so it is purely atmosphere — the
+             booking card and every tap still own their space. The fade at the
+             bottom of .gh-mapfield::after is what keeps the card readable
+             without putting a solid panel over the streets. */}
+      <div className="gh-mapfield" aria-hidden="true">
+        <GogoHeroMap />
+      </div>
 
       <AnimatedNavFramer />
       <Header />

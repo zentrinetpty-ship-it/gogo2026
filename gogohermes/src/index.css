@@ -1095,3 +1095,196 @@ input, textarea, select {
   .gh-hero-card .gh-lab,
   .gh-hero-card .gh-sub-lab { margin-bottom: 2px !important; font-size: 10px !important; }
 }
+
+
+/* ══ hero map ══════════════════════════════════════════════════ */
+/* =========================================================================
+   GOGO — HERO MAP STYLES
+
+   The reference map's character comes from restraint, not detail:
+     · ZERO shadows or depth on the map itself
+     · roads are WHITE on a pale ground — the contrast is low, about one shade
+     · blocks are flat, with no parcel or building subdivision
+     · parks are barely-there mint
+   Getting any of those wrong and it stops looking like the reference and starts
+   looking like a transit diagram.
+
+   Colours are CSS variables so /lv's orange theme carries through, and the map
+   never hardcodes a brand colour.
+   ========================================================================= */
+
+.ghm {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* the map is a backdrop: it must never intercept a tap meant for the card */
+  pointer-events: none;
+}
+
+/* ── the ground ──────────────────────────────────────────────────────────────
+   Not white — a hair warmer and darker, so the white roads read as roads.
+   Pure white ground makes white roads disappear. */
+.ghm-ground {
+  fill: var(--gogo-map-ground, #EFEFEB);
+}
+
+.ghm-park {
+  fill: var(--gogo-map-park, #D8E9DD);
+}
+
+/* ── roads ───────────────────────────────────────────────────────────────────
+   Flat white strokes. No casing on the minor ones, which is what keeps the
+   texture calm; only the majors get a hairline outline, and only at very low
+   contrast. */
+
+
+/* ── cars ────────────────────────────────────────────────────────────────────
+   The only accent on the map. A slow drift so the map feels alive without
+   drawing the eye away from the booking card; long pauses between moves keep it
+   from reading as a loading spinner. */
+.ghm-car circle {
+  fill: rgb(var(--gogo-accent, 163 230 53));
+  opacity: 0.92;
+}
+
+.ghm-car-glyph {
+  stroke: #1A1A1A;
+  stroke-width: 0.42;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.ghm-car {
+  animation: ghmDrift 9s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes ghmDrift {
+  0%, 62% { transform: translate(var(--tx, 0), var(--ty, 0)); }
+  100%     { transform: translate(calc(var(--tx, 0px) + 2.2px), calc(var(--ty, 0px) - 0.6px)); }
+}
+
+/* ── you are here ────────────────────────────────────────────────────────────
+   Solid blue dot inside a large translucent halo, matching the reference. The
+   halo breathes very slowly — 4s, barely perceptible — which is what makes the
+   position feel live rather than a static sticker. */
+.ghm-halo {
+  fill: #5B6BF0;
+  opacity: 0.14;
+  transform-origin: center;
+  animation: ghmBreathe 4s ease-in-out infinite;
+}
+
+.ghm-dot-ring {
+  fill: #FFFFFF;
+}
+
+.ghm-dot {
+  fill: #2F6BFF;
+}
+
+@keyframes ghmBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.16; }
+  50%      { transform: scale(1.18); opacity: 0.09; }
+}
+
+/* ── the frame the map sits in ───────────────────────────────────────────────
+   On the landing page the map is the hero backdrop: full-bleed behind the
+   content, fading out where the booking card overlaps it so the card stays
+   readable without needing a solid panel over the whole thing. */
+.gh-mapfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  /* pure backdrop: never intercept a tap meant for the card above it */
+  pointer-events: none;
+}
+
+.gh-mapfield::after {
+  /* The first attempt faded from 38% to 88% of the screen, which erased the
+     whole lower half of the map and made it read as a faint stain rather than
+     a map. The reference keeps its map visible right down to the sheet, so this
+     fade is short and low: it only softens the last quarter, where the content
+     column sits, and never goes fully opaque. */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 55%,
+    rgba(255, 255, 255, 0.42) 78%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghm-car, .ghm-halo { animation: none; }
+}
+
+
+/* ── street labels ───────────────────────────────────────────────────────────
+   Small, grey, and sparse. The reference labels only a few streets, and that
+   restraint is most of why its map reads as calm. These sit at very low opacity
+   so they add texture without becoming something the eye tries to read. */
+.ghm-label {
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.55px;
+  font-weight: 500;
+  fill: #8A8A83;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* ── roads: three tiers, because two read as a diagram ───────────────────────
+   v1 had major and minor only, all evenly spaced, and it looked like graph
+   paper. A real network needs a visible hierarchy: alleys you can barely see,
+   streets you can, arterials that dominate. The gaps below are what the eye
+   actually reads as "city". */
+.ghm-side line {
+  stroke: #FFFFFF;
+  stroke-width: 0.55;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.ghm-minor line {
+  stroke: #FFFFFF;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.ghm-major line {
+  stroke: #FFFFFF;
+  stroke-width: 3.6;
+  stroke-linecap: round;
+}
+
+/* building footprints: just enough to suggest blocks, never enough to read as
+   individual buildings */
+.ghm-buildings rect {
+  fill: #DEDED8;
+  opacity: 1;
+}
+
+/* ── points of interest ─────────────────────────────────────────────────────
+   The design review was right that the map had no navigational anchors: a grid
+   of roads with no landmarks reads as a wireframe. Two or three small POI discs
+   give the eye somewhere to land and make the map feel like a specific place
+   rather than a pattern. Kept to three; more turns back into noise. */
+.ghm-poi circle {
+  fill: #FFFFFF;
+  stroke: #C9C9C2;
+  stroke-width: 0.3;
+}
+.ghm-poi path {
+  stroke: #7A7A73;
+  stroke-width: 0.34;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
