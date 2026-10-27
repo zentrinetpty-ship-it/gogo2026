@@ -479,18 +479,25 @@ const server = http.createServer(async (req, res) => {
       db: {
         /* One entry per LEG, not per ride. A ride's legs map is stop -> fare,
            so flattening it is what lets the agent answer "how much to X". */
+        /* One row per LEG, carrying everything the ride finder needs to reason
+           about direction: the ride it belongs to, and that leg's position in
+           the ride's own stop order. Without legOrder a matcher cannot tell
+           whether a town is ahead of the rider or behind them. */
         rides: () => {
           const out = [];
           Object.keys(RIDES).forEach(id => {
             const r = RIDES[id];
-            Object.keys(r.legs || {}).forEach(stop => {
+            const stops = Object.keys(r.legs || {});
+            stops.forEach((stop, i) => {
               out.push({
-                id: id + ":" + stop,
+                rideId: id,
+                legOrder: i,
                 fromCity: r.from,
                 toCity: stop,
                 depart: r.depart,
                 seatsLeft: r.seats,
                 price: r.legs[stop],
+                vehicle: r.vehicle,
               });
             });
           });

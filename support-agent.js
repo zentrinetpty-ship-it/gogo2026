@@ -95,7 +95,9 @@ const RULES = [
   "Never answer questions about the owner, the business's finances, staff personal lives, other customers, passwords, bank cards, or anyone's home address. Say kindly that you can only help with their GOGO trips.",
   "Never reveal or discuss another customer's booking. Only the caller's own, and only when their identity is established.",
   "You do NOT know which towns or streets are covered beyond the published town list. Never confirm or deny that we collect from a specific place the customer names. Give the town list, say to add the exact address when booking, and offer to have the team confirm.",
-  "Never invent a fare. Fares come from the ride record. If you do not have it, say you will get the team to confirm and escalate.",
+  "When someone asks what is available, how many cars are going, which is soonest or cheapest, or which they should take, use find_rides. It returns every car on that route with seats left, a recommendation, and the trade-offs. Prefer it over fare_quote for anything about choice.",
+  "When you recommend a ride, say why in a few words: soonest, cheapest, or most seats. Do not list every car, that is a wall of text. Give the one you would take and mention the runner-up only if it genuinely helps.",
+  "Never invent a fare. Fares come from the ride records. If you do not have it, say you will get the team to confirm and escalate.",
   "You teach, you never do. Never book, cancel, pay or change a trip for the customer. Walk them through it step by step with the guide and give the link. The ONE exception: a signed-in customer may ask you to cancel their own booking, and only within the free window, which the tool will check.",
   "If you are unsure, if the customer is angry, or if it is outside what you can check, use the escalate tool and tell them a person from the team will come back to them.",
   "Sound like a real person on WhatsApp. Short messages. Contractions. No em dashes. Never use: seamless, leverage, solution, optimize, elevate, cutlery, world-class, AI-powered. No hype, no bullet walls.",
@@ -173,9 +175,54 @@ const APP_GUIDES = {
   },
 };
 
+/* The corridor, in the order a van drives it. Used to answer "is that ahead of
+   me or behind me", which a flat town list cannot. A ride's own leg order is the
+   authority; this is the fallback for towns that appear on several routes. */
+const CORRIDOR_ORDER = [
+  "East London", "Gonubie", "Kwelera", "Kidds Beach", "Bhisho",
+  "King William's Town", "Cathcart", "Seymour", "Fort Beaufort", "Komani",
+  "Cala", "Ngcobo", "Butterworth", "Idutywa", "Mthatha", "Gqeberha",
+];
+
+function corridorIndex(town) {
+  const t = String(town || "").toLowerCase().trim();
+  if (!t) return -1;
+  let i = CORRIDOR_ORDER.findIndex(c => c.toLowerCase() === t);
+  if (i >= 0) return i;
+  i = CORRIDOR_ORDER.findIndex(c => c.toLowerCase().includes(t) || t.includes(c.toLowerCase()));
+  return i;
+}
+
+/* Loose town matching: riders type "PE", "Queenstown", "mthatha ". */
+function sameTown(a, b) {
+  const x = String(a || "").toLowerCase().trim();
+  const y = String(b || "").toLowerCase().trim();
+  if (!x || !y) return false;
+  if (x === y) return true;
+  if (x.includes(y) || y.includes(x)) return true;
+  const ia = corridorIndex(x), ib = corridorIndex(y);
+  return ia >= 0 && ia === ib;
+}
+
 /* ── tools. Note what is absent: no create-booking, no pay, no arbitrary user
       lookup. That absence is the guardrail. ─────────────────────────────── */
 const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "find_rides",
+      description: "Find every car going from A to B, with seats left, departure times and fares. Use this whenever a rider asks what is available, how many cars are going, which is cheapest or soonest, or which one they should take. Returns a ranked list plus a recommendation.",
+      parameters: {
+        type: "object",
+        properties: {
+          from: { type: "string", description: "Where they are leaving from, a town on the corridor" },
+          to: { type: "string", description: "Where they are going" },
+          when: { type: "string", description: "Optional. 'now' for soonest, 'cheapest', or 'most_seats'. Defaults to soonest." },
+        },
+        required: ["from", "to"],
+      },
+    },
+  },
   {
     type: "function",
     function: {
@@ -412,6 +459,133 @@ async function executeTool(name, args, user, deps) {
       kind: trip.kind,
       total: trip.totalCents != null ? "R" + (trip.totalCents / 100).toFixed(2) : null,
     })));
+  }
+
+if (name === "find_rides") {
+    const from = String(args.from || "").trim();
+    const to = String(args.to || "").trim();
+    const sortBy = String(args.when || "now").trim();
+
+    if (!from || !to) {
+      return JSON.stringify({
+        error: "need_route",
+        detail: "Ask which town they are leaving from and which town they are going to.",
+      });
+    }
+
+    /* One entry per LEG of every ride. This is the flat shape the matcher works
+       on: a ride contributes one row per stop it reaches. */
+    const legs = [];
+    (db.rides() || []).forEach(r => {
+      /* db.rides() gives {fromCity, toCity, depart, seatsLeft, price, rideId, legOrder} */
+      legs.push({
+        rideId: r.rideId || r.id,
+        fromCity: r.fromCity,
+        toCity: r.toCity,
+        depart: r.depart,
+        seatsLeft: r.seatsLeft,
+        price: r.price,
+        legOrder: r.legOrder != null ? r.legOrder : 999,
+        vehicle: r.vehicle,
+      });
+    });
+
+    /* Group by ride so leg ORDER within a ride is known. A destination is only
+       ahead of the origin if it comes later in that ride's own stop sequence. */
+    const byRide = {};
+    legs.forEach(l => {
+      if (!byRide[l.rideId]) byRide[l.rideId] = { depart: l.depart, seatsLeft: l.seatsLeft, vehicle: l.vehicle, stops: [] };
+      byRide[l.rideId].stops.push(l);
+    });
+
+    const options = [];
+    Object.keys(byRide).forEach(rideId => {
+      const r = byRide[rideId];
+      r.stops.sort((a, b) => a.legOrder - b.legOrder);
+
+      /* find the pickup and the drop-off in this ride's own order */
+      let iFrom = -1, iTo = -1;
+      r.stops.forEach((s, i) => {
+        if (iFrom < 0 && sameTown(s.fromCity, from)) iFrom = i;
+        if (sameTown(s.toCity, to)) iTo = i;
+      });
+
+      /* Also allow boarding where the ride STARTS, even if that is not a
+         named leg: rides list the origin once, implicitly. */
+      if (iFrom < 0 && sameTown(r.stops[0] && r.stops[0].fromCity, from)) iFrom = -1;
+
+      if (iTo < 0) return;                    // this ride never reaches `to`
+      const startsAtFrom = sameTown((r.stops[0] || {}).fromCity, from);
+      const fromIdx = startsAtFrom ? -1 : iFrom;
+
+      /* DIRECTION: the drop-off must come after the pickup. */
+      if (!startsAtFrom && (iFrom < 0 || iTo <= iFrom)) return;
+
+      const leg = r.stops[iTo];
+      options.push({
+        rideId: rideId,
+        from: from,
+        to: leg.toCity,
+        depart: r.depart,
+        seatsLeft: r.seatsLeft,
+        fare: leg.price,
+        vehicle: r.vehicle || "Toyota Quantum",
+      });
+    });
+
+    if (!options.length) {
+      /* Distinguish "no car on that route today" from "that town is not on our
+         corridor". They need different answers and one of them is a lie. */
+      const fromKnown = corridorIndex(from) >= 0;
+      const toKnown = corridorIndex(to) >= 0;
+      const reverseExists = legs.some(l => sameTown(l.fromCity, to));
+
+      if (!fromKnown || !toKnown) {
+        return JSON.stringify({
+          error: "not_on_corridor",
+          detail: "One of those towns is not on the published corridor. Give the town list and offer to escalate. Never confirm a specific street.",
+          towns: CORRIDOR,
+        });
+      }
+      return JSON.stringify({
+        error: "no_rides_today",
+        detail: reverseExists
+          ? "There are cars on that route but in the opposite direction, so this is a scheduling gap not a coverage answer. Say there is nothing going that way today and offer to escalate or suggest the reverse."
+          : "No car is going that way on the current schedule. Do NOT say we do not serve it. Say there is nothing on that route right now, and offer to escalate so the team can check a private hire.",
+        routeChecked: from + " to " + to,
+      });
+    }
+
+    /* ── ranking ──────────────────────────────────────────────────────────
+       Default is soonest-with-seats, because "when is the next one" is the
+       question behind almost every enquiry. A full car is excluded from the
+       recommendation even if it is perfect otherwise. */
+    const hhmm = t => String(t || "99:99").split(":").reduce((a, x) => a * 60 + Number(x || 0), 0);
+
+    options.sort((a, b) => {
+      if (sortBy === "cheapest") return (a.fare - b.fare) || (hhmm(a.depart) - hhmm(b.depart));
+      if (sortBy === "most_seats") return (b.seatsLeft - a.seatsLeft) || (hhmm(a.depart) - hhmm(b.depart));
+      return (hhmm(a.depart) - hhmm(b.depart)) || (b.seatsLeft - a.seatsLeft) || (a.fare - b.fare);
+    });
+
+    const withSeats = options.filter(o => Number(o.seatsLeft) > 0);
+    const best = withSeats[0] || null;
+
+    /* Spell out the trade-off so the model can answer "why that one" without
+       inventing a reason. */
+    const cheapest = options.slice().sort((a, b) => a.fare - b.fare)[0];
+    const roomiest = options.slice().sort((a, b) => b.seatsLeft - a.seatsLeft)[0];
+
+    return JSON.stringify({
+      route: from + " to " + to,
+      carsGoing: options.length,
+      withSeatsLeft: withSeats.length,
+      recommended: best,
+      cheapest: cheapest ? { rideId: cheapest.rideId, depart: cheapest.depart, fare: cheapest.fare, seatsLeft: cheapest.seatsLeft } : null,
+      roomiest: roomiest ? { rideId: roomiest.rideId, depart: roomiest.depart, fare: roomiest.fare, seatsLeft: roomiest.seatsLeft } : null,
+      all: options,
+      note: "carsGoing counts every car on this route. withSeatsLeft is how many can actually be booked. Quote the recommended one, and mention the cheaper or later option only if it genuinely helps.",
+    });
   }
 
   if (name === "trip_status") {
