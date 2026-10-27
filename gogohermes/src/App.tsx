@@ -540,13 +540,15 @@ function ChooseYourRide({
         </button>
       </div>
 
-      {/* the link through to the full list, on its own line so the two big
-          buttons stay the primary action */}
+      {/* Through to the explainer. Renamed from "See all hikes":
+          the full list is one tap away in the Ride tab and the Quick links row,
+          so this slot is better spent answering the question a first-time guest
+          actually has — what happens after I tap Search. */}
       <a
-        href={`/gogo/rides.html${qs}`}
-        className="mt-3 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-neutral-500 hover:text-ink"
+        href="/gogo/why.html"
+        className="mt-3 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold text-neutral-500 transition-colors hover:text-ink"
       >
-        See all hikes
+        How it works
         <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.4} />
       </a>
     </section>

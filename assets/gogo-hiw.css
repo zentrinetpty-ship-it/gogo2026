@@ -1,0 +1,569 @@
+/* ══ HOW IT WORKS ═══════════════════════════════════════════════════════════
+   Redesign of why.html.
+
+   The old page was a stack of identical .g-card blocks, every one with the same
+   .g-h3 and the same padding. Nothing established an entry point, and section
+   headers floated between unrelated cards — the "scattered" look. The fix is
+   hierarchy, not decoration:
+
+     h1   40px tight, one line of promise
+     h2   26px, always paired with a small uppercase label above it
+     h3   15px, only inside a step or a check
+     body 13.5px, 1.55
+
+   Only the four steps carry numbers. Everything else is deliberately quieter, so
+   the page has one spine instead of seven competing ones.
+
+   Everything scales with clamp() against the viewport, so there are no
+   breakpoint jumps between phone, tablet and desktop — the layout just breathes.
+   ========================================================================= */
+
+.hiw {
+  --hiw-ink: #1A1A1A;
+  --hiw-mute: #737373;
+  --hiw-faint: #A3A3A3;
+  --hiw-line: #EAEAE7;
+  --hiw-wash: #FAFAF8;
+  --hiw-lime: rgb(var(--gogo-accent, 163 230 53));
+  --hiw-lime-deep: rgb(var(--gogo-accent-deep, 141 182 0));
+  --hiw-gutter: clamp(18px, 5vw, 40px);
+  --hiw-max: 760px;
+
+  max-width: var(--hiw-max);
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 36px) var(--hiw-gutter) calc(96px + env(safe-area-inset-bottom, 0px));
+  color: var(--hiw-ink);
+}
+
+/* ── shared type ─────────────────────────────────────────────────────────── */
+.hiw-label {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--hiw-faint);
+}
+
+.hiw-h1 {
+  font-size: clamp(27px, 7.2vw, 40px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.028em;
+  margin: 10px 0 0;
+}
+
+.hiw-h2 {
+  font-size: clamp(19px, 4.6vw, 26px);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -.02em;
+  margin: 7px 0 0;
+}
+
+.hiw-lede {
+  font-size: clamp(13px, 3.5vw, 14.5px);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--hiw-mute);
+  margin: 9px 0 0;
+  max-width: 46ch;
+}
+
+.hiw-mt { margin-top: clamp(16px, 4vw, 22px); }
+
+/* ── 01 hero ─────────────────────────────────────────────────────────────── */
+.hiw-hero { padding: clamp(6px, 2vw, 14px) 0 clamp(22px, 5vw, 34px); }
+
+.hiw-hero-lede {
+  font-size: clamp(13.5px, 3.7vw, 15px);
+  line-height: 1.62;
+  color: var(--hiw-mute);
+  margin: 13px 0 0;
+  max-width: 44ch;
+}
+
+.hiw-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: clamp(18px, 4.5vw, 24px);
+}
+
+/* the closing panel centres its buttons */
+.hiw-close .hiw-hero-actions { justify-content: center; }
+
+.hiw-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.hiw-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+
+.hiw-btn-ink {
+  background: var(--hiw-ink);
+  color: var(--hiw-lime);
+  box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5);
+}
+
+.hiw-btn-lime {
+  background: var(--hiw-lime);
+  color: var(--hiw-ink);
+  box-shadow: 0 6px 18px -8px rgba(141, 182, 0, .7);
+}
+
+.hiw-btn-ghost {
+  background: transparent;
+  color: var(--hiw-ink);
+  border: 1px solid var(--hiw-line);
+}
+
+.hiw-btn:active { transform: scale(.97); }
+
+@media (hover: hover) {
+  .hiw-btn-ink:hover { transform: translateY(-1px); }
+  .hiw-btn-ghost:hover { background: var(--hiw-wash); }
+  .hiw-btn-lime:hover { transform: translateY(-1px); }
+}
+
+/* the three figures under the hero, on a hairline rail */
+.hiw-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: clamp(22px, 5vw, 30px) 0 0;
+  padding: 0;
+  border-top: 1px solid var(--hiw-line);
+  padding-top: clamp(14px, 3.5vw, 18px);
+}
+
+.hiw-stats dt {
+  font-size: clamp(20px, 5vw, 25px);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--hiw-ink);
+}
+
+.hiw-stats dd {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--hiw-mute);
+}
+
+/* ── section rhythm ──────────────────────────────────────────────────────── */
+.hiw-section {
+  padding: clamp(28px, 7vw, 44px) 0 clamp(6px, 2vw, 12px);
+  border-top: 1px solid var(--hiw-line);
+  margin-top: clamp(26px, 6vw, 40px);
+}
+
+.hiw-head { margin-bottom: clamp(16px, 4vw, 22px); }
+
+/* ── 02 the four steps: the spine ─────────────────────────────────────────
+   A vertical rail runs through the numbers so the four read as one sequence
+   rather than four separate cards. The rail stops at the last step. */
+.hiw-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.hiw-step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  position: relative;
+  padding-bottom: clamp(18px, 4.5vw, 26px);
+}
+
+.hiw-step:last-child { padding-bottom: 0; }
+
+/* the connecting rail, drawn between numbers only */
+.hiw-step:not(:last-child) .hiw-step-rail::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 34px;
+  bottom: calc(-1 * clamp(18px, 4.5vw, 26px));
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, var(--hiw-line), rgba(234, 234, 231, .35));
+}
+
+.hiw-step-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.hiw-step-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--hiw-ink);
+  color: var(--hiw-lime);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+
+.hiw-step-body {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.hiw-step-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.hiw-step-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--hiw-wash);
+  border: 1px solid var(--hiw-line);
+  color: var(--hiw-ink);
+  flex: 0 0 auto;
+}
+
+.hiw-step-ic svg { width: 15px; height: 15px; }
+
+.hiw-step-t {
+  font-size: clamp(14.5px, 3.9vw, 16px);
+  font-weight: 700;
+  letter-spacing: -.012em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.hiw-step-p {
+  font-size: 13px;
+  line-height: 1.58;
+  color: var(--hiw-mute);
+  margin: 7px 0 0;
+  max-width: 52ch;
+}
+
+.hiw-step-tag {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(163, 230, 53, .16);
+  color: #5B7A16;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+/* ── 03 side by side ─────────────────────────────────────────────────────
+   Each ROW is one comparison, so the eye reads across instead of scrolling a
+   list and trying to remember what it was paired with. */
+.hiw-vs {
+  border: 1px solid var(--hiw-line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #FFFFFF;
+}
+
+.hiw-vs-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--hiw-wash);
+  border-bottom: 1px solid var(--hiw-line);
+}
+
+.hiw-vs-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px 13px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hiw-vs-head .hiw-vs-cell {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--hiw-mute);
+  align-items: center;
+}
+
+.hiw-vs-head svg { width: 14px; height: 14px; }
+
+.hiw-vs-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.hiw-vs-row + .hiw-vs-row { border-top: 1px solid var(--hiw-line); }
+
+.hiw-vs-row .bad { color: var(--hiw-faint); }
+.hiw-vs-row .good { color: var(--hiw-ink); font-weight: 500; }
+
+/* the vertical divider between the two columns */
+.hiw-vs-row .good { border-left: 1px solid var(--hiw-line); }
+
+.hiw-vs-x, .hiw-vs-tick {
+  flex: 0 0 auto;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.hiw-vs-x { color: #C4C4BE; }
+.hiw-vs-tick { color: var(--hiw-lime-deep); }
+
+/* ── 04 what we check ──────────────────────────────────────────────────── */
+.hiw-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--hiw-line);
+  border: 1px solid var(--hiw-line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hiw-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 13px 14px;
+  background: #FFFFFF;
+}
+
+.hiw-check-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: var(--hiw-wash);
+  border: 1px solid var(--hiw-line);
+  flex: 0 0 auto;
+  color: var(--hiw-ink);
+}
+
+.hiw-check-ic svg { width: 14px; height: 14px; }
+
+.hiw-check b,
+.hiw-why b {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -.008em;
+}
+
+.hiw-check span span,
+.hiw-why span span { display: block; }
+
+.hiw-check div span,
+.hiw-why div span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--hiw-mute);
+  margin-top: 3px;
+}
+
+/* two columns once there is room, single column on a phone */
+@media (min-width: 620px) {
+  .hiw-checks { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── 05 why it matters ───────────────────────────────────────────────────── */
+.hiw-whys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 620px) {
+  .hiw-whys { grid-template-columns: 1fr 1fr; gap: 14px; }
+}
+
+.hiw-why {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid var(--hiw-line);
+  border-radius: 14px;
+  background: #FFFFFF;
+  transition: border-color .18s ease, transform .18s ease;
+}
+
+@media (hover: hover) {
+  .hiw-why:hover { border-color: #D8D8D2; transform: translateY(-1px); }
+}
+
+.hiw-why-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(163, 230, 53, .16);
+  color: #4F6B12;
+  flex: 0 0 auto;
+}
+
+.hiw-why-ic svg { width: 14px; height: 14px; }
+
+/* ── 06 answers ──────────────────────────────────────────────────────────── */
+.hiw-faq {
+  border-top: 1px solid var(--hiw-line);
+}
+
+.hiw-faq-item { border-bottom: 1px solid var(--hiw-line); }
+
+.hiw-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 2px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -.008em;
+  color: var(--hiw-ink);
+}
+
+.hiw-faq-item summary::-webkit-details-marker { display: none; }
+
+/* a plus that becomes a minus, drawn in CSS so it can transition */
+.hiw-faq-plus {
+  position: relative;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.hiw-faq-plus::before,
+.hiw-faq-plus::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: var(--hiw-mute);
+  transition: transform .22s cubic-bezier(.16, 1, .3, 1), opacity .22s ease;
+}
+
+.hiw-faq-plus::before {
+  width: 11px;
+  height: 1.5px;
+  transform: translate(-50%, -50%);
+}
+
+.hiw-faq-plus::after {
+  width: 1.5px;
+  height: 11px;
+  transform: translate(-50%, -50%);
+}
+
+.hiw-faq-item[open] .hiw-faq-plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+  opacity: 0;
+}
+
+.hiw-faq-item p {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--hiw-mute);
+  margin: 0;
+  padding: 0 2px 15px;
+  max-width: 54ch;
+}
+
+/* ── 07 close ────────────────────────────────────────────────────────────── */
+.hiw-close {
+  margin-top: clamp(30px, 7vw, 46px);
+  padding: clamp(26px, 6.5vw, 38px) clamp(18px, 5vw, 28px);
+  border-radius: 20px;
+  background: linear-gradient(150deg, rgba(163, 230, 53, .26), rgba(141, 182, 0, .10));
+  border: 1px solid rgba(141, 182, 0, .18);
+  text-align: center;
+}
+
+.hiw-close .hiw-h2 { margin-top: 0; }
+
+.hiw-close .hiw-lede {
+  margin-inline: auto;
+  max-width: 40ch;
+}
+
+/* ── motion ───────────────────────────────────────────────────────────────
+   Driven by one IntersectionObserver in the script. Reduced motion shows
+   everything at once — a long page should not be unreadable because someone
+   prefers not to be animated. */
+.hiw-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .55s ease, transform .55s cubic-bezier(.16, 1, .3, 1);
+  will-change: opacity, transform;
+}
+
+.hiw-reveal.hiw-in {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* the steps stagger, so the sequence reads as a sequence */
+.hiw-steps .hiw-step:nth-child(1) { transition-delay: 0ms; }
+.hiw-steps .hiw-step:nth-child(2) { transition-delay: 70ms; }
+.hiw-steps .hiw-step:nth-child(3) { transition-delay: 140ms; }
+.hiw-steps .hiw-step:nth-child(4) { transition-delay: 210ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hiw-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hiw-faq-plus::before,
+  .hiw-faq-plus::after { transition: none; }
+}
+
+/* ── narrow phone tweaks ─────────────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .hiw-vs-cell { padding: 10px 10px; font-size: 11.5px; }
+  .hiw-vs-head .hiw-vs-cell { font-size: 10px; }
+  .hiw-btn { padding: 0 16px; font-size: 12.5px; }
+  .hiw-stats { gap: 6px; }
+  .hiw-stats dd { font-size: 10.5px; }
+}

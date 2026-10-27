@@ -145,138 +145,246 @@ const GOGOWhy = (() => {
   }
 
   /* ── dedicated page ───────────────────────────────────────────────────── */
-  function pageWhy() {
-    $('#main').innerHTML = `
-    <div class="g-wrap g-section">
-      <div class="g-anim">
-        <span class="g-label">Why GOGO</span>
-        <h1 class="g-h1 g-mt-sm" style="max-width:20em">Travel that starts at your gate, not at a rank</h1>
-        <p class="g-s g-mt" style="max-width:60em;font-size:15.5px">Every reason people stay home instead of travelling has the same shape: the wait, the walk, the weather and the luggage. GOGO was built to remove all four, and to keep your family able to see you while you travel.</p>
-        <div class="g-row g-mt-lg">
-          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
-          <a class="g-btn g-btn-outline" href="#reasons">Read the reasons</a>
-        </div>
-      </div>
+  var ICON = function (n) { return GICON(n); };
 
-      <div class="g-grid g-mt-lg" style="grid-template-columns:repeat(4,1fr);gap:12px">
-        ${[["label", "4 checks", "before a seat is sold"], ["signal", "3 watchers", "on every trip"], ["clock", "04:00 to late", "every day"], ["lock", "24 hours", "then selfies delete"]].map(([e, a, b]) => `
-          <div class="g-card g-anim"><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON(e)}</span>
-            <div class="g-t g-mt-sm">${a}</div><div class="g-list-s">${b}</div></div>`).join("")}
-      </div>
+  var STEPS = [
+    {
+      n: "01",
+      icon: "search",
+      title: "Tell us where you are",
+      body: "Type your address and where you are going. We suggest real streets as you type, house number included, so the driver reaches your gate and not the corner.",
+      aside: "Today, tomorrow, or any day"
+    },
+    {
+      n: "02",
+      icon: "seat",
+      title: "Pick a seat or a boot",
+      body: "Every hike shows its departure time, the van, and how many seats are left. Travelling light? Send a parcel in a boot that is already going there.",
+      aside: "Pay cash or card"
+    },
+    {
+      n: "03",
+      icon: "shield",
+      title: "We check the driver",
+      body: "Licence, professional driving permit, criminal clearance and a roadworthy certificate, all verified before a seat is sold. Both sides send a safety selfie on the day.",
+      aside: "4 checks, every trip"
+    },
+    {
+      n: "04",
+      icon: "signal",
+      title: "Your people watch you arrive",
+      body: "Add up to three watchers. They see the van move on a live map, your arrival time, and your \u201cI am safe\u201d at the end. Your number is never shown.",
+      aside: "Up to 3 watchers"
+    }
+  ];
 
-      <div class="g-card g-mt-lg g-anim">
-        <div class="g-head"><span class="g-label">The old way vs GOGO</span><span class="g-s-sm">same trip, different day</span></div>
-        <div class="g-vs g-mt">
-          <div class="g-vs-col bad">
-            <div class="g-vs-head"><span aria-hidden>${GICON("van")}</span> Standing at the rank</div>
-            <ul>
-              <li>Leave home an hour early to hold a spot</li>
-              <li>Wait in the rain, the sun or the wind</li>
-              <li>Carry everything yourself, or pay someone to watch it</li>
-              <li>Cash out in the open, with people watching</li>
-              <li>No car going your way today, so you go home anyway</li>
-              <li>Nobody knows where you are until you arrive</li>
-              <li>Luggage on your lap for three hours</li>
-            </ul>
-          </div>
-          <div class="g-vs-col good">
-            <div class="g-vs-head"><span aria-hidden>${(window.GOGO && GOGO.van) ? GOGO.van() : ''}</span> Hiking with GOGO</div>
-            <ul>
-              <li>Wait at your gate, walk out when the van arrives</li>
-              <li>Live arrival time, so you wait inside</li>
-              <li>Driver collects you from your address</li>
-              <li>Pay by card, or hand cash over in the car</li>
-              <li>Set an alert and stay home until a ride appears</li>
-              <li>Up to 3 people watch your trip live</li>
-              <li>Bags in the boot, seat for you</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+  /* ── old way vs GOGO: paired, so each row is one comparison ────────────── */
+  var VS = [
+    ["Leave home an hour early to hold a spot", "Wait at your gate until the van is turning in"],
+    ["Stand in the rain, the sun or the wind", "Live arrival time, so you wait inside"],
+    ["Carry everything to the rank yourself", "The driver collects you from your address"],
+    ["Cash out in the open, with people watching", "Pay by card, or hand cash over in the car"],
+    ["No car going your way, so you go home", "Set an alert and stay home until a ride appears"],
+    ["Nobody knows where you are until you land", "Up to three people watch your trip live"],
+    ["Luggage on your lap for three hours", "Bags in the boot, a seat for you"]
+  ];
 
-      <div id="reasons" class="g-mt-lg">
-        <span class="g-label">The reasons</span>
-        <h2 class="g-h2 g-mt-sm">Eight problems GOGO takes off your plate</h2>
-      </div>
+  /* ── what we check: compact, deliberately quieter than the steps ───────── */
+  var CHECKS = [
+    ["label",  "Driver's licence",           "The right code for carrying passengers, verified against their ID."],
+    ["ticket", "Professional driving permit", "The permit that makes carrying passengers for reward legal."],
+    ["search", "Criminal record clearance",   "Vetted before a seat is sold. We keep the result and its expiry, not the certificate."],
+    ["gear",   "Roadworthy certificate",      "The vehicle is fit to carry people, and its plate matches the listing."],
+    ["mobile", "Safety selfie, both sides",   "Held for the ride, then deleted 24 hours after you confirm you are safe."],
+    ["shield", "Support inside the trip",     "Report from the ride chat or a watcher's link. The trip is attached automatically."]
+  ];
 
-      ${REASONS.map((r, i) => `
-        <div class="g-card g-mt-lg g-anim" id="${r.key}">
-          <div class="g-row">
-            <span class="g-ic g-ic-lg ${r.tone === "lime" ? "g-ic-lime" : r.tone === "navy" ? "g-ic-ink" : ""}" aria-hidden>${GICON(r.icon)}</span>
-            <div style="min-width:0">
-              <span class="g-label">Reason ${String(i + 1).padStart(2, "0")}</span>
-              <h3 class="g-h3 g-mt-sm">${r.title}</h3>
-            </div>
-          </div>
-          <p class="g-s g-mt" style="font-size:15px">${r.line}</p>
-          <div class="g-mt">${r.long.map(p => `<p class="g-s g-mt-sm">${p}</p>`).join("")}</div>
-          <div class="g-why-proof g-mt"><span aria-hidden>${GICON("check")}</span> ${r.proof}</div>
-        </div>`).join("")}
+  /* ── the reasons, compressed: title plus one line, no paragraphs ───────── */
+  var WHY = [
+    ["clock",  "You wait inside, not outside",  "A live arrival time means you leave your gate when the van is close, not an hour before."],
+    ["van",    "Collected at your address",     "Door to door. No taxi to the rank, no walk with the bags."],
+    ["luggage","Your bags travel in the boot",  "Not on your lap for three hours, and not paid for separately at the rank."],
+    ["lock",   "Cash stays in your pocket",     "Pay by card if you would rather not count money in the open."],
+    ["signal", "Your family can see you",       "Up to three watchers follow the van on a live map until you tap I am safe."],
+    ["seat",   "One seat or six, same trip",    "Book for yourself, or take the family. The van is going either way."],
+    ["flag",   "Stops where you need them",     "Hop off at a stop on the way, or ride all the way through."],
+    ["check",  "Verified on both sides",        "Driver and passenger both check in with a selfie on the day of the ride."]
+  ];
 
-      <div class="g-card g-mt-lg g-anim" id="watch">
-        <div class="g-between">
-          <div><span class="g-label">Live tracking</span><h3 class="g-h3 g-mt-sm">How the sharing actually works</h3></div>
-          <span class="g-stamp g-stamp-full">up to 3 people</span>
-        </div>
-        <div class="g-grid g-mt">
-          ${[["1", "You book and pick your watchers", "Add up to three names: Mom, your brother, your flatmate. One link each."],
-             ["2", "They open a live map", "The van moving, your route, your stops, the estimated arrival time, and a heartbeat that proves it is current."],
-             ["3", "You tap I am safe", "Everyone watching sees it at the same moment. The trip closes and your safety selfie starts its 24 hour deletion clock."]]
-            .map(([n, t, s]) => `
-              <div class="g-6"><div class="g-card"><div class="g-row"><span class="g-step-no" aria-hidden>${n}</span>
-                <div><div class="g-t">${t}</div><div class="g-list-s">${s}</div></div></div></div></div>`).join("")}
-        </div>
-        <ul class="g-ticks g-mt">
-          <li><span aria-hidden>${GICON("check")}</span> No phone numbers shown to anyone</li>
-          <li><span aria-hidden>${GICON("check")}</span> Revoke any link mid trip</li>
-          <li><span aria-hidden>${GICON("check")}</span> See who opened your link and when</li>
-          <li><span aria-hidden>${GICON("check")}</span> Links expire when the trip closes</li>
-        </ul>
-      </div>
+  var HIW_FAQ = [
+    ["What does it cost?", "The fare shown is the fare. There is a small booking fee, and it is shown before you confirm. Cash is fine, card is fine."],
+    ["How early do I need to be ready?", "Be at your gate when the van is two minutes away. The tracking tells you when that is, so you do not wait outside."],
+    ["Can I send a parcel instead?", "Yes. Choose Parcel, describe the size, and a boot that is already going that way carries it. You get a code the receiver quotes."],
+    ["What if the driver does not arrive?", "Open the trip and report it. Support is inside the ride, the trip is attached automatically, and no fare is charged."],
+    ["Do you share my phone number?", "Never. Chat runs inside GOGO and your number stays hidden, including from your watchers."],
+    ["What happens to my safety selfie?", "It is held for the duration of the ride and deleted 24 hours after you confirm you are safe."]
+  ];
 
-      <div class="g-card g-mt-lg g-anim">
-        <span class="g-label">Safety, in plain terms</span>
-        <h3 class="g-h3 g-mt-sm">What GOGO checks before you get in</h3>
-        <div class="g-grid g-mt">
-          ${[["label", "Driver's licence", "The right code for carrying passengers, verified against their ID."],
-             ["ticket", "Professional driving permit", "The permit that makes carrying passengers for reward legal."],
-             ["search", "Criminal record clearance", "Vetted before a seat is sold. We keep the result and its expiry, not the certificate."],
-             ["gear", "Roadworthy certificate", "The vehicle is fit to carry people, and its plate matches the listing."],
-             ["mobile", "Safety selfie, both sides", "Held for the duration of the ride, then deleted 24 hours after you confirm you are safe."],
-             ["🆘", "Support inside the trip", "Report from the ride chat or from a watcher's link. The trip is attached automatically."]]
-            .map(([e, t, s]) => `
-              <div class="g-6"><div class="g-card" style="height:100%">
-                <span class="g-ic g-ic-sm" aria-hidden>${GICON(e)}</span>
-                <div class="g-t g-mt-sm">${t}</div><div class="g-list-s">${s}</div></div></div>`).join("")}
-        </div>
-        <a class="g-btn g-btn-outline g-mt" href="safety"><span aria-hidden>${GICON("shield")}</span> Visit the safety centre</a>
-      </div>
-
-      <div class="g-mt-lg">
-        <span class="g-label">Questions</span>
-        <h2 class="g-h2 g-mt-sm">Straight answers</h2>
-        <div class="g-faq g-mt">
-          ${FAQ.map(([q, a]) => `
-            <details class="g-faq-item">
-              <summary><span>${q}</span><span class="g-faq-plus" aria-hidden>＋</span></summary>
-              <p class="g-s">${a}</p>
-            </details>`).join("")}
-        </div>
-      </div>
-
-      <div class="g-card g-mt-lg g-anim" style="background:linear-gradient(135deg,rgba(163,230,53,.22),rgba(141,182,0,.12));text-align:center">
-        <h2 class="g-h2">Your next hike starts at your gate</h2>
-        <p class="g-s g-mt-sm" style="max-width:44em;margin-inline:auto">Pick your town, pick your seat, and let the people who love you watch you arrive.</p>
-        <div class="g-row g-mt" style="justify-content:center">
-          <a class="g-btn g-btn-ink" href="index.html"><span aria-hidden>${GICON("search")}</span> Find a ride</a>
-          <a class="g-btn g-btn-lime" href="auth"><span aria-hidden>${GICON("chat")}</span> Start with your number</a>
-        </div>
-      </div>
-    </div>`;
+  function section(label, title, lede) {
+    return (
+      '<div class="hiw-head">' +
+        '<span class="hiw-label">' + label + '</span>' +
+        '<h2 class="hiw-h2">' + title + '</h2>' +
+        (lede ? '<p class="hiw-lede">' + lede + '</p>' : '') +
+      '</div>'
+    );
   }
 
+  function pageHowItWorks() {
+    var steps = STEPS.map(function (s) {
+      return (
+        '<li class="hiw-step">' +
+          '<div class="hiw-step-rail" aria-hidden="true">' +
+            '<span class="hiw-step-n">' + s.n + '</span>' +
+          '</div>' +
+          '<div class="hiw-step-body">' +
+            '<div class="hiw-step-top">' +
+              '<span class="hiw-step-ic" aria-hidden="true">' + ICON(s.icon) + '</span>' +
+              '<h3 class="hiw-step-t">' + s.title + '</h3>' +
+            '</div>' +
+            '<p class="hiw-step-p">' + s.body + '</p>' +
+            '<span class="hiw-step-tag">' + s.aside + '</span>' +
+          '</div>' +
+        '</li>'
+      );
+    }).join("");
 
-  /* ── terms ────────────────────────────────────────────────────────────── */
+    var vs = VS.map(function (p) {
+      return (
+        '<div class="hiw-vs-row">' +
+          '<div class="hiw-vs-cell bad"><span class="hiw-vs-x" aria-hidden="true">\u00d7</span>' + p[0] + '</div>' +
+          '<div class="hiw-vs-cell good"><span class="hiw-vs-tick" aria-hidden="true">\u2713</span>' + p[1] + '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    var checks = CHECKS.map(function (c) {
+      return (
+        '<li class="hiw-check">' +
+          '<span class="hiw-check-ic" aria-hidden="true">' + ICON(c[0]) + '</span>' +
+          '<div><b>' + c[1] + '</b><span>' + c[2] + '</span></div>' +
+        '</li>'
+      );
+    }).join("");
+
+    var why = WHY.map(function (w) {
+      return (
+        '<li class="hiw-why">' +
+          '<span class="hiw-why-ic" aria-hidden="true">' + ICON(w[0]) + '</span>' +
+          '<div><b>' + w[1] + '</b><span>' + w[2] + '</span></div>' +
+        '</li>'
+      );
+    }).join("");
+
+    var faq = HIW_FAQ.map(function (f) {
+      return (
+        '<details class="hiw-faq-item">' +
+          '<summary><span>' + f[0] + '</span>' +
+          '<span class="hiw-faq-plus" aria-hidden="true"></span></summary>' +
+          '<p>' + f[1] + '</p>' +
+        '</details>'
+      );
+    }).join("");
+
+    $('#main').innerHTML = `
+<div class="hiw">
+
+  <!-- 01 · hero ─────────────────────────────────────────────────────────── -->
+  <header class="hiw-hero hiw-reveal">
+    <span class="hiw-label">How it works</span>
+    <h1 class="hiw-h1">From your gate to theirs,<br class="hiw-br"> in four steps</h1>
+    <p class="hiw-hero-lede">No rank, no queue, no standing in the weather. Tell us where you are and where you are going, and we take it from there.</p>
+    <div class="hiw-hero-actions">
+      <a class="hiw-btn hiw-btn-ink" href="index.html">${ICON("search")}<span>Find a ride</span></a>
+      <a class="hiw-btn hiw-btn-ghost" href="#steps">See the four steps</a>
+    </div>
+    <dl class="hiw-stats">
+      <div><dt>4</dt><dd>checks before a seat is sold</dd></div>
+      <div><dt>3</dt><dd>watchers on every trip</dd></div>
+      <div><dt>24h</dt><dd>then selfies delete</dd></div>
+    </dl>
+  </header>
+
+  <!-- 02 · the four steps ───────────────────────────────────────────────── -->
+  <section class="hiw-section" id="steps">
+    ${section("The four steps", "What happens after you tap Search")}
+    <ol class="hiw-steps hiw-reveal">${steps}</ol>
+  </section>
+
+  <!-- 03 · old way vs GOGO ──────────────────────────────────────────────── -->
+  <section class="hiw-section">
+    ${section("Side by side", "The same trip, a different day")}
+    <div class="hiw-vs hiw-reveal">
+      <div class="hiw-vs-head">
+        <div class="hiw-vs-cell bad"><span aria-hidden="true">${ICON("van")}</span> Standing at the rank</div>
+        <div class="hiw-vs-cell good"><span aria-hidden="true">${ICON("check")}</span> Hiking with GOGO</div>
+      </div>
+      ${vs}
+    </div>
+  </section>
+
+  <!-- 04 · what we check ────────────────────────────────────────────────── -->
+  <section class="hiw-section">
+    ${section("Before you get in", "What GOGO verifies, every time",
+              "Four checks run before a seat is ever sold, and both sides confirm who they are on the day.")}
+    <ul class="hiw-checks hiw-reveal">${checks}</ul>
+    <a class="hiw-btn hiw-btn-ghost hiw-mt" href="safety.html">${ICON("shield")}<span>Visit the safety centre</span></a>
+  </section>
+
+  <!-- 05 · why it matters ───────────────────────────────────────────────── -->
+  <section class="hiw-section">
+    ${section("Why it matters", "Eight things you no longer have to do")}
+    <ul class="hiw-whys hiw-reveal">${why}</ul>
+  </section>
+
+  <!-- 06 · answers ──────────────────────────────────────────────────────── -->
+  <section class="hiw-section">
+    ${section("Questions", "Straight answers")}
+    <div class="hiw-faq hiw-reveal">${faq}</div>
+  </section>
+
+  <!-- 07 · close ────────────────────────────────────────────────────────── -->
+  <section class="hiw-close hiw-reveal">
+    <h2 class="hiw-h2">Your next hike starts at your gate</h2>
+    <p class="hiw-lede">Pick your town, pick your seat, and let the people who love you watch you arrive.</p>
+    <div class="hiw-hero-actions">
+      <a class="hiw-btn hiw-btn-lime" href="index.html">${ICON("search")}<span>Find a ride</span></a>
+      <a class="hiw-btn hiw-btn-ghost" href="auth.html">${ICON("chat")}<span>Start with your number</span></a>
+    </div>
+  </section>
+
+</div>`;
+
+    reveal();
+  }
+
+  /* ── motion: one observer for the whole page ────────────────────────────
+     Fade and lift on entry. Sections already on screen at load are revealed
+     immediately by the observer's first callback, so nothing sits invisible.
+     prefers-reduced-motion skips the animation entirely and just shows them. */
+  function reveal() {
+    var items = document.querySelectorAll(".hiw-reveal");
+    if (!items.length) return;
+
+    var reduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduced || !("IntersectionObserver" in window)) {
+      for (var i = 0; i < items.length; i++) items[i].classList.add("hiw-in");
+      return;
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("hiw-in");
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+
+    for (var j = 0; j < items.length; j++) io.observe(items[j]);
+  }
+
   function pageTerms() {
     $('#main').innerHTML = `
     <div class="g-wrap g-section g-legal" style="max-width:900px">
@@ -422,6 +530,10 @@ const GOGOWhy = (() => {
       </div>
     </div>`;
   }
+
+  /* boot() and the module export both reference pageWhy, so keep that name
+     bound to the rebuilt page rather than rewriting the router. */
+  var pageWhy = pageHowItWorks;
 
   function boot() {
     const page = document.body.dataset.page;
