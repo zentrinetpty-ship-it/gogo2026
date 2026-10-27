@@ -664,14 +664,14 @@ img, svg, video, canvas, iframe, table { max-width: 100%; }
   display: flex; gap: 6px; padding: 4px; margin-bottom: 16px;
   background: var(--wash); border: 1px solid var(--line); border-radius: 2px;
 }
-.g-tab {
+.g-tabs .g-tab {
   flex: 1; padding: 9px 10px; border: 0; border-radius: 2px; background: transparent;
   font: inherit; font-size: var(--t-sm); font-weight: 800; color: var(--ink-mute);
   cursor: pointer; transition: background .18s ease, color .18s ease;
 }
-.g-tab:hover { color: var(--ink); background: rgba(38, 38, 43, .06); }
-.g-tab.on { background: var(--ink); color: #FFFFFF; }
-.g-tab.on:hover { background: var(--ink); color: #FFFFFF; }
+.g-tabs .g-tab:hover { color: var(--ink); background: rgba(38, 38, 43, .06); }
+.g-tabs .g-tab.on { background: var(--ink); color: #FFFFFF; }
+.g-tabs .g-tab.on:hover { background: var(--ink); color: #FFFFFF; }
 
 .g-meter { height: 5px; border-radius: 2px; background: var(--wash); overflow: hidden; }
 .g-meter i { display: block; height: 100%; width: 0; background: var(--lime); transition: width .25s ease, background .25s ease; }
