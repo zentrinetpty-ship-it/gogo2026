@@ -28,9 +28,12 @@ export function GogoHeroMap() {
       const api = (window as any).GogoHeroMap;
       if (api && typeof api.boot === "function") {
         api.boot(host.current, {
-          /* the dot sits low-right of centre so it is not hidden behind the
-             logo lockup, which is dead centre */
+          /* the dot sits low-right of centre so it is never behind the header */
           dot: { x: 58, y: 46 },
+          /* hand the map its own box so it can pick a viewBox matching that
+             shape. Without this it assumed a wide desktop band, which on a
+             phone cropped away most of the street field and left one label. */
+          host: host.current,
         });
         done = true;
         return;

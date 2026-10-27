@@ -102,15 +102,31 @@ const GogoHeroMap = (() => {
 
   /* ── labels: sparse, and only on the tiers that deserve one ─────────────── */
   const LABELS = [
-    /* font sizes are in VIEWBOX units, and the svg renders ~5.75x larger than
-       that (1264px / 220). So 1.5 here is about 8.6px on screen — small enough
-       to read as map text. Anything approaching 2 becomes a headline. */
-    { x: 10.0, y: 30.0, text: "Oxford St",  r: -2.2, s: 1.5 },
-    { x: 96.0, y: 9.0,  text: "Union Ave",   r: 87,   s: 1.5 },
-    { x: 140.0, y: 40.2, text: "Fleet St",   r: -3.4, s: 1.5 },
-    { x: 182.0, y: 50.4, text: "Beacon Rd",  r: -3.2, s: 1.5 },
-    { x: 22.0, y: 59.4, text: "Strand St",   r: -1.6, s: 1.5 },
-    { x: 48.0, y: 49.2, text: "Nahoon Dr",   r: 87,   s: 1.5 },
+    /* Labels are placed across the whole 220x66 world, not just the middle.
+       When the viewBox was square-cropped only the centre survived, so six
+       labels collapsed to one on a phone. Sixteen spread across the grid means
+       whichever window is shown, several streets are named — which is what makes
+       it read as a map rather than a texture.
+
+       Font sizes are in viewBox units. The svg renders ~5.75x wider than the
+       viewBox on desktop, so 1.5 is about 8.6px there and a little larger on a
+       phone where the scale is smaller. */
+    { x: 6.0,   y: 30.0, text: "Oxford St",   r: -2.2,  s: 1.5 },
+    { x: 96.0,  y: 9.0,  text: "Union Ave",    r: 87,    s: 1.4 },
+    { x: 140.0, y: 40.2, text: "Fleet St",     r: -3.4,  s: 1.5 },
+    { x: 182.0, y: 50.4, text: "Beacon Rd",    r: -3.2,  s: 1.5 },
+    { x: 18.0,  y: 60.0, text: "Strand St",    r: -1.6,  s: 1.4 },
+    { x: 48.0,  y: 49.2, text: "Nahoon Dr",    r: 87,    s: 1.3 },
+    { x: 26.0,  y: 8.4,  text: "Union St",     r: 2.0,   s: 1.3 },
+    { x: 62.0,  y: 19.4, text: "Church St",    r: -1.8,  s: 1.3 },
+    { x: 104.0, y: 22.6, text: "Grey Rd",      r: -2.6,  s: 1.2 },
+    { x: 12.0,  y: 41.4, text: "Belgravia",    r: 1.6,   s: 1.2 },
+    { x: 74.0,  y: 51.6, text: "Border Rd",    r: -2.0,  s: 1.2 },
+    { x: 118.0, y: 60.4, text: "Vincent",      r: 2.2,   s: 1.2 },
+    { x: 156.0, y: 18.0, text: "Selborne",     r: -2.4,  s: 1.2 },
+    { x: 198.0, y: 30.0, text: "Essex St",     r: 3.0,   s: 1.2 },
+    { x: 86.0,  y: 41.0, text: "Kings Rd",     r: 88,    s: 1.2 },
+    { x: 168.0, y: 59.0, text: "Lukin Rd",     r: -1.4,  s: 1.2 },
   ];
 
   const CARS = [
@@ -128,9 +144,32 @@ const GogoHeroMap = (() => {
     /* 0-220 by 0-220: at 1264px wide that is 5.7px per unit. The earlier 0-100
        viewBox put 12.6px on every unit, which is why the streets looked like
        motorways and the labels were the size of headings. */
-    const { width = 220, height = 66, dot = { x: 128, y: 33 } } = opts;
+    /* The world is authored 220 x 66 and stays that way. What changes per screen
+       is the WINDOW into it — the viewBox — because a fixed window crops badly.
+
+       The original bug: viewBox 220x66 is 3.33:1. On a phone the box is ~390x353,
+       barely 1.1:1, so preserveAspectRatio:slice scaled to fill the height and
+       threw away roughly 70% of the width. Only the centre strip survived, which
+       is why one street name was visible.
+
+       Sizing the viewBox to the box's own aspect fixes the crop, and because the
+       phone's window is narrower it also zooms IN — fewer metres of city, more
+       streets and labels per screen. Desktop keeps the same wide view as before. */
+    const host = opts.host || null;
+    const hostW = (host && host.clientWidth) || 390;
+    const hostH = (host && host.clientHeight) || 353;
+    const aspect = hostW / hostH;
+    const WORLD_W = 220, WORLD_H = 66;
+    /* the width of world shown, chosen so the window matches the box shape */
+    let width = Math.min(WORLD_W, Math.round(WORLD_H * aspect));
+    width = Math.max(46, width);
+    const height = WORLD_H;
+    /* centre the window on the part of the world with the most street detail */
+    const dot = { x: width * 0.55, y: height * 0.5 };
     const svg = el("svg");
-    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    /* window offset: centre it in the authored world */
+    const vbX = Math.max(0, Math.round((WORLD_W - width) / 2));
+    svg.setAttribute("viewBox", `${vbX} 0 ${width} ${height}`);
     svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
     svg.setAttribute("aria-hidden", "true");
     svg.classList.add("ghm");
