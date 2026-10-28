@@ -22,6 +22,7 @@ import { GogoHeroMap } from "@/components/gogo-hero-map";
 import { cn } from "@/lib/utils";
 import { getActiveCity, getHomeCity, setBookingCity } from "@/lib/city";
 import { displayCity } from "@/lib/towns";
+import { useRider, riderLabel } from "@/lib/use-rider";
 
 /* =========================================================================
    Home.
@@ -296,6 +297,12 @@ export default function App() {
 
 /* ── header ──────────────────────────────────────────────────────────────── */
 function Header() {
+  /* The header is the only place the rider sees their own account state on the
+     landing, so it asks the server rather than assuming. Until the answer
+     arrives it stays quiet (no button at all) instead of flashing "Sign in" at
+     somebody who already signed in. */
+  const { rider, settled } = useRider();
+
   return (
     /* No bar, no border, no blur: the controls sit directly on the page's own
        ground. A header band drew a line across the hero before anyone read a
@@ -317,12 +324,29 @@ function Header() {
             <Bell className="h-[17px] w-[17px] text-ink" strokeWidth={1.9} />
             <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-lime ring-2 ring-white" />
           </button>
-          <a
-            href="/gogo/auth.html"
-            className="flex h-9 items-center rounded-full bg-lime px-4 text-[12.5px] font-semibold text-[#1A1A1A]"
-          >
-            Sign in
-          </a>
+          {rider ? (
+            /* Signed in: the account, not a sign-in offer. Tapping goes to the
+               dashboard, which is where a signed-in rider actually has work. */
+            <a
+              href="/gogo/dashboard.html"
+              className="flex h-9 items-center gap-1.5 rounded-full border border-neutral-200 bg-white pl-1 pr-3.5 text-[12.5px] font-semibold text-ink"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] font-bold text-lime">
+                {riderLabel(rider).charAt(0).toUpperCase()}
+              </span>
+              {riderLabel(rider)}
+            </a>
+          ) : settled ? (
+            <a
+              href="/gogo/auth.html"
+              className="flex h-9 items-center rounded-full bg-lime px-4 text-[12.5px] font-semibold text-[#1A1A1A]"
+            >
+              Sign in
+            </a>
+          ) : (
+            /* still asking: reserve the space so the bell does not jump */
+            <span className="h-9 w-[74px]" aria-hidden="true" />
+          )}
         </div>
       </div>
     </header>

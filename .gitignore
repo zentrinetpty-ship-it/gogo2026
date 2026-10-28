@@ -46,3 +46,8 @@ Thumbs.db
 
 # payment ledger: contains real money events once Stripe is live
 payments-ledger.json
+
+# auth data: real phone numbers and hashed codes
+auth-users.json
+auth-otps.json
+auth-secret

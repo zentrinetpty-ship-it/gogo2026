@@ -24,8 +24,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="/gogo/gogo-heromap.js" defer></script>
-  <script type="module" crossorigin src="/gogo/_app/app-iMIr9up9.js?v=1793078672"></script>
-  <link rel="stylesheet" crossorigin href="/gogo/_app/asset-CAJLlHZu.css?v=1793078672">
+  <!-- The built bundle is injected by Vite at build time (see vite.config.ts).
+       Nothing here may reference _app/app-*.js or asset-*.css by hashed name:
+       those are build OUTPUTS, and naming a previous build's hash in the source
+       makes the next build fail with "Rollup failed to resolve import". That is
+       exactly what happened — a deploy script wrote the runtime paths back into
+       this file. -->
 </head>
 <body>
 <script>
@@ -35,6 +39,9 @@
     window.__GOGO_MAPS_KEY = "AIzaSyAY6CTTEKmEkkwjP4YMAnUyIADO7k2uED8";
   </script>
   <div id="root"></div>
+  <!-- This is the entry Vite rewrites at build time into the hashed bundle.
+       It must point at the SOURCE, never at a previous build's filename. -->
+  <script type="module" src="/src/main.tsx"></script>
 <!-- runs before the app boots: clears any address left over from a previous
      visit, so the pickup field never arrives pre-filled -->
 <script src="/gogo/assets/gogo-session.js"></script>
