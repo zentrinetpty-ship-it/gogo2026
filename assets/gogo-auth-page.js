@@ -451,10 +451,23 @@ const GOGOAuthPage = (() => {
     }
   }
 
+  /* Where to land after signing in.
+     `?next=` comes from a page that redirected a guest here (dashboard does
+     this). Only same-site page names are accepted — an open redirect that
+     forwards a freshly signed-in rider to an attacker's site is a classic auth
+     bug, and the fix is an allowlist, not a sanitiser. Anything unrecognised
+     falls back to the home page. */
+  const NEXT_OK = { dashboard: "/gogo/dashboard.html", ride: "/gogo/rides.html" };
+
   function goHome() {
     /* a full navigation, not a client route: every other page is a separate
        document and must re-read the session from scratch */
-    window.location.href = "/gogo/";
+    let dest = "/gogo/";
+    try {
+      const want = new URLSearchParams(location.search).get("next");
+      if (want && NEXT_OK[want]) dest = NEXT_OK[want];
+    } catch (e) { /* keep the default */ }
+    window.location.href = dest;
   }
 
   /* ── resend countdown ─────────────────────────────────────────────────── */

@@ -19,44 +19,24 @@ function pageDashboard() {
      The dashboard is the rider's own trips, parcels and points. Without an
      account there is nothing to show and nothing to keep, so it asks for one
      rather than rendering an empty shell that looks broken. */
-  if (window.GOGOAuth && GOGOAuth.require) {
-    if (!GOGOAuth.isIn()) {
-      /* Render a real page first, THEN offer the modal. Returning early left
-         #main empty, so dismissing the modal dropped the rider onto a blank
-         white screen with a header and a dock — it read as a broken app rather
-         than as "this part needs an account". A welcome that names what the
-         dashboard holds is both honest and useful. */
-      const host = document.getElementById("main");
-      if (host) {
-        host.innerHTML = `
-    <div class="g-wrap g-section">
-      <span class="g-hero-kicker">Dashboard</span>
-      <h1 class="g-h2 g-mt-sm">Your trips, in one place</h1>
-      <p class="g-s g-mt-sm">Bookings, parcels and the people watching your trip all live here once you have an account. Sign in and this page fills in.</p>
+  /* ── not signed in -> straight to sign-in ────────────────────────────────
+     This used to render a whole welcome page (heading, "what lands here" card,
+     a second card with two buttons) and then open a sign-in modal on top of it.
+     Three layers for one question: "you need an account".
 
-      <div class="g-card g-mt-lg">
-        <span class="g-label">What lands here</span>
-        <div class="g-list">
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("ticket")}</span>
-            <div><div class="g-list-t">Every seat you have booked</div><div class="g-list-s">Pickup time, driver, and how far along the route you are going.</div></div></div>
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("parcel")}</span>
-            <div><div class="g-list-t">Parcels in transit</div><div class="g-list-s">What you sent, who is carrying it, and the price you agreed.</div></div></div>
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("chat")}</span>
-            <div><div class="g-list-t">Chat with the driver</div><div class="g-list-s">Number stays hidden until your seat is confirmed.</div></div></div>
-        </div>
-      </div>
+     The rider tapped Dashboard. The only useful answer is the form that gets
+     them in. The auth page already has the GOGO header and the four-tab bottom
+     bar, so nothing is lost by going there.
 
-      <div class="g-card g-mt">
-        <div class="g-head"><span class="g-label">Next</span></div>
-        <p class="g-s">Sign in with your number and we will send a code. No password to remember.</p>
-        <a class="g-btn g-btn-ink g-btn-block g-mt" href="auth?next=dashboard"><span aria-hidden>${GICON("person")}</span> Sign in or create an account</a>
-        <a class="g-btn g-btn-outline g-btn-block g-mt-sm" href="/gogo/"><span aria-hidden>${GICON("search")}</span> Find a ride first</a>
-      </div>
-    </div>`;
-      }
-      if (window.GOGOAuth.require) GOGOAuth.require("Sign in to see your trips", "dashboard");
-      return;
-    }
+     No welcome content, no modal, no flash of a dashboard they cannot see.
+
+     isIn() is only a hint — it answers from the stored token. That is fine for
+     deciding where to send somebody: if the token turns out to be dead, the
+     auth page's own /auth/me check sends them back here, which lands them here
+     again and forward to sign-in. One bounce, no loop. */
+  if (window.GOGOAuth && GOGOAuth.isIn && !GOGOAuth.isIn()) {
+    window.location.replace("auth.html?next=dashboard");
+    return;
   }
 
   const R = n => "R" + Number(n).toFixed(2);
