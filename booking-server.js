@@ -28,7 +28,25 @@ const path = require("path");
 const crypto = require("crypto");
 const intervals = require("./seat-intervals");
 const payments = require("./payments");
+const auth = require("./auth");
+
+/* ── auth helpers ────────────────────────────────────────────────────────── */
+function bearer(req) {
+  const h = req.headers["authorization"] || "";
+  const m = /^Bearer\s+(.+)$/i.exec(h);
+  return m ? m[1].trim() : "";
+}
+
+function cookieSession(req) {
+  const raw = req.headers["cookie"] || "";
+  const m = /(?:^|;\s*)gogo_session=([^;]+)/.exec(raw);
+  return m ? decodeURIComponent(m[1]) : "";
+}
+
+
 const agent = require("./support-agent");
+const driverOps = require("./driver-ops");
+const driverRoutes = require("./driver-routes");
 
 const PORT = 3050;
 const DATA = path.join(__dirname, "booking-data.json");
@@ -329,6 +347,15 @@ const server = http.createServer(async (req, res) => {
   // prefix is just /api, so strip whichever one arrives and treat the rest
   // as the route. That keeps old links working while the new domain beds in.
   const route = url.pathname.replace(/^\/gogo\/api/, "").replace(/^\/api/, "") || "/";
+
+  /* ── driver operations + chat ───────────────────────────────────────────
+     Twelve routes live in their own module so this file stays a flat list of
+     booking logic. It returns true when it handled the request; anything it does
+     not recognise falls through to the routes below. Mounted high so a
+     /driver/* path is never mistaken for a booking route. */
+  if (driverRoutes(req, res, route, url, {
+    auth, ops: driverOps, json, body, bearer, cookieSession,
+  })) return;
 
   /* destination matching -- see matchDestination above */
   /* ══ mid-route search ═══════════════════════════════════════════════════
@@ -1003,6 +1030,100 @@ const server = http.createServer(async (req, res) => {
   /* ══ what may the UI claim about money? ═════════════════════════════════ */
   if (req.method === "GET" && route === "/payments/status") {
     return json(res, 200, payments.honesty());
+  }
+
+
+  /* ══ AUTHENTICATION ═════════════════════════════════════════════════════
+     Phone number is the identity. Signup and login are one flow: request a
+     code, verify it, and the account exists. There is no password anywhere.
+
+     The caller is ALWAYS derived from a token. No route below trusts a user id,
+     phone number or "signed in" flag supplied in a request body. */
+
+  /* What the page is allowed to say about how codes are delivered. While
+     Twilio is not configured this reports devMode: true, and the UI must warn
+     that codes are on screen rather than pretend an SMS was sent. */
+  if (req.method === "GET" && route === "/auth/config") {
+    return json(res, 200, auth.config());
+  }
+
+  /* Step 1 — ask for a code. Creates no account: a mistyped number must not
+     leave an orphan record behind. */
+  if (req.method === "POST" && route === "/auth/request-otp") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const r = await auth.requestCode(b.phone);
+    if (!r.ok) {
+      /* 429 for rate limits, 400 for a bad number. The client shows r.message
+         as-is, because it was written for a human. */
+      const status = (r.code === "cooldown" || r.code === "hourly_limit") ? 429 : 400;
+      return json(res, status, r);
+    }
+    return json(res, 200, r);
+  }
+
+  /* Step 2 — check the code and issue a session. On success the code is
+     destroyed, so it cannot be replayed. */
+  if (req.method === "POST" && route === "/auth/verify-otp") {
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const r = auth.verifyCode(b.phone, b.code);
+    if (!r.ok) {
+      const status = r.code === "too_many_attempts" ? 429 : 401;
+      return json(res, status, r);
+    }
+
+    /* httpOnly + SameSite=Lax: the cookie rides on top-level navigations, so a
+       page reload stays signed in, and JavaScript cannot read it. Secure is
+       omitted because this origin is served over Cloudflare Flexible (the app
+       sees plain HTTP); adding it here would silently stop the cookie working. */
+    res.setHeader(
+      "Set-Cookie",
+      "gogo_session=" + encodeURIComponent(r.token) +
+      "; Path=/; HttpOnly; SameSite=Lax; Max-Age=" + Math.floor((r.expiresAt - Date.now()) / 1000)
+    );
+
+    return json(res, 200, {
+      ok: true,
+      token: r.token,
+      created: r.created,
+      needsProfile: r.needsProfile,
+      user: r.user,
+    });
+  }
+
+  /* Who am I? Reads the token, never a body. Returns 401 rather than an empty
+     object so the client can tell "signed out" from "request failed". */
+  if (req.method === "GET" && route === "/auth/me") {
+    const tok = bearer(req) || cookieSession(req);
+    const u = auth.userFromToken(tok);
+    if (!u) return json(res, 401, { ok: false, error: "not_signed_in" });
+    return json(res, 200, { ok: true, user: auth.publicUser(u) });
+  }
+
+  /* Complete the profile. This is what turns a fresh phone verification into
+     an account the app can use, and it is required before booking. */
+  if (req.method === "POST" && route === "/auth/profile") {
+    const tok = bearer(req) || cookieSession(req);
+    const b = await body(req);
+    if (!b) return json(res, 400, { error: "bad json" });
+
+    const r = auth.setProfile(tok, { name: b.name, home: b.home });
+    if (!r.ok) {
+      const status = r.code === "not_signed_in" ? 401 : 400;
+      return json(res, status, r);
+    }
+    return json(res, 200, { ok: true, user: r.user });
+  }
+
+  /* Sign out: clear the cookie. The token itself stays valid until it expires,
+     which is honest — the server holds no session table to kill. Rotating the
+     secret invalidates every token at once if that is ever needed. */
+  if (req.method === "POST" && route === "/auth/logout") {
+    res.setHeader("Set-Cookie", "gogo_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+    return json(res, 200, { ok: true });
   }
 
   return json(res, 404, { error: "no such endpoint" });

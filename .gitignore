@@ -51,3 +51,5 @@ payments-ledger.json
 auth-users.json
 auth-otps.json
 auth-secret
+drivers-data.json
+chats-data.json

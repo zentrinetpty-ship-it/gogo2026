@@ -487,3 +487,135 @@
 @media (max-width: 520px) {
   .grc-fact-seats .grc-fact-s { max-width: none; }
 }
+
+/* ══ vehicle band, driver avatar, message button ═════════════════════════════
+   Three additions to the ride card, each earning its place:
+
+   the Quantum glyph   riders on this corridor instantly recognise a minibus
+                       taxi; a generic car icon would be wrong for all of them
+   the driver avatar   a face and a name before you commit to a stranger's van
+   the message button  a question answered before booking is a booking that
+                       does not get cancelled at the rank
+   ─────────────────────────────────────────────────────────────────────── */
+
+.grc-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair);
+}
+
+.grc-van {
+  display: flex;
+  width: 40px;
+  height: 24px;
+  flex: 0 0 auto;
+  color: var(--ink);
+}
+
+.grc-van svg { width: 100%; height: 100%; }
+
+.grc-vehicle-t {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the plate reads as a plate, not as more body text */
+.grc-vehicle-p {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--mute);
+  background: var(--wash);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the avatar replaces the plain driver text: same information, one more cue */
+.grc-driver {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  position: relative;
+  z-index: 2;         /* above the card overlay so it is genuinely tappable */
+  border-radius: 8px;
+  transition: opacity .14s ease;
+}
+
+.grc-driver:active { opacity: .6; }
+
+.grc-av {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
+.grc-driver-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+/* the message button sits over the top-right of the card, clear of the price */
+.grc-msg {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--hair);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, transform .14s ease;
+}
+
+.grc-msg svg { width: 16px; height: 16px; }
+
+.grc-msg:active { transform: scale(.93); background: var(--wash); }
+
+.grc-msg:hover { border-color: #DEDED6; }
+
+/* the price needs to clear the message button */
+.grc-price { padding-right: 40px; }
+
+@media (min-width: 900px) {
+  .grc-msg { top: 16px; right: 16px; }
+  .grc-price { padding-right: 44px; }
+}
+
+@media (max-width: 380px) {
+  /* at this width the plate is the first thing to go */
+  .grc-vehicle-p { display: none; }
+  .grc-msg { width: 32px; height: 32px; top: 11px; right: 11px; }
+  .grc-price { padding-right: 36px; }
+}

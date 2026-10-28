@@ -319,6 +319,39 @@ function vehicleShort(v) {
   return parts.length > 1 ? parts[parts.length - 1] : s;
 }
 
+/* A Quantum, not a car. The silhouette that says "minibus taxi" rather than
+   "sedan" is a TALL, BOXY body with a near-vertical nose and a long slab side —
+   drawn at 44x26 so the height-to-length ratio (0.59) is visibly taller than a
+   car's (~0.38). The sliding-door rail and the row of windows do the rest. */
+const QUANTUM_SVG = `<svg viewBox="0 0 44 26" fill="none" aria-hidden="true">
+  <!-- body: flat nose, high roof, squared tail -->
+  <path d="M3.2 19.4V9.6c0-1 .5-1.9 1.4-2.4L9.6 4.6c.5-.3 1.1-.4 1.7-.4h20.9c.6 0 1.2.2 1.6.6l4.4 3.7c.5.4.8 1 .8 1.6v9.3"
+        stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- roofline, deliberately straight and long -->
+  <path d="M9.4 4.2h22.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- windscreen + three side windows: the give-away for a minibus -->
+  <path d="M4.6 10.1h4.3V4.9L6.1 6.6a2 2 0 0 0-1.5 2v1.5Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+  <path d="M11.2 4.5v5.6M17.4 4.5v5.6M23.6 4.5v5.6M29.8 4.5v5.6"
+        stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+  <path d="M10.6 10.1h25.9" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+  <!-- sliding door rail, the detail that marks it as a taxi -->
+  <path d="M30.2 13.1h5.9" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+  <!-- sill -->
+  <path d="M3.2 19.4h38.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  <!-- wheels sit low and small under a tall body -->
+  <circle cx="11.4" cy="20.2" r="2.7" stroke="currentColor" stroke-width="1.7"/>
+  <circle cx="33.4" cy="20.2" r="2.7" stroke="currentColor" stroke-width="1.7"/>
+</svg>`;
+
+/* Two letters from a name, for the driver avatar. Falls back to a single letter
+   rather than throwing on a one-word name. */
+function initialsOf(name) {
+  const parts = String(name || "?").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 function rideCard(r) {
   /* dateTxt / timeTxt are derived HERE, per card, from r.depart. They were
      local consts in the original function and dropping them while replacing the
@@ -376,11 +409,21 @@ function rideCard(r) {
         </div>
       </div>
 
+      <div class="grc-vehicle">
+        <span class="grc-van" aria-hidden="true">${QUANTUM_SVG}</span>
+        <span class="grc-vehicle-t">${esc(r.vehicle)}</span>
+        <span class="grc-vehicle-p">${esc(r.plate || "")}</span>
+      </div>
+
       <div class="grc-facts">
-        <span class="grc-fact">
-          <span class="grc-fact-v">${esc(r.driver)}</span>
-          <span class="grc-fact-s">★ ${r.rating} · ${r.trips} trips</span>
-        </span>
+        <button class="grc-driver" type="button" data-driver="${r.id}"
+                aria-label="Driver profile: ${esc(r.driver)}">
+          <span class="grc-av" aria-hidden="true">${initialsOf(r.driver)}</span>
+          <span class="grc-driver-t">
+            <span class="grc-fact-v">${esc(r.driver)}</span>
+            <span class="grc-fact-s">★ ${r.rating} · ${r.trips} trips</span>
+          </span>
+        </button>
         <span class="grc-fact grc-fact-seats">
           <span class="grc-fact-v grc-seats-${seatTone}">${full ? "Full" : left + " left"}</span>
           <span class="grc-fact-s">${esc(vehicleShort(r.vehicle))}</span>
@@ -397,6 +440,16 @@ function rideCard(r) {
           <span class="grc-stops-l">Stops</span>
           ${r.stops.map(s => `<span class="grc-stop">${esc(s.city)}<b>${money(s.fare)}</b></span>`).join("")}
         </div>` : ""}
+
+      <button class="grc-msg" type="button" data-chat="${r.id}"
+              aria-label="Message ${esc(r.driver)} about this ride">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.5 11.6a7.6 7.6 0 0 1-8.1 7.6 8.4 8.4 0 0 1-2.6-.5L4.5 20l1.3-4.2a7.5 7.5 0 0 1-1.3-4.2 7.6 7.6 0 0 1 8.1-7.6 7.6 7.6 0 0 1 7.9 7.6Z"></path>
+          <path d="M9 10.5h6"></path>
+          <path d="M9 13.6h3.5"></path>
+        </svg>
+      </button>
 
       <a class="grc-go" href="ride.html?id=${r.id}${rideQuery()}">${full ? "View ride" : "Join this ride"}</a>
     </article>`;
