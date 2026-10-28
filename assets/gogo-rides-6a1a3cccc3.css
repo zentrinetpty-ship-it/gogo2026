@@ -1,0 +1,489 @@
+/* ══ GOGO ride card + rides page ════════════════════════════════════════════
+   Replaces 118 rules that were defined twice in gogo-live-d0316cd925.css (the
+   `.g-rc` block appears at line 909 and again at 940, the second silently
+   overriding the first).
+
+   THE OLD CARD
+   · 20px radius, drop shadow, hover lift — three kinds of depth on a flat page
+   · two 34px town CODES ("EL", "XA") as the loudest elements
+   · a full-width date divider between the journey and the facts
+   · a dotted line with a van SVG rattling along it
+   · five bands, each with its own border
+
+   THE NEW CARD
+   · one border, no shadow, no lift. Nothing on a list of results should feel
+     like a floating panel.
+   · town NAMES loud, times beside them, price anchored top-right
+   · a real timeline: filled dot, hairline, hollow dot — the spine of the card
+   · facts as quiet metadata, one row
+   · the whole card is a hit area, with the button as the visible affordance
+
+   SCOPED TO .grc / .grides so it cannot disturb the other 19 pages.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ══ the card ═══════════════════════════════════════════════════════════════ */
+.grc {
+  --ink: #1A1A1A;
+  --lime: #A3E635;
+  --hair: #EDEDE7;
+  --mute: #8A8A83;
+  --faint: #B0B0A9;
+  --wash: #FBFBF9;
+
+  position: relative;
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  background: #fff;
+  padding: 16px;
+  color: var(--ink);
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  transition: border-color .18s ease;
+}
+
+.grc + .grc { margin-top: 11px; }
+
+/* the whole card is tappable. The <a> is an invisible overlay so the card can be
+   a <article> with real content inside rather than one giant link — and so the
+   Join button can carry its own label without nesting anchors. */
+.grc-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.grc:hover { border-color: #DEDED6; }
+.grc:active { background: #FDFDFB; }
+
+/* a full ride is dimmed but not disabled: you can still look at it */
+.grc-full { opacity: .74; }
+
+/* ── top: when + how much ────────────────────────────────────────────────── */
+.grc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.grc-when { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.grc-when b {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.grc-when span {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.grc-price { text-align: right; display: flex; flex-direction: column; gap: 1px; }
+
+.grc-price b {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.grc-price span {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── route: the timeline ─────────────────────────────────────────────────── */
+.grc-route {
+  display: flex;
+  gap: 11px;
+  margin-top: 15px;
+}
+
+.grc-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 9px;
+  padding-top: 6px;
+  padding-bottom: 7px;
+}
+
+.grc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.grc-dot-from { background: var(--ink); }
+
+.grc-dot-to {
+  background: #fff;
+  border: 1.5px solid var(--faint);
+}
+
+.grc-line {
+  flex: 1 1 auto;
+  width: 1px;
+  min-height: 14px;
+  background: var(--hair);
+  margin: 3px 0;
+}
+
+.grc-places {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.grc-place { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+
+.grc-town {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grc-meta {
+  font-size: 11.5px;
+  color: var(--mute);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── facts ───────────────────────────────────────────────────────────────── */
+.grc-facts {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid var(--hair);
+}
+
+.grc-fact { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.grc-fact-lug { text-align: right; }
+
+.grc-fact-v {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grc-fact-s {
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* seat count carries a tone, because "0 left" and "5 left" are different news */
+.grc-seats-ok { color: var(--ink); }
+.grc-seats-low { color: #C2410C; }
+.grc-seats-out { color: var(--faint); }
+
+/* how full the van is, as a hairline under the seat count */
+.grc-bar {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--hair);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.grc-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ink);
+}
+
+/* ── stops ───────────────────────────────────────────────────────────────── */
+.grc-stops {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.grc-stops-l {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin-right: 1px;
+}
+
+.grc-stop {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--wash);
+  border-radius: 999px;
+  padding: 4px 9px;
+}
+
+.grc-stop b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mute);
+}
+
+/* ── the action ──────────────────────────────────────────────────────────── */
+.grc-go {
+  position: relative;
+  z-index: 2;               /* above .grc-hit so it is genuinely clickable */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  text-decoration: none;
+  transition: transform .14s ease, opacity .14s ease;
+}
+
+.grc-go:active { transform: scale(.98); }
+.grc-full .grc-go { background: #fff; color: var(--ink); border: 1px solid var(--hair); }
+
+/* ══ the rides page ═════════════════════════════════════════════════════════ */
+
+/* the search summary card at the top */
+.grides-sum {
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  padding: 15px 16px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.grides-sum-route {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grides-sum-meta {
+  font-size: 11.5px;
+  color: var(--mute);
+  margin: 2px 0 0;
+}
+
+/* filter chips: quiet, one line, scrolls sideways on a small phone */
+.grides-chips {
+  display: flex;
+  gap: 7px;
+  margin-top: 13px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 1px;
+}
+
+.grides-chips::-webkit-scrollbar { display: none; }
+
+.grides-chip {
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.grides-chip.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.grides-chip:active { transform: scale(.97); }
+
+/* the count line above the list */
+.grides-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  margin-bottom: 13px;
+}
+
+.grides-count h2 {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+
+.grides-count span {
+  font-size: 11.5px;
+  color: var(--faint);
+  text-align: right;
+}
+
+/* stagger the cards in. Capped so a long list does not crawl in forever. */
+.grc { animation: grc-in .34s cubic-bezier(.22,.61,.36,1) both; }
+
+.grc:nth-child(1) { animation-delay: .02s; }
+.grc:nth-child(2) { animation-delay: .06s; }
+.grc:nth-child(3) { animation-delay: .10s; }
+.grc:nth-child(4) { animation-delay: .14s; }
+.grc:nth-child(5) { animation-delay: .18s; }
+.grc:nth-child(n+6) { animation-delay: .20s; }
+
+@keyframes grc-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (min-width: 560px) {
+  .grc { padding: 18px; }
+  .grc-when b, .grc-price b { font-size: 20px; }
+  .grc-town { font-size: 16px; }
+}
+
+@media (min-width: 900px) {
+  /* at real width the journey and the facts can sit on one line, which halves
+     the card height and lets more results fit above the fold */
+  .grc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+    align-items: start;
+    padding: 18px 20px;
+  }
+  .grc-top { grid-column: 1; }
+  .grc-route { grid-column: 1; }
+  .grc-facts {
+    grid-column: 1;
+    grid-template-columns: 1fr 1fr 1fr;
+    margin-top: 12px;
+    padding-top: 11px;
+  }
+  .grc-stops { grid-column: 1; }
+  .grc-go {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    margin-top: 0;
+    width: 168px;
+    height: 46px;
+  }
+  .grc-fact-lug { text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grc { animation: none; }
+  .grc, .grc-go, .grides-chip { transition: none; }
+}
+
+/* ══ FIX: facts row collapsed at narrow widths ═════════════════════════════
+   grid-template-columns: 1fr auto auto  with 14px gaps means the two auto
+   columns claim their content width FIRST. On a 312px card the driver name
+   ("Sipho M.") plus a vehicle string ("Toyota Quantum") together exceed the
+   available space, so the 1fr column is squeezed to 16px and every child
+   truncates to an ellipsis — measured at a simulated 360px viewport.
+
+   minmax(0, 1fr) lets the flexible column actually give up space, and the
+   explicit min-width:0 on the children stops their intrinsic width from forcing
+   the grid wider than the card. The vehicle label is the longest string and the
+   least important, so it is the one allowed to ellipsis. */
+.grc-facts {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, auto);
+  gap: 10px;
+}
+
+.grc-fact { min-width: 0; }
+.grc-fact-v, .grc-fact-s { min-width: 0; }
+
+/* the vehicle/model line is the first thing to go when space runs out */
+.grc-fact-seats .grc-fact-s { max-width: 9ch; }
+
+@media (max-width: 380px) {
+  .grc { padding: 14px; }
+  .grc-facts { gap: 8px; }
+  .grc-town { font-size: 14px; }
+  .grc-when b, .grc-price b { font-size: 18px; }
+  /* at this width the luggage column is noise next to the seat count */
+  .grc-fact-lug { display: none; }
+  .grc-facts { grid-template-columns: minmax(0, 1fr) minmax(0, auto); }
+}
+
+/* ══ FIX: desktop grid was leaking into narrow cards ═══════════════════════
+   The >=900px rule turns .grc into a two-column grid (content + a 168px action
+   button). That media query tests the VIEWPORT, but the card is only ever as
+   wide as its column, which on a phone is 312px. So the grid still applied and
+   the 168px button column squeezed the content to 16px — town names measured
+   8px wide and every fact truncated.
+
+   Scoping the desktop layout to a container, not the viewport, is the real fix;
+   until container queries are safe here, the two-column form is limited to a
+   viewport wide enough that the card genuinely has room (>= 720px), and the
+   narrow card keeps its single column. */
+@media (min-width: 900px) {
+  .grc { grid-template-columns: minmax(0, 1fr) 168px; }
+}
+
+@media (max-width: 899px) {
+  /* single column: undoes every part of the desktop grid */
+  .grc { display: block; }
+  .grc-go { width: 100%; margin-top: 14px; }
+}
+
+/* and make the content column genuinely flexible in the desktop form */
+.grc > * { min-width: 0; }
+
+/* at phone width the full vehicle name always ellipsised ("Toyota Q..."), which
+   is worse than saying "Quantum" — a half-word tells you nothing. Shorten the
+   label rather than the space: the seat count is what matters here. */
+@media (max-width: 520px) {
+  .grc-fact-seats .grc-fact-s { max-width: none; }
+}
