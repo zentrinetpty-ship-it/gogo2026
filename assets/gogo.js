@@ -219,11 +219,40 @@ function paintChrome(active) {
         '<button class="g-bell" aria-label="Notifications" type="button">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8.8a6 6 0 1 0-12 0c0 4.6-2 5.6-2 5.6h16s-2-1-2-5.6Z"/><path d="M13.7 18.4a2 2 0 0 1-3.4 0"/></svg>' +
         '</button>' +
-        '<a class="g-signin" href="auth"><span aria-hidden="true">' +
+        '<a class="g-signin" id="gSignIn" href="auth"><span aria-hidden="true">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>' +
         '</span>Log in</a>' +
       '</div>';
+
+    /* The header used to say "Log in" no matter what, so a signed-in rider was
+       offered a sign-in they did not need. Ask the server (through the auth
+       shim, which caches for the page lifetime) and repaint if they are known.
+       Until the answer arrives the link stays as "Log in" — the wrong label for
+       one moment beats a flash of somebody else's name. */
+    paintSignedIn();
   }
+}
+
+
+
+/* Paint the header chip from the real session. Called once after the chrome is
+   built; the shim memoises /auth/me so this costs one request per page even
+   when several modules ask. */
+async function paintSignedIn() {
+  if (typeof GOGOAuth === "undefined") return;
+  let user = null;
+  try { user = await GOGOAuth.me(); } catch (e) { return; }
+  if (!user) return;                     /* stays "Log in" */
+
+  const a = document.getElementById("gSignIn");
+  if (!a) return;
+  const label = (user.name || user.phonePretty || "You").split(/\s+/)[0];
+  a.href = "/gogo/dashboard.html";
+  a.classList.add("g-signin-in");
+  a.innerHTML =
+    '<span class="g-signin-av" aria-hidden="true">' +
+      label.charAt(0).toUpperCase() +
+    '</span>' + label.replace(/[<>&]/g, "");
 }
 
 let toastT;
