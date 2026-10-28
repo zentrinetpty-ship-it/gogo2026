@@ -1,0 +1,539 @@
+/* ══ GOGO dashboard ═════════════════════════════════════════════════════════
+   Replaces gogo-dashboard.css, which carried Cleanic's palette in places and
+   used three different corner radii across four bordered stat cards.
+
+   THE RULES THIS FILE FOLLOWS
+   · One radius family: 14px for cards, 999px for pills and buttons. Nothing else.
+   · Colour is spent on one thing per screen. Lime marks the primary action and
+     nothing else — a second lime element halves the power of the first.
+   · Hairlines do the dividing, not borders on every child.
+   · Air, not gaps: sections breathe at 22–26px, rows at 14–16px.
+   · Nothing animates twice. Entry is one staggered pass; tab switches reveal
+     once and stop. Reduced motion removes all of it.
+
+   SCOPED UNDER .gdb
+   Every selector starts at .gdb so this cannot leak into the 19 other pages
+   that load the shared theme. */
+
+.gdb {
+  --ink: #1A1A1A;
+  --lime: #A3E635;
+  --hair: #EDEDE7;
+  --mute: #8A8A83;
+  --faint: #B0B0A9;
+  --wash: #FBFBF9;
+  --r: 14px;
+
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 4px 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  color: var(--ink);
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── entry animation ───────────────────────────────────────────────────────
+   Sections rise 10px and fade. Stagger is set inline by the module so the
+   order is data, not a stylesheet coincidence. */
+.gdb [data-anim] {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .46s cubic-bezier(.22,.61,.36,1),
+              transform .46s cubic-bezier(.22,.61,.36,1);
+}
+
+.gdb [data-anim].in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── hero ────────────────────────────────────────────────────────────────── */
+.gdb-hero { padding: 22px 0 4px; }
+
+.gdb-eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin: 0 0 10px;
+}
+
+.gdb-h1 {
+  font-size: clamp(25px, 7.2vw, 31px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -.028em;
+  margin: 0;
+  /* balance the two lines instead of leaving a widowed word */
+  text-wrap: balance;
+}
+
+.gdb-sub {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--mute);
+  margin: 9px 0 0;
+  max-width: 34ch;
+}
+
+.gdb-actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.gdb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0 19px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform .14s ease, background .16s ease, border-color .16s ease;
+}
+
+.gdb-btn:active { transform: scale(.975); }
+.gdb-btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
+
+.gdb-btn-lime { background: var(--lime); color: var(--ink); }
+.gdb-btn-ink { background: var(--ink); color: #fff; }
+.gdb-btn-ghost { background: #fff; color: var(--ink); border-color: var(--hair); }
+
+.gdb-btn-sm { height: 42px; padding: 0 17px; font-size: 13px; margin-top: 14px; }
+
+/* ── stat rail ─────────────────────────────────────────────────────────────
+   One bordered rail with hairline dividers, not four cards. The numbers are a
+   single idea, so they read as one object. */
+.gdb-rail {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 26px;
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: #fff;
+}
+
+.gdb-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 15px 15px 14px;
+  text-decoration: none;
+  color: var(--ink);
+  min-width: 0;
+  transition: background .16s ease;
+}
+
+.gdb-stat:active { background: var(--wash); }
+.gdb-stat + .gdb-stat { border-left: 1px solid var(--hair); }
+
+.gdb-stat-ic {
+  display: flex;
+  width: 15px;
+  height: 15px;
+  color: var(--faint);
+  margin-bottom: 7px;
+}
+
+.gdb-stat-ic svg { width: 15px; height: 15px; }
+
+.gdb-stat-n {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gdb-stat-l {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 3px;
+}
+
+.gdb-stat-s {
+  font-size: 10.5px;
+  color: var(--faint);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── tabs ──────────────────────────────────────────────────────────────────
+   A quiet segmented strip. No pill, no fill: an underline that slides is
+   enough, and it survives being cramped at 320px. */
+.gdb-tabs {
+  display: flex;
+  gap: 2px;
+  margin-top: 26px;
+  border-bottom: 1px solid var(--hair);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.gdb-tabs::-webkit-scrollbar { display: none; }
+
+.gdb-tab {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 10px 12px 12px;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mute);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .16s ease;
+}
+
+.gdb-tab:hover { color: var(--ink); }
+
+.gdb-tab.on {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* the sliding underline: one per active tab, drawn at the bottom edge */
+.gdb-tab::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .26s cubic-bezier(.22,.61,.36,1);
+}
+
+.gdb-tab.on::after { transform: scaleX(1); }
+
+/* ── panels ──────────────────────────────────────────────────────────────── */
+.gdb-panels { padding-top: 18px; }
+
+.gdb-panel[hidden] { display: none; }
+
+/* the per-switch reveal. Deliberately shorter than the entry animation so it
+   reads as a response, not as a second page load. */
+.gdb-panel.reveal { animation: gdb-reveal .3s cubic-bezier(.22,.61,.36,1) both; }
+
+@keyframes gdb-reveal {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── cards ───────────────────────────────────────────────────────────────── */
+.gdb-card {
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  padding: 16px;
+  background: #fff;
+}
+
+.gdb-card + .gdb-card { margin-top: 12px; }
+
+.gdb-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.gdb-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gdb-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hair);
+  padding-bottom: 1px;
+}
+
+.gdb-p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mute);
+  margin: 9px 0 0;
+}
+
+/* ── routes ──────────────────────────────────────────────────────────────── */
+.gdb-routes { display: flex; flex-direction: column; }
+
+.gdb-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  text-decoration: none;
+  color: var(--ink);
+  border-top: 1px solid var(--hair);
+  transition: opacity .14s ease;
+}
+
+.gdb-route:first-child { border-top: 0; }
+.gdb-route:active { opacity: .55; }
+
+.gdb-route-main { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+
+.gdb-route-to {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gdb-route-via {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--faint);
+  letter-spacing: .03em;
+  flex: 0 0 auto;
+}
+
+.gdb-route-dur {
+  font-size: 12px;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+/* ── next trip ───────────────────────────────────────────────────────────── */
+.gdb-next-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.gdb-next-time {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.gdb-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--lime);
+  border-radius: 999px;
+  padding: 4px 9px;
+}
+
+.gdb-next-route {
+  font-size: 13px;
+  color: var(--mute);
+  margin: 7px 0 0;
+}
+
+/* ── lists ───────────────────────────────────────────────────────────────── */
+.gdb-list {
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  overflow: hidden;
+  background: #fff;
+}
+
+.gdb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  text-decoration: none;
+  color: var(--ink);
+  border-top: 1px solid var(--hair);
+  transition: background .14s ease;
+}
+
+.gdb-item:first-child { border-top: 0; }
+.gdb-item:active { background: var(--wash); }
+
+.gdb-item-ic {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--wash);
+  color: var(--ink);
+}
+
+.gdb-item-ic svg { width: 16px; height: 16px; }
+
+.gdb-item-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+
+.gdb-item-t {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gdb-item-s { font-size: 11.5px; color: var(--mute); }
+
+.gdb-item-r {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+/* ── empty state ─────────────────────────────────────────────────────────── */
+.gdb-empty {
+  border: 1px solid var(--hair);
+  border-radius: var(--r);
+  padding: 30px 22px;
+  text-align: center;
+  background: #fff;
+}
+
+.gdb-empty-ic {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--wash);
+  color: var(--faint);
+  margin-bottom: 13px;
+}
+
+.gdb-empty-ic svg { width: 20px; height: 20px; }
+
+.gdb-empty-t { font-size: 14.5px; font-weight: 600; margin: 0; }
+
+.gdb-empty-s {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--mute);
+  margin: 6px auto 0;
+  max-width: 30ch;
+}
+
+/* ── plan ────────────────────────────────────────────────────────────────── */
+.gdb-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.gdb-time {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+
+/* ── footer rows ─────────────────────────────────────────────────────────── */
+.gdb-foot {
+  margin-top: 22px;
+  border-top: 1px solid var(--hair);
+}
+
+.gdb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 2px;
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--hair);
+  transition: opacity .14s ease;
+}
+
+.gdb-row:active { opacity: .55; }
+
+.gdb-row-t { font-size: 13.5px; font-weight: 500; }
+
+.gdb-row-a { display: flex; width: 16px; height: 16px; color: var(--faint); }
+.gdb-row-a svg { width: 16px; height: 16px; }
+
+/* ── responsive ────────────────────────────────────────────────────────────
+   The layout is one column by design — a dashboard on a phone should not try
+   to be a wall of widgets. What changes is breathing room and type size. */
+@media (min-width: 480px) {
+  .gdb { padding-left: 24px; padding-right: 24px; }
+  .gdb-h1 { font-size: 32px; }
+  .gdb-stat { padding: 17px 17px 16px; }
+  .gdb-stat-n { font-size: 24px; }
+}
+
+@media (min-width: 768px) {
+  .gdb { max-width: 680px; padding-top: 14px; }
+  .gdb-hero { padding-top: 30px; }
+  .gdb-h1 { font-size: 37px; letter-spacing: -.032em; }
+  .gdb-sub { font-size: 14.5px; }
+  .gdb-actions { gap: 11px; }
+  .gdb-card { padding: 20px; }
+  .gdb-rail { margin-top: 30px; }
+  .gdb-stat { padding: 19px; }
+}
+
+@media (min-width: 1024px) {
+  .gdb { max-width: 760px; }
+  /* a slightly denser rail reads better once there is real width */
+  .gdb-stat { flex-direction: row; align-items: baseline; gap: 9px; padding: 20px 22px; }
+  .gdb-stat-ic { margin-bottom: 0; align-self: center; }
+  .gdb-stat-n { font-size: 26px; }
+  .gdb-stat-l { margin-top: 0; }
+  .gdb-stat-s { margin-left: auto; }
+}
+
+/* ── reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .gdb [data-anim],
+  .gdb [data-anim].in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .gdb-panel.reveal { animation: none; }
+  .gdb-tab::after { transition: none; }
+  .gdb-btn, .gdb-stat, .gdb-item, .gdb-row { transition: none; }
+}

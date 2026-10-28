@@ -41,7 +41,7 @@
 <link rel="stylesheet" href="assets/gogo-hero.css?v=1793070904">
 <link rel="stylesheet" href="assets/gogo-book.css?v=1793070904">
 <link rel="stylesheet" href="assets/gogo-live-d0316cd925.css">
-<link rel="stylesheet" href="assets/gogo-dashboard.css?v=1793077724">
+<link rel="stylesheet" href="assets/gogo-dashboard-new.css?v=1">
 <link rel="stylesheet" href="assets/gogo-parcel.css?v=1793070904">
 <link rel="manifest" href="manifest.webmanifest">
 
@@ -59,7 +59,7 @@
 <script src="assets/gogo-icons.js?v=1793070904"></script>
 <script src="assets/gogo-session.js?v=1793070904"></script>
 <script src="assets/gogo-town-codes.js?v=1793070904"></script>
-<script src="assets/gogo-dashboard.js?v=1793070904"></script>
+<script src="assets/gogo-dashboard-new.js?v=1"></script>
 <script src="assets/gogo-routes.js?v=1793070904"></script>
 <script src="assets/gogo-renames.js?v=1793070904"></script>
 <script src="assets/gogo-address.js?v=1793070904"></script>
@@ -67,12 +67,12 @@
 <script src="assets/gogo-gate.js?v=1793070904"></script>
 <script src="assets/gogo-support.js?v=1793079000"></script>
 <script src="assets/gogo-support-fab.js?v=1793079000"></script>
+<script src="assets/gogo-auth.js"></script>
 <script src="assets/gogo.js?v=1793070904"></script>
 <script src="assets/gogo-parcel.js?v=1793070904"></script>
 <script src="assets/gogo-places.js?v=1793070904"></script>
 <script src="assets/gogo-safety.js?v=1793070904"></script>
 <script src="assets/gogo-chat.js?v=1793075695"></script>
-<script src="assets/gogo-auth.js?v=1793070904"></script>
 <script src="assets/gogo-map.js?v=1793070904"></script>
 <script src="assets/gogo-pay.js?v=1793070904"></script>
 <script src="assets/gogo-pay-ui.js?v=1793070904"></script>
@@ -81,5 +81,16 @@
 <script src="assets/gogo-share.js?v=1793070904"></script>
 <script src="assets/gogo-why.js?v=1793075125"></script>
 <script src="assets/gogo-pwa.js?v=1793074314" defer></script>
+
+<script>
+/* The new dashboard module owns its own boot. It waits for DOMContentLoaded so
+   #main exists, and it reads the session through GOGOAuth (already loaded above
+   by the auth shim) rather than trusting a local flag. */
+document.addEventListener("DOMContentLoaded", function () {
+  if (window.GOGODashboard && GOGODashboard.boot) {
+    GOGODashboard.boot().catch(function (e) { console.error("dashboard boot failed", e); });
+  }
+});
+</script>
 </body>
 </html>
