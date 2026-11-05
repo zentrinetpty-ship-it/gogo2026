@@ -13,6 +13,32 @@
   color: var(--ink);
   font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+
+  /* ── the missing box model ───────────────────────────────────────────────
+     This rule had colour and font but no width or padding, so every card inside
+     ran the full width of the viewport with its text against both edges. On a
+     384px phone the balance card, the stats and every ride card measured 384px
+     with left:0 and right:384 — edge to edge, which reads as a screen that has
+     collapsed rather than a page that scrolls.
+
+     The passenger dashboard (.gdb) and the account page (.gac) both set
+     max-width 560 and 20px gutters. The driver side was the odd one out. Matched
+     them, plus the bottom reserve so the fixed tab bar never sits on the last
+     card. */
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 4px 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+/* the driver page is rendered inside #main, which already carries the page
+   gutter on some breakpoints — collapse the doubling rather than fight it */
+@media (min-width: 480px) {
+  .gdr { padding-left: 24px; padding-right: 24px; }
+}
+
+@media (min-width: 768px) {
+  .gdr { max-width: 680px; padding-top: 14px; }
 }
 
 /* mode switch: two segments, one rail. Not a slider: both options need a word,
@@ -453,6 +479,25 @@
 .gdr-empty-t { font-size: 14px; font-weight: 600; margin: 0; }
 .gdr-empty-s { font-size: 12px; color: var(--mute); margin: 6px 0 0; }
 
+/* the failed-load state: says what happened and offers the two ways out */
+.gdr-error {
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  padding: 26px 20px;
+  text-align: center;
+  background: #fff;
+}
+
+.gdr-error-t { font-size: 14.5px; font-weight: 600; margin: 0; }
+.gdr-error-s { font-size: 12.5px; line-height: 1.55; color: var(--mute); margin: 7px 0 0; }
+
+.gdr-btn-quiet {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--hair);
+  margin-top: 9px;
+}
+
 /* withdraw sheet */
 .gwd-h { font-size: 17px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
 .gwd-avail { font-size: 12px; color: var(--mute); margin: 4px 0 0; }
@@ -511,4 +556,229 @@
 
 @media (prefers-reduced-motion: reduce) {
   .gmode-b, .gdr-btn, .grdr-bar i { transition: none; }
+}
+
+/* TAP AFFORDANCE
+   A card that opens something has to look like it does. The chevron on the
+   balance card and the press state on every tappable card are the whole
+   difference between "this is information" and "this will show me more". */
+
+.gdr-tap {
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gdr-tap:active {
+  transform: scale(.994);
+  border-color: #DCDCD4;
+}
+
+.gdr-tap:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.gdr-more {
+  float: right;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--mute);
+  text-transform: none;
+}
+
+/* the dots that say "there is more behind this" */
+.gdr-more::after {
+  content: " ›";
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* DRIVER RIDE CARD: whole-card tap target */
+.grdr { position: relative; }
+
+.grdr-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.grdr-hit:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* everything above the hit layer, so buttons inside the card still receive taps */
+.grdr > *:not(.grdr-hit) { position: relative; z-index: 2; pointer-events: none; }
+.grdr .grdr-act { pointer-events: auto; }
+
+.grdr:active { border-color: #DCDCD4; }
+
+/* RIDE DETAIL SHEET */
+.gride { padding-bottom: 4px; }
+
+.gride-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gride-arrow { color: var(--faint); font-weight: 400; }
+
+.gride-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: 15px;
+  padding: 1px;
+  background: var(--hair);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gride-grid > div {
+  background: #fff;
+  padding: 11px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gride-v {
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gride-money {
+  margin-top: 15px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 4px 13px;
+}
+
+.gride-mrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--hair);
+  font-size: 12.5px;
+  color: var(--mute);
+}
+
+.gride-mrow:first-child { border-top: 0; }
+.gride-mrow strong { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.gride-mrow-neg strong { color: #C2410C; }
+
+.gride-mrow-total {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.gride-mrow-total strong { font-size: 15px; letter-spacing: -.02em; }
+
+.gride-sec { margin-top: 17px; }
+
+.gride-people { margin-top: 8px; display: flex; flex-direction: column; }
+
+.gride-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--hair);
+  min-width: 0;
+}
+
+.gride-person:first-child { border-top: 0; }
+
+.gride-pav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--wash);
+  border: 1px solid var(--hair);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.gride-pn {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gride-pname {
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gride-pst {
+  font-size: 10.5px;
+  color: var(--faint);
+  text-transform: capitalize;
+}
+
+/* state reads as tone, not just a word */
+.gride-pst-completed { color: #15803D; }
+.gride-pst-held, .gride-pst-confirmed { color: #B45309; }
+.gride-pst-refunded, .gride-pst-forfeited { color: #B4453A; }
+
+.gride-pa {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.gride-none {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--mute);
+  margin: 8px 0 0;
+}
+
+.gride-hint {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--mute);
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: var(--wash);
+  border-radius: 10px;
+}
+
+@media (max-width: 380px) {
+  .gride-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gdr-tap { transition: none; }
 }

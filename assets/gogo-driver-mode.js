@@ -34,15 +34,50 @@
 
   async function api(path, opts) {
     const t = token();
-    const res = await fetch("/api" + path, Object.assign({
-      headers: Object.assign(
-        { "Content-Type": "application/json" },
-        t ? { Authorization: "Bearer " + t } : {}
-      ),
-    }, opts || {}));
-    let j = {};
-    try { j = await res.json(); } catch (e) { j = {}; }
-    return { ok: res.ok && j.ok !== false, status: res.status, data: j };
+
+    /* ── a request that never finishes is a screen that never loads ─────────
+       fetch() has no default timeout. If the tunnel stalls, a train goes into a
+       cutting, or the API is mid-restart, the promise simply never settles and
+       the driver stares at "Loading your driver account…" forever with no
+       reload button and no error. That is the "hangs and nothing works" report,
+       and it is not a rendering problem — it is a missing timeout.
+
+       AbortController turns a silent forever-wait into a failure the UI can
+       report and offer a retry for. Ten seconds is generous for a JSON GET on a
+       phone and short enough that nobody gives up first. */
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+
+    try {
+      const res = await fetch("/api" + path, Object.assign({
+        headers: Object.assign(
+          { "Content-Type": "application/json" },
+          t ? { Authorization: "Bearer " + t } : {}
+        ),
+        signal: ctrl.signal,
+      }, opts || {}));
+
+      let j = {};
+      try { j = await res.json(); } catch (e) { j = {}; }
+      return { ok: res.ok && j.ok !== false, status: res.status, data: j };
+    } catch (e) {
+      /* an abort is a timeout, not a network error — say so, because "check your
+         connection" when the connection is fine is a lie the driver cannot act
+         on */
+      const timedOut = e && e.name === "AbortError";
+      return {
+        ok: false,
+        status: 0,
+        data: {
+          error: timedOut
+            ? "That took too long. Check your signal and try again."
+            : "Could not reach GOGO. Check your connection.",
+        },
+        timedOut,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /* ── mode persistence ─────────────────────────────────────────────────────
@@ -84,6 +119,113 @@
           ${I.van}<span>Driver</span>
         </button>
       </div>`;
+  }
+
+  /* ══ balance detail ════════════════════════════════════════════════════
+     The card shows four numbers. A driver who taps it wants to know how those
+     numbers were arrived at and what is coming, so this sheet states the
+     arithmetic plainly instead of hiding it behind trust.
+   */
+  function openBalance(d, onDone) {
+    const sheet = getSheet();
+    const b = d.balance || {};
+    const an = d.analytics || {};
+    const ws = (d.withdrawals || []).filter(w => w.status !== "paid");
+
+    sheet.host.innerHTML = `
+      <div class="gwd gride">
+        <h2 class="gwd-h">Your money</h2>
+        <p class="gwd-avail">${esc(b.availablePretty || "R0.00")} available to withdraw</p>
+
+        <div class="gride-money">
+          <div class="gride-mrow gride-mrow-total"><span>Available now</span><strong>${esc(b.availablePretty || "R0.00")}</strong></div>
+          <div class="gride-mrow"><span>Earned in total</span><strong>${esc(b.earnedPretty || "R0.00")}</strong></div>
+          <div class="gride-mrow"><span>On hold (${esc(String(b.holdHours || 24))}h)</span><strong>${esc(b.holdingPretty || "R0.00")}</strong></div>
+          <div class="gride-mrow"><span>Reserved for withdrawals</span><strong>${esc(b.reservedPretty || "R0.00")}</strong></div>
+          <div class="gride-mrow gride-mrow-neg"><span>Already paid out</span><strong>${esc(b.paidOutPretty || "R0.00")}</strong></div>
+        </div>
+
+        <p class="gwd-note">
+          GOGO takes ${esc(String(an.commissionPct || 12))}% of every completed seat. Money from a
+          finished trip becomes withdrawable ${esc(String(b.holdHours || 24))} hours later, so a
+          refund can still be honoured. The minimum withdrawal is ${esc(b.minimumPretty || "R100")}.
+        </p>
+
+        ${ws.length ? `
+          <div class="gride-sec">
+            <span class="grdr-k">Withdrawals waiting</span>
+            ${ws.map(w => `
+              <div class="gride-person">
+                <span class="gride-pn">
+                  <span class="gride-pname">${esc(w.amountPretty)} · ${esc(String(w.method).toUpperCase())}</span>
+                  <span class="gride-pst">Requested ${esc(String(w.requestedAt || "").slice(0, 10))}</span>
+                </span>
+                <span class="gride-pa">${esc(w.status)}</span>
+              </div>`).join("")}
+          </div>` : ""}
+
+        ${b.canWithdraw ? '<button class="gwd-btn" id="grideW" type="button">Withdraw</button>' : ""}
+      </div>`;
+
+    const w = sheet.host.querySelector("#grideW");
+    if (w) w.addEventListener("click", () => { sheet.hide(); openWithdraw(b, onDone); });
+
+    sheet.show();
+  }
+
+  /* ══ analytics detail ══════════════════════════════════════════════════
+     Load factor and seats sold are the two numbers that tell a driver whether
+     the route is working. This sheet adds the temporal view the card cannot:
+     which days earn, which routes earn, and what that means in rand per seat.
+   */
+  function openStats(d, onDone) {
+    const sheet = getSheet();
+    const an = d.analytics || {};
+    const trend = an.trend || [];
+    const max = Math.max(...trend.map(t => t.cents), 1);
+
+    sheet.host.innerHTML = `
+      <div class="gwd gride">
+        <h2 class="gwd-h">How you are doing</h2>
+        <p class="gwd-avail">${esc(String(an.ridesListed || 0))} rides · ${esc(String(an.seatsSold || 0))} seats sold</p>
+
+        <div class="gride-grid">
+          <div><span class="grdr-k">Load factor</span><span class="gride-v">${esc(String(an.loadPct || 0))}%</span></div>
+          <div><span class="grdr-k">Revenue</span><span class="gride-v">${esc(an.netPretty || "R0.00")}</span></div>
+          <div><span class="grdr-k">Per seat</span><span class="gride-v">${esc(an.avgFarePretty || R(0))}</span></div>
+          <div><span class="grdr-k">Rating</span><span class="gride-v">${Number(an.rating || 0).toFixed(1)}</span></div>
+        </div>
+
+        ${trend.length > 1 ? `
+          <div class="gride-sec">
+            <span class="grdr-k">Earnings by day</span>
+            <div class="gdr-trend" style="margin-top:10px">
+              ${trend.map(t => `<div class="gdr-bar-col" title="${esc(t.day)}: ${R(t.cents / 100)}">
+                <i style="height:${Math.max(4, Math.round((t.cents / max) * 48))}px"></i></div>`).join("")}
+            </div>
+          </div>` : ""}
+
+        ${an.routes && an.routes.length ? `
+          <div class="gride-sec">
+            <span class="grdr-k">By route</span>
+            ${an.routes.map(r => `
+              <div class="gride-person">
+                <span class="gride-pn">
+                  <span class="gride-pname">${esc(r.route)}</span>
+                  <span class="gride-pst">${esc(String(r.seats))} seats</span>
+                </span>
+                <span class="gride-pa">${esc(r.netPretty)}</span>
+              </div>`).join("")}
+          </div>` : ""}
+
+        <p class="gwd-note">
+          Load factor is seats sold divided by seats offered. Below about 50% the
+          route is not paying for the trip; a full van is the only way a minibus
+          makes money.
+        </p>
+      </div>`;
+
+    sheet.show();
   }
 
   /* ══ onboarding — a driver cannot list until this is done ═════════════ */
@@ -134,8 +276,9 @@
     const rides = d.rides || [];
 
     return `
-      <section class="gdr-hero" data-anim="1">
-        <span class="gdr-label">Available to withdraw</span>
+      <section class="gdr-hero gdr-tap" data-anim="1" id="gdrBalanceCard" role="button" tabindex="0"
+               aria-label="Money details">
+        <span class="gdr-label">Available to withdraw<span class="gdr-more">Details</span></span>
         <div class="gdr-bal">
           <strong>${esc(bal.availablePretty || "R0.00")}</strong>
           ${bal.canWithdraw
@@ -151,7 +294,8 @@
           ${bal.holdHours} hours after the trip, so a refund can still be honoured.</p>` : ""}
       </section>
 
-      <div class="gdr-stats" data-anim="2">
+      <div class="gdr-stats gdr-tap" data-anim="2" id="gdrStatsCard" role="button" tabindex="0"
+           aria-label="Performance details">
         <div class="gdr-stat"><span class="gdr-stat-n">${an.loadPct || 0}<i>%</i></span><span class="gdr-stat-l">Load factor</span></div>
         <div class="gdr-stat"><span class="gdr-stat-n">${an.seatsSold || 0}</span><span class="gdr-stat-l">Seats sold</span></div>
         <div class="gdr-stat"><span class="gdr-stat-n">${Number(an.rating || 0).toFixed(1)}</span><span class="gdr-stat-l">Rating</span></div>
@@ -178,8 +322,19 @@
   }
 
   function rideCard(r) {
+    /* ── the whole card is the tap target ───────────────────────────────────
+       A driver glancing at their list wants to open a ride and see who is on
+       it, not hunt for a small link. The card is a <article> wrapping one
+       overlay button so the entire surface is clickable AND the row still reads
+       as an article to a screen reader. The per-passenger complete button stops
+       propagation, so marking someone as boarded does not also open the sheet.
+    */
     return `
       <article class="grdr" data-ride="${esc(r.id)}">
+        <button class="grdr-hit" type="button" data-open-ride="${esc(r.id)}"
+                aria-label="Open ${esc(r.from)} to ${esc(r.to)} on ${esc(r.date)}">
+        </button>
+
         <header class="grdr-top">
           <div>
             <p class="grdr-route">${esc(r.from)} <span>→</span> ${esc(r.to)}</p>
@@ -190,7 +345,8 @@
 
         <div class="grdr-bar-wrap">
           <div class="grdr-bar"><i style="width:${r.loadPct}%"></i></div>
-          <span class="grdr-bar-l">${r.seatsSold}/${r.seatsTotal} seats · ${r.loadPct}% full</span>
+          <span class="grdr-bar-l">${r.seatsSold}/${r.seatsTotal} seats · ${r.loadPct}% full${
+            r.seatsOpen ? ` · ${r.seatsOpen} open` : " · full"}</span>
         </div>
 
         <div class="grdr-facts">
@@ -207,12 +363,118 @@
                 <span class="grdr-sale-s">${esc(s.state)}</span>
                 <span class="grdr-sale-a">${esc(s.netPretty)}</span>
                 ${s.state === "held" || s.state === "confirmed" ? `
-                  <button class="grdr-act" data-sale="${esc(s.id)}" data-act="complete" type="button" title="Mark as completed">
+                  <button class="grdr-act" data-sale="${esc(s.id)}" data-act="complete"
+                          type="button" title="Mark ${esc(s.passenger)} as boarded">
                     ${I.check}
                   </button>` : ""}
               </div>`).join("")}
           </div>` : ""}
       </article>`;
+  }
+
+  /* ══ ride detail sheet ══════════════════════════════════════════════════
+     What the driver needs about ONE ride, which the list card cannot hold: every
+     passenger and their state, the money broken down against commission, the
+     seats still unsold, and the actions that change any of it.
+   */
+  function openRide(r, onDone) {
+    const sheet = getSheet();
+    const host = sheet.host;
+
+    const stateLabel = { held: "Holding", confirmed: "Confirmed", completed: "Boarded", refunded: "Refunded", forfeited: "No-show" };
+
+    host.innerHTML = `
+      <div class="gwd gride">
+        <div class="gride-top">
+          <div>
+            <h2 class="gwd-h">${esc(r.from)} <span class="gride-arrow">→</span> ${esc(r.to)}</h2>
+            <p class="gwd-avail">${esc(r.date)} · departs ${esc(r.depart)} · ${esc(r.vehicle || "")}</p>
+          </div>
+          <span class="grdr-pill ${r.status === "open" ? "" : "off"}">${esc(r.status)}</span>
+        </div>
+
+        <div class="gride-grid">
+          <div><span class="grdr-k">Fare</span><span class="gride-v">${esc(r.farePretty)}</span></div>
+          <div><span class="grdr-k">Seats</span><span class="gride-v">${r.seatsSold}/${r.seatsTotal}</span></div>
+          <div><span class="grdr-k">Open</span><span class="gride-v">${r.seatsOpen}</span></div>
+          <div><span class="grdr-k">Load</span><span class="gride-v">${r.loadPct}%</span></div>
+        </div>
+
+        <div class="gride-money">
+          <div class="gride-mrow"><span>Gross taken</span><strong>${esc(r.earnings.grossPretty)}</strong></div>
+          <div class="gride-mrow gride-mrow-neg"><span>Commission</span><strong>-${esc(R(r.earnings.commissionCents / 100))}</strong></div>
+          <div class="gride-mrow gride-mrow-total"><span>Your earnings</span><strong>${esc(r.earnings.netPretty)}</strong></div>
+          ${r.earnings.pendingCents ? `<div class="gride-mrow"><span>Still pending</span><strong>${esc(r.earnings.pendingPretty)}</strong></div>` : ""}
+        </div>
+
+        <div class="gride-sec">
+          <span class="grdr-k">Passengers${r.sales.length ? ` · ${r.sales.length}` : ""}</span>
+          ${r.sales.length ? `
+            <div class="gride-people">
+              ${r.sales.map(s => `
+                <div class="gride-person">
+                  <span class="gride-pav">${esc(initialsOf(s.passenger))}</span>
+                  <span class="gride-pn">
+                    <span class="gride-pname">${esc(s.passenger)}</span>
+                    <span class="gride-pst gride-pst-${esc(s.state)}">${esc(stateLabel[s.state] || s.state)}</span>
+                  </span>
+                  <span class="gride-pa">${esc(s.netPretty)}</span>
+                  ${s.state === "held" || s.state === "confirmed" ? `
+                    <button class="grdr-act" data-sale="${esc(s.id)}" data-act="complete" type="button"
+                            title="Mark as boarded">${I.check}</button>` : ""}
+                </div>`).join("")}
+            </div>` : `<p class="gride-none">No passengers yet. This ride is on the board and riders can see it.</p>`}
+        </div>
+
+        ${r.seatsOpen > 0 ? `
+          <p class="gride-hint">${r.seatsOpen} ${r.seatsOpen === 1 ? "seat" : "seats"} still open.
+             At ${esc(r.farePretty)} each that is another ${esc(R((r.seatsOpen * r.fare * 0.88) / 100))} if they sell.</p>` : ""}
+      </div>`;
+
+    host.querySelectorAll("[data-sale]").forEach(b => {
+      b.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        b.disabled = true;
+        await api(`/driver/sales/${b.getAttribute("data-sale")}/${b.getAttribute("data-act")}`, { method: "POST" });
+        sheet.hide();
+        if (onDone) onDone();
+      });
+    });
+
+    sheet.show();
+  }
+
+  function initialsOf(name) {
+    return String(name || "?").split(/\s+/).filter(Boolean)
+      .map(p => p.charAt(0)).slice(0, 2).join("").toUpperCase() || "?";
+  }
+
+  /* one sheet instance, shared by every driver overlay */
+  function getSheet() {
+    let sheet = document.querySelector(".gsheet");
+    if (!sheet) {
+      sheet = document.createElement("div");
+      sheet.className = "gsheet";
+      sheet.innerHTML = '<div class="gsheet-scrim" data-close></div><div class="gsheet-body"><div class="gsheet-grab"></div><div id="gsheetIn"></div></div>';
+      document.body.appendChild(sheet);
+    }
+    const host = sheet.querySelector("#gsheetIn") || sheet.querySelector(".gsheet-body");
+
+    function hide() {
+      sheet.classList.remove("shown");
+      document.documentElement.style.overflow = "";
+      setTimeout(() => sheet.classList.remove("on"), 220);
+    }
+    function show() {
+      sheet.classList.add("on");
+      document.documentElement.style.overflow = "hidden";
+      requestAnimationFrame(() => sheet.classList.add("shown"));
+    }
+    if (!sheet.__wired) {
+      sheet.addEventListener("click", e => { if (e.target.closest("[data-close]")) hide(); });
+      sheet.__wired = true;
+    }
+    return { host, show, hide };
   }
 
   function trendHtml(an) {
@@ -484,6 +746,32 @@
       return;
     }
 
+    /* ── a failed load must not look like a slow one ────────────────────────
+       Without this, a timeout or a 500 left the "Loading…" line on screen
+       forever: the driver cannot tell a dead page from a slow one, and there is
+       nothing to tap. Any non-auth failure now says what happened and offers the
+       one action that can fix it. */
+    if (!me.ok) {
+      host.innerHTML = `
+        <div class="gdr">
+          ${switchHtml("driver")}
+          <div class="gdr-error">
+            <p class="gdr-error-t">Could not load your driver account</p>
+            <p class="gdr-error-s">${esc(me.data.error || "Something went wrong.")}</p>
+            <button class="gdr-btn gdr-btn-lime" id="gdrRetry" type="button">Try again</button>
+            <button class="gdr-btn gdr-btn-quiet" id="gdrBack" type="button">Back to passenger</button>
+          </div>
+        </div>`;
+      const retry = host.querySelector("#gdrRetry");
+      if (retry) retry.addEventListener("click", () => renderDriver(host));
+      const back = host.querySelector("#gdrBack");
+      if (back) back.addEventListener("click", () => {
+        setMode("passenger");
+        if (window.GOGODashboard && GOGODashboard.boot) GOGODashboard.boot();
+      });
+      return;
+    }
+
     /* not a driver yet: onboarding, which is the only useful thing to offer */
     if (me.data.onboardingRequired || !me.data.driver) {
       host.innerHTML = `<div class="gdr">${switchHtml("driver")}${onboardingHtml()}</div>`;
@@ -515,12 +803,34 @@
     if (nbtn) nbtn.addEventListener("click", () => openNewRide(reload));
 
     host.querySelectorAll("[data-sale]").forEach(b => {
-      b.addEventListener("click", async () => {
+      b.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
         b.disabled = true;
         await api(`/driver/sales/${b.getAttribute("data-sale")}/${b.getAttribute("data-act")}`, { method: "POST" });
         reload();
       });
     });
+
+    /* ── open a ride ──────────────────────────────────────────────────────
+       The card is the tap target, so this is the one handler the list needs.
+       Looked up by id from the data we already hold rather than stashed in a
+       closure per card — one source of truth, and a completed sale updates the
+       same object the sheet reopens from. */
+    host.querySelectorAll("[data-open-ride]").forEach(b => {
+      b.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const id = b.getAttribute("data-open-ride");
+        const ride = d.rides.find(x => x.id === id);
+        if (ride) openRide(ride, reload);
+      });
+    });
+
+    /* the stats and balance cards are informative, but a driver will still tap
+       them — so give them somewhere useful to go rather than nothing */
+    const balCard = host.querySelector("#gdrBalanceCard");
+    if (balCard) balCard.addEventListener("click", () => openBalance(d, reload));
+    const statsCard = host.querySelector("#gdrStatsCard");
+    if (statsCard) statsCard.addEventListener("click", () => openStats(d, reload));
   }
 
   function wireOnboarding(host) {
