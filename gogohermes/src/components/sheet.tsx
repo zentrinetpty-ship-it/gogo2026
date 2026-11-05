@@ -15,6 +15,7 @@
    the rider is reaching for the button at the bottom of it.
 */
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -64,8 +65,20 @@ export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[900]" role="dialog" aria-modal="true" aria-label={title || "Booking"}>
+  /* ══ RENDERED INTO <body>, NOT IN PLACE ══════════════════════════════════
+     `position: fixed` resolves against the nearest ancestor that has a transform,
+     filter, contain, or perspective — not against the viewport. This sheet lives
+     inside the booking card, and that card animates in via `.gh-rise`, which is a
+     transform. So the sheet's "viewport" was the card: it anchored to the bottom
+     of the CARD, and on a long landing page that meant it appeared wherever the
+     card happened to be in the document — far below the fold, which is why the
+     page had to be dragged down to reveal it.
+
+     A portal lifts it to <body>, where no ancestor is transformed, so `fixed`
+     finally means what it says. The wrapper is also given an explicit height for
+     mobile browsers that mis-resolve inset utilities on fixed elements. */
+  return createPortal(
+    <div className="fixed inset-0 z-[900] h-[100dvh] w-screen" role="dialog" aria-modal="true" aria-label={title || "Booking"}>
       <div
         onClick={onClose}
         className={cn(
@@ -77,7 +90,12 @@ export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
       <div
         ref={panel}
         className={cn(
-          "absolute inset-x-0 bottom-0 max-h-[82dvh] overflow-y-auto overscroll-contain rounded-t-[22px] bg-white px-5 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-2.5",
+          /* min-h gives the sheet presence. A one-field sheet is 160px of
+             content, and pinned to the bottom of a tall screen that reads as a
+             floating toolbar rather than a sheet you can type into. The driver
+             screens never hit this because their content always fills the panel;
+             rider sheets have to state a floor. */
+          "flex max-h-[82dvh] min-h-[280px] flex-col absolute inset-x-0 bottom-0 overflow-y-auto overscroll-contain rounded-t-[22px] bg-white px-5 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-2.5",
           "transition-transform duration-[260ms] ease-[cubic-bezier(.22,.61,.36,1)]",
           shown ? "translate-y-0" : "translate-y-full",
           /* from 640px it stops being a bottom sheet and becomes a centred
@@ -109,9 +127,10 @@ export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
           </button>
         </div>
 
-        <div>{children}</div>
+        <div className="flex-1">{children}</div>
         {footer}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
