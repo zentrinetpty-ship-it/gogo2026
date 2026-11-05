@@ -173,25 +173,30 @@ function paintChrome(active) {
   const items = [
     ["/gogo/",           "Home",      "home"],
     ["/gogo/dashboard",  "Dashboard", "grid"],
-    ["/gogo/messages",   "Messages",  "chat"],
+    ["/gogo/account.html", "Account", "person"],
     ["/gogo/why.html",   "More",      "dots"],
   ];
 
   const IC = {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
-    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.65L4 21l1.2-4.2A8.5 8.5 0 1 1 20.5 12Z"/></svg>',
+    person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/></svg>',
     dots: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
   };
 
   /* data-page gives a PAGE name; the tabs are keyed by ICON name. Without this
      translation only Home ever lit up and the bar looked broken everywhere
-     else. Rider maps to Dashboard because that is where trips live. */
+     else. Rider maps to Dashboard because that is where trips live.
+
+     Messages used to own the third slot and mapped four pages to it. That slot
+     is now Account, so those pages point at Dashboard instead — a rider looking
+     for their booking still lands somewhere that shows it. */
   const PAGE_TO_TAB = {
     index: "home", home: "home", app: "home",
     dashboard: "grid", rider: "grid", ride: "grid", rides: "grid", ticket: "grid",
-    messages: "chat", chats: "chat", parcel: "chat",
-    more: "dots", why: "dots", safety: "dots", auth: "dots", driver: "dots",
+    messages: "grid", chats: "grid", parcel: "grid",
+    account: "person", auth: "person", driver: "person",
+    more: "dots", why: "dots", safety: "dots",
     ops: "dots", terms: "dots", privacy: "dots", "404": "dots", track: "grid",
   };
   const current = PAGE_TO_TAB[active] || "home";

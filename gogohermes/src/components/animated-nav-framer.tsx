@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { name: "Home", href: "/gogo/", Icon: Home },
   { name: "Dashboard", href: "/gogo/dashboard", Icon: LayoutGrid },
-  { name: "Messages", href: "/gogo/messages", Icon: ReceiptText },
+  { name: "Account", href: "/gogo/account.html", Icon: ReceiptText },
   /* More points at How it works, not the /gogo/more nav shell. That shell was a
      menu of links with no content of its own; the explainer is the page people
      actually want when they tap "more" on a service they do not understand yet.
