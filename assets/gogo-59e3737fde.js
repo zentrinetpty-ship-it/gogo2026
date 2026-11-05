@@ -349,36 +349,48 @@ function vehicleShort(v) {
 }
 
 function rideCard(r) {
-  /* dateTxt / timeTxt are derived HERE, per card, from r.depart. They were
-     local consts in the original function and dropping them while replacing the
-     markup broke every card with "departTxt is not defined" — a rename that
-     looked like a helper call. Kept local and explicit. */
+  /* dateTxt / timeTxt are derived HERE, per card, from r.depart. They were local
+     consts in the original function and dropping them while replacing the markup
+     broke every card with "departTxt is not defined" — a rename that looked like a
+     helper call. Kept local and explicit. */
   const t = new Date(r.depart);
   const timeTxt = t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const dateTxt = t.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
 
   const left = seatsOpen(r), full = left === 0, taken = seatsHeld(r);
   const dur = tripDuration(r);
-  const dep = townCodeOf(r.from), arr = townCodeOf(r.to);
+  const arr = townCodeOf(r.to);
   const pct = Math.round((taken / Math.max(1, r.seatsTotal)) * 100);
 
-  /* One card, read top-down: when it leaves, where it goes, what it costs.
-     The town NAMES are the loud elements — a rider scans for "Mthatha", not for
-     a two-letter code. Codes are gone entirely.
-
-     The left rail is a real timeline: filled dot at the origin, hairline to the
-     stop, hollow dot at the destination. It gives the eye a spine and it is the
-     only piece of decoration in the card that carries meaning. */
+  /* how the rider wants to be told about seats: a number is honest, a colour word
+     is faster. Both, and the bar carries the same information a third time in
+     shape — the card has to survive being glanced at. */
   const seatTone = left === 0 ? "out" : left <= 2 ? "low" : "ok";
+  const seatTxt = full ? "Full" : left === 1 ? "1 seat left" : left + " seats left";
+
+  /* what THIS rider pays: the fare they see is per seat, but they searched for a
+     number of seats and the card should not make them multiply. Uses the same
+     query the rest of the page already reads. */
+  const q = parseQuery();
+  const wantSeats = Math.max(1, Math.min(6, Number(q.seats) || 1));
+  const payTotal = r.fare * wantSeats;
+
+  /* stops are the reason minibuses work — a rider going to Dutywa does not care
+     that the van ends at Mthatha. Each carries its own fare, which is the whole
+     point of a hop-on-hop-off corridor. */
+  const stops = r.stops || [];
+
+  /* luggage in plain words, because "boot" means nothing to a first-time rider */
+  const lugTxt = r.luggage === "boot" ? "Boot space for a big bag" : "Hand luggage only";
 
   return `
     <article class="grc${full ? " grc-full" : ""}" data-ride="${r.id}">
 
-      <a class="grc-hit" href="ride.html?id=${r.id}${rideQuery()}" aria-label="${esc(r.from)} to ${esc(r.to)}, ${esc(timeTxt)}, ${money(r.fare)}"></a>
+      <a class="grc-hit" href="ride.html?id=${r.id}${rideQuery()}" aria-label="${esc(r.from)} to ${esc(r.to)}, ${esc(timeTxt)}, ${money(r.fare)} per seat"></a>
 
       <header class="grc-top">
         <span class="grc-when">
-          <b>${esc(timeTxt)}</b>
+          <b><span aria-hidden="true">🕐</span> ${esc(timeTxt)}</b>
           <span>${esc(dateTxt)}</span>
         </span>
         <span class="grc-price">
@@ -395,37 +407,66 @@ function rideCard(r) {
         </div>
         <div class="grc-places">
           <div class="grc-place">
-            <span class="grc-town">${esc(dep.name)}</span>
-            <span class="grc-meta">${esc(dur)}</span>
+            <span class="grc-town">${esc(r.from)}</span>
+            <span class="grc-meta">departs ${esc(timeTxt)}</span>
           </div>
           <div class="grc-place">
-            <span class="grc-town">${esc(arr.name)}</span>
+            <span class="grc-town">${esc(r.to)}</span>
             <span class="grc-meta">arrives ${esc(etaOf(r))}</span>
           </div>
         </div>
       </div>
 
-      <div class="grc-facts">
-        <span class="grc-fact">
-          <span class="grc-fact-v">${esc(r.driver)}</span>
-          <span class="grc-fact-s">★ ${r.rating} · ${r.trips} trips</span>
+      <div class="grc-rail-facts" role="list">
+        <span class="grc-rf" role="listitem">
+          <span class="grc-rf-e" aria-hidden="true">⏱️</span>
+          <span class="grc-rf-t">${esc(dur)} ride</span>
         </span>
-        <span class="grc-fact grc-fact-seats">
-          <span class="grc-fact-v grc-seats-${seatTone}">${full ? "Full" : left + " left"}</span>
-          <span class="grc-fact-s">${esc(vehicleShort(r.vehicle))}</span>
-          <span class="grc-bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
+        <span class="grc-rf" role="listitem">
+          <span class="grc-rf-e" aria-hidden="true">🛑</span>
+          <span class="grc-rf-t">${stops.length ? stops.length + (stops.length === 1 ? " stop" : " stops") : "Non-stop"}</span>
         </span>
-        <span class="grc-fact grc-fact-lug">
-          <span class="grc-fact-v">${r.luggage === "boot" ? "Boot" : "Hand"}</span>
-          <span class="grc-fact-s">luggage</span>
+        <span class="grc-rf" role="listitem">
+          <span class="grc-rf-e" aria-hidden="true">🚌</span>
+          <span class="grc-rf-t">${esc(vehicleShort(r.vehicle))}</span>
         </span>
       </div>
 
-      ${r.stops.length ? `
+      <div class="grc-facts">
+        <span class="grc-fact">
+          <span class="grc-fact-e" aria-hidden="true">👤</span>
+          <span class="grc-fact-v">${esc(r.driver)}</span>
+          <span class="grc-fact-s">${r.rating ? `⭐ ${r.rating} · ${r.trips} trip${r.trips === 1 ? "" : "s"}` : (r.newDriver ? "✨ New on GOGO" : "⭐ Not yet rated")}</span>
+        </span>
+        <span class="grc-fact grc-fact-seats">
+          <span class="grc-fact-e" aria-hidden="true">💺</span>
+          <span class="grc-fact-v grc-seats-${seatTone}">${esc(seatTxt)}</span>
+          <span class="grc-fact-s">${taken} of ${r.seatsTotal} taken</span>
+          <span class="grc-bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
+        </span>
+      </div>
+
+      <div class="grc-lug">
+        <span class="grc-lug-e" aria-hidden="true">🧳</span>
+        <span class="grc-lug-t">${esc(lugTxt)}</span>
+      </div>
+
+      ${stops.length ? `
         <div class="grc-stops">
-          <span class="grc-stops-l">Stops</span>
-          ${r.stops.map(s => `<span class="grc-stop">${esc(s.city)}<b>${money(s.fare)}</b></span>`).join("")}
+          <span class="grc-stops-l">Stops on the way</span>
+          ${stops.map(s => `<span class="grc-stop">${esc(s.city)}<b>${money(s.fare)}</b></span>`).join("")}
         </div>` : ""}
+
+      ${wantSeats > 1 ? `
+        <div class="grc-total">
+          <span class="grc-total-l">${wantSeats} seats</span>
+          <span class="grc-total-v">${money(payTotal)}</span>
+        </div>` : ""}
+
+      <div class="grc-foot">
+        <span class="grc-pickup" aria-hidden="true">📲</span>
+        <span class="grc-pickup-t">We collect you at your street</span>
+      </div>
 
       <a class="grc-go" href="ride.html?id=${r.id}${rideQuery()}">${full ? "View ride" : "Join this ride"}</a>
     </article>`;
@@ -2178,9 +2219,13 @@ async function hydrateCatalogue() {
         .map((town) => ({ city: town, time: "", fare: Number(r.legs[town] || 0) }));
       return {
         id: r.id,
+        /* keep nulls as nulls: a fabricated 4.8 rating and 0 trips was worse
+           than no rating at all, because it looked like a real score from
+           nobody. The card decides how to say "not yet rated". */
         driver: r.driver || "GOGO driver",
-        rating: r.rating || 4.8,
-        trips: r.trips || 0,
+        rating: r.rating || null,
+        trips: Number(r.trips) || 0,
+        newDriver: Boolean(r.newDriver),
         vehicle: r.vehicle || "Minibus",
         plate: r.plate || "",
         colour: r.colour || "White",

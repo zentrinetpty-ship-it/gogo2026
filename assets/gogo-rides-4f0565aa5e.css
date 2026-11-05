@@ -770,3 +770,145 @@ select.grides-i {
 @media (prefers-reduced-motion: reduce) {
   .grides-seg-b { transition: none; }
 }
+
+/* ══ MAKE THE SEARCH BAR FINGER-SIZED ═══════════════════════════════════════
+   Seen on a real phone, the bar read as cramped and unfinished even though every
+   rule was applying: labels at 9.5px, inputs at 42px, day buttons at 32px. Those
+   are desktop numbers. The smallest comfortable target on a phone is 44px, and a
+   label smaller than about 11px is decoration rather than a label.
+
+   Nothing here changes WHAT the bar says, only how much room it takes to say it. */
+
+.grides-fl {
+  font-size: 11px;
+  letter-spacing: .05em;
+  color: #8A8A83;
+}
+
+.grides-i {
+  height: 48px;
+  padding: 0 13px;
+  border-radius: 12px;
+}
+
+select.grides-i { font-size: 16px; padding-right: 30px; }
+
+/* day control: three equal thirds, each a real target */
+.grides-seg { padding: 4px; gap: 4px; }
+
+.grides-seg-b {
+  height: 40px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+/* the chips are filters and get tapped often — give them a target too */
+.grides-chip {
+  min-height: 36px;
+  padding: 0 13px;
+  font-size: 12.5px;
+}
+
+.grides-fields { grid-template-columns: 1fr 88px; gap: 10px; }
+
+/* on a genuinely narrow phone the number field does not need a third of the row */
+@media (max-width: 400px) {
+  .grides-fields { grid-template-columns: 1fr 74px; }
+  .grides-bar { padding: 15px 14px 13px; }
+}
+
+/* ══ THE RIDE CARD, REBUILT ═════════════════════════════════════════════════
+   Rows, in the order a rider decides: when it leaves, where it goes, how long it
+   takes, who drives, whether there is room, what my bag does, where it stops,
+   what I pay, and how I get collected.
+
+   The emojis are CONTENT labels, not chrome — they are the only emoji in GOGO's
+   interface, and they are here because a 🧳 reads faster than "luggage" at a
+   glance. Everything structural is still hairlines and type. */
+
+/* the quick-fact rail: duration, stops, vehicle — one row, small, scannable */
+.grc-rail-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.grc-rf {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #FBFBF9;
+  border: 1px solid #EDEDE7;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4A4A45;
+  white-space: nowrap;
+}
+
+.grc-rf-e { font-size: 11px; line-height: 1; }
+
+/* the two bigger facts: driver and seats, each with its own emoji */
+.grc-fact-e {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+/* luggage as a sentence, not a word */
+.grc-lug {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F2F2EE;
+  font-size: 12.5px;
+  color: #6E6E68;
+}
+
+.grc-lug-e { font-size: 13px; line-height: 1; }
+
+/* what it costs for the seats actually searched for */
+.grc-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #F7FBEA;
+  border: 1px solid #E4F0C6;
+}
+
+.grc-total-l { font-size: 12px; font-weight: 600; color: #4A4A45; }
+.grc-total-v { font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: #1A1A1A; }
+
+/* the pickup promise, immediately above the button */
+.grc-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  font-size: 11.5px;
+  color: #8A8A83;
+}
+
+.grc-foot .grc-pickup { font-size: 12px; line-height: 1; }
+
+/* the seats bar must read as a quantity, so it gets a floor and a cap */
+.grc-bar { display: block; height: 3px; border-radius: 999px; background: #EFEFE9; overflow: hidden; margin-top: 6px; }
+.grc-bar > i { display: block; height: 100%; border-radius: 999px; background: #A3E635; transition: width .3s ease; }
+.grc-full .grc-bar > i { background: #D4D4CC; }
+
+/* a full ride dims everything except the fact that it is full */
+.grc-full .grc-go { background: #EDEDE7; color: #8A8A83; }
+
+@media (max-width: 380px) {
+  .grc-rail-facts { gap: 5px; }
+  .grc-rf { font-size: 11px; padding: 0 8px; }
+}

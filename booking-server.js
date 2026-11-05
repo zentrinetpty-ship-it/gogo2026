@@ -523,14 +523,32 @@ const server = http.createServer(async (req, res) => {
         });
         legs[r.to] = Math.round(Number(r.fare || 0)) / 100;
 
+        /* ── the driver, joined in ────────────────────────────────────────
+           The card needs a name, a rating and a run count to be worth reading,
+           and the listing itself only stores a driverId. Without this join the
+           finder showed a live ride as "GOGO driver · 0 trips", which reads as a
+           rating of nobody by nobody — the opposite of reassurance.
+
+           A driver who has completed no trips yet is described honestly rather
+           than padded: newDriver is passed through so the card can say "new on
+           GOGO" instead of printing a hollow 0. */
+        const drv = (db.drivers || []).find((x) => x && x.id === r.driverId) || null;
+        const completed = (db.sales || []).filter(
+          (x) => x && x.driverId === r.driverId && x.state === "completed"
+        ).length;
+
         list.push({
           id: r.id,
           from: r.from,
           to: r.to,
           depart: r.depart,
-          vehicle: r.vehicle || "Minibus",
+          vehicle: r.vehicle || drv && drv.vehicle || "Minibus",
           seats: free,
           legs,
+          driver: drv && (drv.name || drv.fullName) || null,
+          rating: drv && Number(drv.rating) > 0 ? Number(drv.rating) : null,
+          trips: completed,
+          newDriver: completed === 0,
           /* marks this as a real listing rather than demo stock, so the UI can
              tell the difference if it ever needs to */
           live: true,
