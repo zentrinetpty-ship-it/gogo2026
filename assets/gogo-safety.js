@@ -369,9 +369,23 @@ const GOGOSafety = (() => {
       paint();
     }
 
+    /* ── the shutter ───────────────────────────────────────────────────────────
+       This used to start with `if (confirmed && dataUrl) { finish(); return; }`,
+       which meant the second tap saved INSTANTLY - no analysis, no verdict, no
+       chance to reject. paint() reassigns onclick afterwards for the rejected and
+       accepted states, but this handler is installed first and the early-return
+       fired before any of that mattered. That is the "it just saves automatically"
+       report.
+
+       Now there is exactly one exit: finish() is only reachable from paint() once
+       a verdict exists AND it passed. There is no path from a raw photo to a saved
+       record. */
     shotBtn.onclick = () => {
-      if (confirmed && dataUrl) { finish(); return; }              // already have one: confirm
       if (!consent.checked) { toast("Please tick the consent box first"); return; }
+
+      /* a verdict already exists and passed: paint() owns the action, so let it */
+      if (confirmed && dataUrl && verdict) { return; }
+
       if (video.style.display !== "none" && video.videoWidth) {
         dataUrl = toDataUrl(video, video.videoWidth, video.videoHeight);
         confirmed = true; verdict = null;
@@ -393,6 +407,14 @@ const GOGOSafety = (() => {
 
     function finish() {
       if (!dataUrl) { toast("A selfie is required to continue"); return; }
+      /* the engine is the gate, not a suggestion: nothing is stored until a photo
+         has been read and passed. Also covers the "existing selfie" refresh path,
+         which reaches finish() directly. */
+      if (verdict && !verdict.pass) {
+        toast("<b>" + (verdict.problems[0] ? verdict.problems[0].say : "That photo cannot be used") + "</b>");
+        return;
+      }
+      if (!verdict && !existing) { toast("Still checking the photo"); return; }
       stopCam();
       const st2 = safety();
       if (existing) {

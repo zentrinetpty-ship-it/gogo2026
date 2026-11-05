@@ -995,6 +995,7 @@ function pageHome() {
 
 /* ── PAGE: results ──────────────────────────────────────────────────────── */
 function pageRides() {
+  document.documentElement.removeAttribute('data-addr-manual');
   const q = parseQuery();
   const from = q.from || "East London";
   const state = {
@@ -1487,6 +1488,11 @@ function pageRide() {
     </div>
   </div>`;
 
+  /* the pickup address is already resolved by the search on this page, so the
+     address widget must not add its Suburb and City fields here — the rider would
+     be re-typing what the app already knows */
+  document.documentElement.setAttribute('data-addr-manual', 'off');
+
   const box = $('#joinBox');
   if (mine) {
     box.innerHTML = `
@@ -1773,10 +1779,34 @@ function pageRide() {
     const jSend = box.querySelector('#jSend');
 
     const rideRef = r.id;
+    /* ══ FINDING MY SELFIE ════════════════════════════════════════════════════
+       The record a capture writes and the record this gate looks for had drifted
+       apart in THREE fields, so a saved selfie was invisible to the page that
+       asked for it — which looked exactly like "it just saves automatically and
+       nothing happens":
+
+         capture writes          this gate read
+         ------------------      -----------------------------
+         dataUrl                 photo        (so the image never showed)
+         name                    who          (so the match never found it)
+         role: "passenger"       passed to forRide, which IGNORES the second
+                                 argument and filters on rideRef alone
+
+       Now matched on the fields that actually exist, with role checked here where
+       it can be. forRide keeps its real signature. */
     const mySelfie = () => {
       try {
-        return (GOGOSafety.forRide(rideRef, "passenger") || [])
-          .find(x => (x.who || "").replace(/[^\d]/g, "") === (S.me.phone || "").replace(/[^\d]/g, "")) || null;
+        const mine = (GOGOSafety.forRide(rideRef) || [])
+          .filter(x => x.role === "passenger")
+          .find(x => {
+            const who = String(x.who || x.name || "").replace(/[^\d]/g, "");
+            const me = String(S.me.phone || "").replace(/[^\d]/g, "");
+            /* if we cannot identify the owner, a passenger selfie for this ride on
+               this device is still mine: the browser holds one person's records */
+            return !who || !me ? true : who.endsWith(me.slice(-9)) || me.endsWith(who.slice(-9));
+          }) || null;
+        if (mine) mine.photo = mine.dataUrl || mine.photo;   /* one name for the image */
+        return mine;
       } catch { return null; }
     };
 

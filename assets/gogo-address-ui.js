@@ -76,15 +76,25 @@ const GOGOAddressField = (() => {
        switch: tap it and Suburb and City appear underneath. On a wide screen
        everything is open from the start and nothing collapses — the CSS
        decides, this only supplies the structure. */
+    /* ── suburb / city are OPTIONAL STRUCTURE, not a required step ─────────────
+       On the join screen the address has already been resolved by the search: the
+       rider picked a town, and the pickup street they type is all that is left to
+       give. Asking for Suburb and City again makes them re-enter what the app
+       already knows, and it is the single most common "why is this here" complaint.
+
+       The fields still exist in the DOM on other screens that genuinely need them
+       (a manual address on the driver's listing form). On a page that sets
+       data-addr-manual="off" they are not built at all. */
+    const wantsManual = document.documentElement.getAttribute("data-addr-manual") !== "off";
     const manual = document.createElement("div");
     manual.className = "g-addr-manual";
-    manual.innerHTML = `
+    manual.innerHTML = wantsManual ? `
       <div class="g-addr-extra">
         <div class="g-addr-manual-grid">
           <label class="g-addr-fld"><span>Suburb</span><input class="g-addr-u" type="text" placeholder="" autocomplete="address-level3"></label>
           <label class="g-addr-fld"><span>City</span><input class="g-addr-t" type="text" placeholder="" autocomplete="address-level2"></label>
         </div>
-      </div>`;
+      </div>` : "";
     wrap.appendChild(manual);
 
     const extra = manual.querySelector(".g-addr-extra");
@@ -106,8 +116,8 @@ const GOGOAddressField = (() => {
       el.addEventListener("click", keepOpen);
     });
 
-    const $u = manual.querySelector(".g-addr-u");
-    const $t = manual.querySelector(".g-addr-t");
+    const $u = manual.querySelector(".g-addr-u");   /* null when suppressed */
+    const $t = manual.querySelector(".g-addr-t");   /* null when suppressed */
 
     let rows = [], active = -1, timer = null, seq = 0;
 
@@ -130,7 +140,7 @@ const GOGOAddressField = (() => {
        the driver always receives what the rider sees. */
     let picked = false;
     const syncFromFields = () => {
-      const val = GOGOAddress.compose(input.value, $u.value, $t.value);
+      const val = GOGOAddress.compose(input.value, $u ? $u.value : "", $t ? $t.value : "");
       input.dataset.addr = val;
     };
     [$u, $t].forEach((el) => {
@@ -277,8 +287,8 @@ const GOGOAddressField = (() => {
 
       /* the address goes back into the one field; only the two below are
          filled, so the address is never shown twice */
-      $u.value = p.suburb || "";
-      $t.value = p.town || "";
+      if ($u) $u.value = p.suburb || "";
+      if ($t) $t.value = p.town || "";
       /* the postcode and coordinates travel with the choice, so the booking
          carries what the map actually verified */
       manual.dataset.postcode = p.postcode || "";
