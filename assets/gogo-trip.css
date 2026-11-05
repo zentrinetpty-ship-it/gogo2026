@@ -337,9 +337,9 @@
 .gtr-f { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
 .gtr-fl {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .07em;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: .055em;
   text-transform: uppercase;
   color: #B0B0A9;
 }
@@ -353,7 +353,12 @@
   border-radius: 11px;
   background: #fff;
   font: inherit;
-  font-size: 16px;      /* 16px stops iOS zooming the page on focus */
+  /* ── 15px, and why it is safe ─────────────────────────────────────────────
+     iOS zooms a focused text input below 16px. That rule applies to <input>; a
+     <select> opens a picker rather than an inline keyboard, so selects are set
+     to 15px and text inputs stay at 16. Full-width fields made the old 16px look
+     oversized, and shrinking a select is free legibility with no zoom cost. */
+  font-size: 16px;
   color: #1A1A1A;
   min-width: 0;
   -webkit-appearance: none;
@@ -361,6 +366,7 @@
 }
 
 select.gtr-i {
+  font-size: 15px;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8A83' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
@@ -824,3 +830,142 @@ select.gtr-i {
 }
 
 .gtr-who-done:active { transform: scale(.99); }
+
+
+/* ══ WHO YOU ARE, now inside the request card ═══════════════════════════════
+   It arrived from the route column carrying its own .gtr-card border, which put
+   a box inside a box. Here it is the FIRST BLOCK of the request, separated by the
+   same hairline the other sections use — one card, three parts, not three cards. */
+
+#whoCard {
+  border: 0;
+  border-radius: 0;
+  padding: 0 0 14px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid #F2F2EE;
+  background: transparent;
+}
+
+#whoCard .gtr-who-form { margin-top: 12px; }
+
+/* the join card's own sections start below the identity block */
+#joinForm .gtr-sec:first-of-type { margin-top: 16px; }
+
+
+/* ══ DROP-OFF + SEATS ON ONE ROW ════════════════════════════════════════════
+   The asymmetry is the point: a town name needs nearly all the width, a seat
+   count needs one digit. Giving them equal thirds wasted the column that had
+   the longest possible value and starved the one that had the shortest.
+
+   1fr + 92px: enough for "Butterworth" and "Idutywa" whole, still a comfortable
+   48px tap target for the seats select. On a very narrow phone the seats column
+   keeps its width and the town truncates with an ellipsis rather than pushing
+   the row into two lines — a select that wraps is the thing we were fixing. */
+.gtr-grid-ds {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 340px) {
+  .gtr-grid-ds { grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; }
+}
+
+#joinForm select.gtr-i {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ══ EMOJIS AS LABELS ═══════════════════════════════════════════════════════
+   These are content markers, not chrome. GOGO uses inline SVG for interface
+   icons; an emoji here does a different job — it lets a rider find "luggage" by
+   shape before they read the word, which is what a dense form needs.
+
+   Sized and aligned so a line of them reads as a rhythm rather than a jumble. */
+
+.gtr-fl span[aria-hidden] {
+  font-size: 11.5px;
+  line-height: 1;
+  margin-right: 4px;
+  vertical-align: -1.5px;
+  filter: saturate(1.1);
+}
+
+.gtr-sec-t span[aria-hidden] {
+  font-size: 15px;
+  line-height: 1;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+.gtr-label span[aria-hidden] {
+  font-size: 12px;
+  line-height: 1;
+  margin-right: 5px;
+  vertical-align: -1.5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ══ RESPONSIVE FEEL ════════════════════════════════════════════════════════
+   "Responsive" here means three specific things, not a media-query count:
+     1  every tap target is at least 44px, so nothing is a near-miss
+     2  the form never reflows mid-typing — fields hold their width
+     3  the page answers the finger instantly, with no 300ms lag or scroll jump */
+
+#joinForm .gtr-i,
+#joinForm select.gtr-i {
+  min-height: 48px;
+  touch-action: manipulation;   /* kills the double-tap zoom delay on fields */
+}
+
+#joinForm button,
+.gtr-selfie-btn,
+.gtr-who-edit,
+.gtr-who-done {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease, background-color .18s ease, border-color .18s ease;
+}
+
+#joinForm button:active,
+.gtr-selfie-btn:active,
+.gtr-who-edit:active,
+.gtr-who-done:active {
+  transform: scale(.985);
+}
+
+/* the fare rows animate in when the seat count changes, so the total visibly
+   moves rather than silently swapping number */
+.gtr-fee-v, .gtr-total-v { transition: color .2s ease; }
+
+/* sections arrive in sequence on first paint — a form that assembles itself
+   reads as faster than one that appears all at once, even at the same speed */
+@keyframes gtrIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+#joinForm .gtr-sec,
+#whoCard,
+.gtr-selfie {
+  animation: gtrIn .34s cubic-bezier(.22,.61,.36,1) both;
+}
+
+#whoCard     { animation-delay: .02s; }
+#joinForm .gtr-sec:nth-of-type(1) { animation-delay: .06s; }
+.gtr-selfie  { animation-delay: .14s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #joinForm .gtr-sec, #whoCard, .gtr-selfie { animation: none; }
+  #joinForm button, .gtr-selfie-btn { transition: none; }
+}
+
+/* ── very small phones: tighten without shrinking targets ─────────────────── */
+@media (max-width: 360px) {
+  .gtr-sec-s { font-size: 11px; }
+  .gtr-selfie { padding: 11px 11px 10px; }
+  .gtr-who-av { width: 36px; height: 36px; font-size: 12px; }
+}

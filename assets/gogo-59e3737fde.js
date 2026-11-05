@@ -1449,60 +1449,6 @@ function pageRide() {
           </p>
         </section>
 
-        <!-- ══ WHO YOU ARE ═══════════════════════════════════════════════════
-             Moved out of the booking form and onto the ROUTE side, immediately
-             after the stop-by-stop list.
-
-             Why: identity is not part of the booking decision, it is context for
-             it. Sitting at the top of the form it read as the first thing you
-             must do; sitting under the route it reads as what the driver will
-             see about you on that route — which is what a name and number
-             actually are here. The form is now purely about the seat.
-
-             Rebuilt as its own card so it carries its own heading, its own
-             verified state and its own edit affordance, instead of three loose
-             fields. -->
-        <section class="gtr-card" id="whoCard">
-          <div class="gtr-who-head">
-            <span class="gtr-label">Who you are</span>
-            <button class="gtr-who-edit" type="button" id="whoEdit">Edit</button>
-          </div>
-
-          <div class="gtr-who-body">
-            <span class="gtr-who-av" id="whoAv">${esc(initials(S.me.name || "You"))}</span>
-            <div class="gtr-who-txt">
-              <span class="gtr-who-n" id="whoName">${esc(S.me.name || "Add your name")}</span>
-              <span class="gtr-who-p" id="whoPhone">${esc(S.me.phone || "Add a number the driver can reach")}</span>
-            </div>
-            <span class="gtr-who-badge" id="whoBadge">${
-              (S.me.phone && String(S.me.phone).replace(/\D/g, "").length >= 9)
-                ? "Verified"
-                : "Incomplete"
-            }</span>
-          </div>
-
-          <div class="gtr-who-note">
-            <span aria-hidden="true">🔒</span>
-            Only the driver on this ride sees your number, and only after they accept.
-          </div>
-
-          <!-- the fields live here, hidden until Edit — so the card reads as a
-               finished thing rather than a form waiting to be filled -->
-          <div class="gtr-who-form" id="whoForm" hidden>
-            <label class="gtr-f">
-              <span class="gtr-fl">Full name</span>
-              <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" placeholder="e.g. Thandi Mbeki" required>
-            </label>
-            <label class="gtr-f">
-              <span class="gtr-fl">Mobile number</span>
-              <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
-            </label>
-            <p class="gtr-who-fine">The driver calls this number if they are running late. It is never shown publicly.</p>
-            <button class="gtr-who-done" type="button" id="whoDone">Save</button>
-          </div>
-        </section>
-      </div>
-
       <!-- ── driver + the join form ── -->
       <div class="gtr-side g-anim">
         <section class="gtr-card gtr-driver-card">
@@ -1562,37 +1508,107 @@ function pageRide() {
       ? d.destination : r.to;
     const lugNames = ["Hand luggage", "One bag", "Big bag + bags"];
     box.innerHTML = `
-      <span class="gtr-label">Request to join</span>
+      <span class="gtr-label"><span aria-hidden="true">🎫</span> Request to join</span>
       <form id="joinForm" class="gtr-form">
+
+        <!-- ══ WHO YOU ARE — inside the request, where it belongs ════════════
+             It was moved to the route side and that turned out to be the wrong
+             read: as a separate card it looked like another thing to fill in
+             somewhere else on the page. Identity and the seat request are one
+             act, so they are one card: who you are, then your hike, then safety. -->
+    <!-- ══ WHO YOU ARE ═══════════════════════════════════════════════════
+    Moved out of the booking form and onto the ROUTE side, immediately
+    after the stop-by-stop list.
+
+    Why: identity is not part of the booking decision, it is context for
+    it. Sitting at the top of the form it read as the first thing you
+    must do; sitting under the route it reads as what the driver will
+    see about you on that route — which is what a name and number
+    actually are here. The form is now purely about the seat.
+
+    Rebuilt as its own card so it carries its own heading, its own
+    verified state and its own edit affordance, instead of three loose
+    fields. -->
+    <section id="whoCard">
+    <div class="gtr-who-head">
+    <span class="gtr-label"><span aria-hidden="true">👤</span> Who you are</span>
+    <button class="gtr-who-edit" type="button" id="whoEdit">Edit</button>
+    </div>
+
+    <div class="gtr-who-body">
+    <span class="gtr-who-av" id="whoAv">${esc(initials(S.me.name || "You"))}</span>
+    <div class="gtr-who-txt">
+    <span class="gtr-who-n" id="whoName">${esc(S.me.name || "Add your name")}</span>
+    <span class="gtr-who-p" id="whoPhone">${esc(S.me.phone || "Add a number the driver can reach")}</span>
+    </div>
+    <span class="gtr-who-badge" id="whoBadge">${
+    (S.me.phone && String(S.me.phone).replace(/\D/g, "").length >= 9)
+    ? "Verified"
+    : "Incomplete"
+    }</span>
+    </div>
+
+    <div class="gtr-who-note">
+    <span aria-hidden="true">🔒</span>
+    Only the driver on this ride sees your number, and only after they accept.
+    </div>
+
+    <!-- the fields live here, hidden until Edit — so the card reads as a
+    finished thing rather than a form waiting to be filled -->
+    <div class="gtr-who-form" id="whoForm" hidden>
+    <label class="gtr-f">
+    <span class="gtr-fl">Full name</span>
+    <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" placeholder="e.g. Thandi Mbeki" required>
+    </label>
+    <label class="gtr-f">
+    <span class="gtr-fl">Mobile number</span>
+    <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
+    </label>
+    <p class="gtr-who-fine">The driver calls this number if they are running late. It is never shown publicly.</p>
+    <button class="gtr-who-done" type="button" id="whoDone">Save</button>
+    </div>
+    </section>
 
         <!-- ══ YOUR HIKE ═════════════════════════════════════════════════════ -->
         <div class="gtr-sec">
-          <span class="gtr-sec-n" aria-hidden="true">1</span>
+          <span class="gtr-sec-n" aria-hidden="true">2</span>
           <div class="gtr-sec-h">
-            <span class="gtr-sec-t">Your hike</span>
+            <span class="gtr-sec-t"><span aria-hidden="true">🛣️</span> Your hike</span>
             <span class="gtr-sec-s">${prePickup ? "We kept the address you searched with." : "Where we collect you, and where you get off."}</span>
           </div>
         </div>
 
         <label class="gtr-f">
-          <span class="gtr-fl">Where we collect you${prePickup ? " · kept from your search" : ""}</span>
+          <span class="gtr-fl"><span aria-hidden="true">🏠</span> Where we collect you${prePickup ? " · kept from your search" : ""}</span>
           <input class="gtr-i g-addr-in" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
         </label>
 
-        <div class="gtr-grid3">
-          <label class="gtr-f grides-f-dest">
-            <span class="gtr-fl">Drop me at</span>
+        <!-- ══ THREE FIELDS, ONE PER ROW ═════════════════════════════════════
+             These were squeezed into a single three-column row, which on a phone
+             left about 90px per field: "Hand luggage" truncated to "Hand lug" and
+             "Mthatha" clipped. A dropdown whose chosen value cannot be read is
+             not saving space, it is hiding the answer.
+
+             Full width each. The selected option is the whole point of the
+             control, so it gets the room to say what it means. -->
+        <!-- Drop-off takes the room; seats is a single digit and needs almost none.
+             Luggage gets its own row because "Big bag + bags" is the longest label
+             on the page and a third of a phone screen is not enough to read it. -->
+        <div class="gtr-grid-ds">
+          <label class="gtr-f">
+            <span class="gtr-fl"><span aria-hidden="true">📍</span> Drop me at</span>
             <select class="gtr-i" id="jOff">${[r.to, ...r.stops.map(s => s.city)].map(c => `<option${c === preOff ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
           </label>
           <label class="gtr-f">
-            <span class="gtr-fl">Seats</span>
+            <span class="gtr-fl"><span aria-hidden="true">💺</span> Seats</span>
             <select class="gtr-i" id="jSeats">${Array.from({ length: Math.max(1, Math.min(4, seatsOpen(r))) }, (_, i) => `<option${i + 1 === preSeats ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
           </label>
-          <label class="gtr-f">
-            <span class="gtr-fl">Luggage</span>
-            <select class="gtr-i" id="jLug">${lugNames.map((n, i) => `<option${i === preLug ? " selected" : ""}>${n}</option>`).join("")}</select>
-          </label>
         </div>
+
+        <label class="gtr-f">
+          <span class="gtr-fl"><span aria-hidden="true">🧳</span> Luggage</span>
+          <select class="gtr-i" id="jLug">${lugNames.map((n, i) => `<option${i === preLug ? " selected" : ""}>${n}</option>`).join("")}</select>
+        </label>
 
         <div id="joinFees"></div>
 
@@ -1601,9 +1617,9 @@ function pageRide() {
              not a nicety: the app tells riders that BOTH sides take a selfie so
              nobody rides anonymously, and without this the claim is false. -->
         <div class="gtr-sec">
-          <span class="gtr-sec-n" aria-hidden="true">2</span>
+          <span class="gtr-sec-n" aria-hidden="true">3</span>
           <div class="gtr-sec-h">
-            <span class="gtr-sec-t">Safety check</span>
+            <span class="gtr-sec-t"><span aria-hidden="true">🛡️</span> Safety check</span>
             <span class="gtr-sec-s">Both you and your driver take one. So nobody rides anonymous.</span>
           </div>
         </div>
