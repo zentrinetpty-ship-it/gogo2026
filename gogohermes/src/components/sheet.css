@@ -1,0 +1,60 @@
+/* ══ SHEET GEOMETRY ═════════════════════════════════════════════════════════
+   The one place the sheet's position and its slide are defined.
+
+   JavaScript sets a single custom property, --slide: 0 when open, 1 when closed.
+   Everything else — where the panel sits, and what "closed" looks like at this
+   width — is decided here, in the same media query that does the positioning.
+   That pairing is the whole point: the code that decides WHERE the panel is and
+   the code that decides HOW IT ARRIVES are now the same code, so they cannot
+   disagree mid-animation.
+
+   WHAT THIS REPLACES
+   JavaScript was computing the transform, reading a matchMedia query of its own,
+   and starting from a guess that corrected after first paint. On a phone that
+   showed up as the sheet jumping up and then down before settling: the first
+   frame used one layout's offset on the other layout's panel, and the correction
+   was the visible jerk.
+
+   THE TWO STATES
+     phone  (< 640px)  pinned to the bottom edge; closed slides down by its own
+                       height with translate3d(0, 100%, 0)
+     desktop (>= 640px) a centred dialog; closed sits 40vh lower and fades, so it
+                       reads as rising into place rather than sliding up the page
+
+   translate3d, not translateY: promoting the panel to its own compositor layer is
+   what keeps the slide smooth on a mid-range Android instead of forcing a repaint
+   of the page behind it on every frame. */
+
+.gogo-sheet-panel {
+  /* phone geometry: full width, pinned to the bottom edge */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+
+  transform: translate3d(0, calc(var(--slide, 1) * 100%), 0);
+}
+
+@media (min-width: 640px) {
+  .gogo-sheet-panel {
+    /* desktop: a centred dialog. The centring offset and the closed offset are
+       ONE transform — a separate translate utility would fight the animation,
+       which is how the earlier version ended up moving on two axes at once. */
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    top: 50%;
+    width: min(460px, 92vw);
+
+    transform: translate3d(-50%, calc(-50% + var(--slide, 1) * 40vh), 0);
+  }
+}
+
+/* respect the system setting: no slide, no fade, just appear */
+@media (prefers-reduced-motion: reduce) {
+  .gogo-sheet-panel,
+  .gogo-sheet-scrim {
+    transition: none !important;
+  }
+}

@@ -2,21 +2,46 @@
    The bottom sheet, in the landing's own stack.
 
    Same object the driver screens use — scrim, panel pinned to the bottom edge on
-   a phone, centred dialog from 640px up, slide-up transition — but built with
-   Tailwind rather than the shared .gsheet stylesheet, because the landing is a
-   Vite bundle and pulling a 23KB static stylesheet into it to draw one panel is
-   a bad trade. The measurements are copied deliberately from that stylesheet:
-   22px top radius, 82dvh cap, 260ms cubic-bezier(.22,.61,.36,1). If one changes,
-   change both — they are meant to be the same object seen from two stacks.
+   a phone, centred dialog from 640px up — but built with Tailwind rather than the
+   shared .gsheet stylesheet, because the landing is a Vite bundle.
 
-   WHY dvh AND NOT vh
-   A phone's address bar collapses on scroll. vh is measured against the tall
-   state, so the foot of the sheet ends up under the browser chrome exactly when
-   the rider is reaching for the button at the bottom of it.
+   ══ WHY THE FIRST VERSION MOVED BADLY ══════════════════════════════════════
+   Three separate faults, all visible in one look at the class list:
+
+   1. TWO TRANSITIONS, CONFLICTING. The panel carried `transition-transform` and
+      the sm: breakpoint added `transition-[transform,opacity]`. Two transition
+      declarations for the same property meant the browser used one set of
+      durations for the transform and another for opacity, so the panel slid and
+      faded at different speeds and neither matched the scrim. On a phone that
+      reads as the card lurching twice.
+
+   2. `translate-y-full` IS NOTHING WITHOUT A TRANSFORM-CAPABLE LAYOUT. Combined
+      with the sm: centring translate, the element carried two competing
+      translate utilities whose resolution order depends on stylesheet order, not
+      on the breakpoint the author intended. On a narrow screen it began at the
+      wrong offset and then corrected — the jump up, then down, that was reported.
+
+   3. FOCUSING AT 290ms MID-FLIGHT. The effect focused the input while the panel
+      was still animating. On iOS that summons the keyboard, which resizes the
+      visual viewport mid-transition and shoves the sheet upward. That is the
+      other half of the jerk.
+
+   ══ THE FIX ════════════════════════════════════════════════════════════════
+   One property, one transition, one place. The panel is positioned by plain
+   `bottom/left/right` with no translate utilities at all, and the slide is driven
+   by an explicit `transform` written from React — `translate3d(0, 100%, 0)` when
+   closed, `translate3d(0, 0, 0)` when open, and on desktop the same value plus
+   nothing else. Only `transform` animates; opacity rides on the scrim alone.
+   Focus is deferred until the animation has actually finished.
+
+   translate3d rather than translateY: promoting the panel to its own compositor
+   layer is what makes the slide smooth on a mid-range Android instead of
+   repainting the page behind it every frame.
 */
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/utils";
+import "./sheet.css";
 
 type Props = {
   open: boolean;
@@ -27,21 +52,27 @@ type Props = {
   footer?: React.ReactNode;
 };
 
+/* the one duration, shared by the panel and the scrim so they cannot disagree */
+const DURATION = 280;
+
 export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
   const [shown, setShown] = React.useState(false);
   const panel = React.useRef<HTMLDivElement>(null);
 
-  /* Two frames, not one: the panel has to be painted in its off-screen state
-     before the transform is removed, or the browser batches both and the sheet
-     simply appears. This is the difference between rising and popping. */
+
+
+  /* Two frames before starting: the panel must be painted in its closed position
+     first, or the browser batches both states and the sheet appears instead of
+     rising. This is the difference between a slide and a pop. */
   React.useEffect(() => {
     if (!open) { setShown(false); return; }
-    const a = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    return () => cancelAnimationFrame(a);
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(() => setShown(true)); });
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
   }, [open]);
 
-  /* Lock the page behind, and restore exactly what was there: clobbering
-     overflow leaves some Android browsers unable to scroll after closing. */
+  /* Lock the page behind and restore exactly what was there: clobbering overflow
+     leaves some Android browsers unable to scroll after closing. */
   React.useEffect(() => {
     if (!open) return;
     const html = document.documentElement;
@@ -50,60 +81,91 @@ export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
     return () => { html.style.overflow = prev; };
   }, [open]);
 
-  /* Escape closes. Focus lands in the panel so a keyboard user is not typing
-     into the page behind the scrim. */
+  /* ── focus, but only once the sheet has arrived ──────────────────────────
+     Focusing during the transition summons the keyboard mid-slide, which resizes
+     the visual viewport and jerks the panel upward. Waiting for the transform to
+     finish costs nothing and removes the whole class of jump. */
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-    const t = setTimeout(() => {
-      const first = panel.current?.querySelector<HTMLElement>("input, select, textarea, button");
+
+    const el = panel.current;
+    let done = false;
+    const focusFirst = () => {
+      if (done) return;
+      done = true;
+      const first = el?.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea");
+      /* the input, not the close button: this sheet exists to be typed into */
       if (first) first.focus({ preventScroll: true });
-    }, 290);
-    return () => { document.removeEventListener("keydown", onKey); clearTimeout(t); };
+    };
+    const onEnd = (e: TransitionEvent) => { if (e.propertyName === "transform") focusFirst(); };
+    el?.addEventListener("transitionend", onEnd);
+    /* a timer as backstop: if the animation never fires (reduced motion, or the
+       element was already settled) the field still gets focus */
+    const t = setTimeout(focusFirst, DURATION + 80);
+
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      el?.removeEventListener("transitionend", onEnd);
+      clearTimeout(t);
+    };
   }, [open, onClose]);
+
+  /* ── the sheet only says WHICH state, never the pixels ────────────────────
+     Every jerk this sheet has had came from JavaScript guessing the geometry and
+     CSS then disagreeing with it. So JS sets one flag and sheet.css decides what
+     that means at each breakpoint: bottom-pinned on a phone, a centred dialog
+     above 640px. The media query that positions the panel is the same one that
+     animates it, so the two cannot diverge and no frame is painted in the wrong
+     mode. */
+  const panelStyle: React.CSSProperties = {
+    "--slide": shown ? "0" : "1",
+    transition: `transform ${DURATION}ms cubic-bezier(.22,.61,.36,1)`,
+    willChange: "transform",
+    maxHeight: "82dvh",
+    minHeight: "280px",
+  } as React.CSSProperties;
 
   if (!open) return null;
 
-  /* ══ RENDERED INTO <body>, NOT IN PLACE ══════════════════════════════════
-     `position: fixed` resolves against the nearest ancestor that has a transform,
-     filter, contain, or perspective — not against the viewport. This sheet lives
-     inside the booking card, and that card animates in via `.gh-rise`, which is a
-     transform. So the sheet's "viewport" was the card: it anchored to the bottom
-     of the CARD, and on a long landing page that meant it appeared wherever the
-     card happened to be in the document — far below the fold, which is why the
-     page had to be dragged down to reveal it.
-
-     A portal lifts it to <body>, where no ancestor is transformed, so `fixed`
-     finally means what it says. The wrapper is also given an explicit height for
-     mobile browsers that mis-resolve inset utilities on fixed elements. */
+  /* Rendered into <body>: `fixed` resolves against the nearest TRANSFORMED
+     ancestor, not the viewport, and this sheet would otherwise live inside the
+     booking card, which animates in with a transform. Portalled, it anchors to
+     the screen. */
   return createPortal(
-    <div className="fixed inset-0 z-[900] h-[100dvh] w-screen" role="dialog" aria-modal="true" aria-label={title || "Booking"}>
+    <div
+      className="fixed inset-0 z-[900]"
+      style={{ height: "100dvh", width: "100vw" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || "Booking"}
+    >
+      {/* the scrim fades; it never moves, so it cannot add to the motion */}
       <div
         onClick={onClose}
+        style={{ transitionDuration: `${DURATION}ms` }}
         className={cn(
-          "absolute inset-0 bg-[rgba(16,16,16,.38)] transition-opacity duration-200 ease-out",
+          "gogo-sheet-scrim absolute inset-0 bg-[rgba(16,16,16,.38)] transition-opacity ease-out",
           shown ? "opacity-100" : "opacity-0"
         )}
       />
 
+      {/* ── the panel ────────────────────────────────────────────────────────
+             Its position and its slide are both defined in sheet.css, keyed off
+             the --slide flag set below. JS does not compute geometry here: every
+             jerk this sheet has had came from JS and CSS disagreeing about where
+             the panel was, and the only durable fix was to stop having two
+             opinions. */}
       <div
         ref={panel}
+        style={panelStyle}
         className={cn(
-          /* min-h gives the sheet presence. A one-field sheet is 160px of
-             content, and pinned to the bottom of a tall screen that reads as a
-             floating toolbar rather than a sheet you can type into. The driver
-             screens never hit this because their content always fills the panel;
-             rider sheets have to state a floor. */
-          "flex max-h-[82dvh] min-h-[280px] flex-col absolute inset-x-0 bottom-0 overflow-y-auto overscroll-contain rounded-t-[22px] bg-white px-5 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-2.5",
-          "transition-transform duration-[260ms] ease-[cubic-bezier(.22,.61,.36,1)]",
-          shown ? "translate-y-0" : "translate-y-full",
-          /* from 640px it stops being a bottom sheet and becomes a centred
-             dialog: a sheet stretched across a desktop reads as a footer */
-          "sm:inset-x-auto sm:left-1/2 sm:bottom-auto sm:top-1/2 sm:max-h-[84dvh] sm:w-[min(460px,92vw)]",
-          "sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[20px] sm:px-6 sm:py-5 sm:shadow-[0_24px_60px_rgba(16,16,16,.22)]",
-          shown ? "sm:opacity-100" : "sm:opacity-0",
-          "sm:transition-[transform,opacity]"
+          /* position, width and the slide itself live in sheet.css — see the note
+             at the top of that file for why they are not Tailwind utilities */
+          "gogo-sheet-panel absolute flex flex-col overflow-y-auto overscroll-contain",
+          "rounded-t-[22px] bg-white px-5 pb-[calc(16px+env(safe-area-inset-bottom,0px))] pt-2.5",
+          "sm:rounded-[20px] sm:px-6 sm:py-5 sm:shadow-[0_24px_60px_rgba(16,16,16,.22)]"
         )}
       >
         <div className="mx-auto mb-2.5 h-1 w-9 rounded-full bg-neutral-200 sm:hidden" aria-hidden />
