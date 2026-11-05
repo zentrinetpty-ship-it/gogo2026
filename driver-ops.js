@@ -188,7 +188,9 @@ function rideSummary(db, r) {
   const potential = held.reduce((n, s) => n + s.netCents, 0);
 
   const seatsTotal = Number(r.seatsTotal) || 0;
-  const seatsSold = completed.length + held.length;
+  /* seats, not sale rows: one row can be three people */
+  const seatsSold = completed.reduce((n, s) => n + Number(s.seats || 1), 0)
+    + held.reduce((n, s) => n + Number(s.seats || 1), 0);
 
   return {
     id: r.id,

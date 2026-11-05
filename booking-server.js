@@ -103,7 +103,7 @@ const toRands = (c) => c / 100;
 
 /* The server's own price for a seat. The client never supplies these inputs. */
 function priceSeat(rideId, stop, seats) {
-  const ride = RIDES[rideId];
+  const ride = resolveRide(rideId);
   if (!ride) return { error: "unknown ride" };
   const fare = ride.legs[stop];
   if (fare === undefined) return { error: "unknown stop" };
@@ -134,7 +134,62 @@ function priceSeat(rideId, stop, seats) {
   };
 }
 
+/* ══ ONE WAY TO FIND A RIDE ══════════════════════════════════════════════════
+   Two catalogues exist: the demo RIDES baked into this file, and the rides real
+   drivers list into drivers-data.json. Everything below used `RIDES[rideId]`
+   directly, so a rider could SEE a driver's ride in the finder (the /rides
+   endpoint merges both) and then be told "unknown ride" the moment they tried to
+   price or book it.
+
+   resolveRide returns the same shape for either source, converting a live ride's
+   stored cents back into the rands-with-a-legs-map the pricing code expects, so
+   no downstream function needs to know which catalogue it came from. */
+function resolveRide(rideId) {
+  if (!rideId) return null;
+
+  const demo = RIDES[rideId];
+  if (demo) return Object.assign({ id: rideId, live: false }, demo);
+
+  try {
+    const ops = require("./driver-ops");
+    const db = ops.load();
+    const r = (db.rides || []).find((x) => x.id === rideId);
+    if (!r || r.status !== "open") return null;
+
+    /* seats: what is still free, not what the vehicle holds — quoting against
+       total capacity would sell the same seat twice */
+    const sold = (db.sales || [])
+      .filter((s) => s.rideId === r.id && s.state !== "refunded")
+      .reduce((n, s) => n + Number(s.seats || 1), 0);
+
+    const legs = {};
+    (r.stops || []).forEach((st) => {
+      if (st.city) legs[st.city] = Number(st.fare || 0) / 100;
+    });
+    legs[r.to] = Number(r.fare || 0) / 100;
+
+    return {
+      id: r.id,
+      live: true,
+      from: r.from,
+      to: r.to,
+      depart: r.depart,
+      date: r.date,
+      vehicle: r.vehicle,
+      seats: Math.max(0, Number(r.seatsTotal || 0) - sold),
+      legs,
+      driverId: r.driverId,
+    };
+  } catch (e) {
+    console.error("[rides] could not resolve", rideId, e.message);
+    return null;
+  }
+}
+
 function priceParcel(rideId, kg) {
+  /* demo rides only, deliberately: a live listing has no boot capacity recorded
+     yet, so quoting a parcel against it would be inventing a number. Parcels on
+     driver listings are a separate feature, not a silent fallback. */
   const ride = RIDES[rideId];
   if (!ride) return { error: "unknown ride" };
   const weight = Number(kg) || 0;
@@ -453,7 +508,12 @@ const server = http.createServer(async (req, res) => {
         if (r.status !== "open") return;
         if (r.date && r.date < today) return;
 
-        const sold = (db.sales || []).filter((s) => s.rideId === r.id && s.state !== "refunded").length;
+        /* SUM the seats, not count the rows: a sale row can hold two or three
+           seats, and counting rows took only one chair off the van no matter how
+           many people were in it. */
+        const sold = (db.sales || [])
+          .filter((s) => s.rideId === r.id && s.state !== "refunded")
+          .reduce((n, s) => n + Number(s.seats || 1), 0);
         const free = Number(r.seatsTotal || 0) - sold;
         if (free <= 0) return;
 
@@ -549,14 +609,70 @@ const server = http.createServer(async (req, res) => {
       payMethod: b.payMethod === "cash" ? "cash" : "card",
     };
 
+    /* ── a booked seat must also be a HELD SALE ──────────────────────────────
+       The driver side counts what is taken from `sales` (driver-ops.rideSummary:
+       completed + held), while the rider side wrote only `bookings`. So a rider
+       could book, the booking would be recorded and priced correctly, and the
+       ride would still report every seat free — bookable again and again until
+       the van was oversold by however many people happened to tap hard enough.
+
+       A held sale is the right record: it is the driver's own vocabulary, it is
+       what the earnings ledger already understands, and it is released by the
+       same paths that release a hold (decline, cancel, no-show). The booking row
+       stays as the rider's view of the same event, carrying the sale's id so the
+       two can never drift into describing different seats.
+
+       Only live rides get one. Demo rides draw their availability from the static
+       RIDES seats number and have no driver ledger to write to. */
+    let heldSaleId = null;
+    const resolvedForSale = resolveRide(b.rideId);
+    if (resolvedForSale && resolvedForSale.live && booking.kind === "passenger") {
+      try {
+        const ops = require("./driver-ops");
+        const ddb = ops.load();
+        const sale = {
+          id: ops.rid("sale"),
+          driverId: resolvedForSale.driverId,
+          rideId: b.rideId,
+          bookingId: booking.id,
+          passengerName: String(b.pickup || "Rider").slice(0, 60),
+          seats: booking.seats,
+          grossCents: quoted.rows[0] ? quoted.rows[0].cents : 0,
+          netCents: 0,
+          commissionCents: 0,
+          /* held, not completed: money is not the driver's until the seat is
+             actually ridden, which is the rule the payout logic already holds */
+          state: "held",
+          from: booking.city || resolvedForSale.from,
+          to: booking.stop || resolvedForSale.to,
+          createdAt: new Date().toISOString(),
+        };
+        ddb.sales = ddb.sales || [];
+        ddb.sales.push(sale);
+        ops.save(ddb);
+        heldSaleId = sale.id;
+        booking.saleId = sale.id;
+      } catch (e) {
+        /* failing to write the hold must not lose the booking: log it loudly and
+           carry on, because a rider who paid and got an error is worse than a
+           seat the driver has to reconcile */
+        console.error("[book] could not record held sale:", e.message);
+      }
+    }
+
     /* a ride cannot be oversold ON ANY LEG IT TOUCHES.
        The old check summed every booking on the ride and compared it to the
        vehicle total, which is only right when everybody rides the whole route.
        Once a passenger alights early, the freed interval can be sold to someone
        boarding further along, and that is the entire point of this feature. */
     if (booking.kind === "passenger") {
-      const ride = Object.assign({ id: b.rideId }, RIDES[b.rideId] || {});
-      const fromTown = booking.city || (RIDES[b.rideId] || {}).from;
+      /* resolveRide, not RIDES: a live listing has its own route and its own
+         remaining seats, and the interval check needs both. Reading only the
+         demo table made every live ride look like a zero-seat ride with no
+         stops, so the check refused bookings that were perfectly valid. */
+      const resolved = resolveRide(b.rideId);
+      const ride = Object.assign({ id: b.rideId }, resolved || {});
+      const fromTown = booking.city || (resolved || {}).from;
       const check = intervals.canBook(ride, db.bookings, fromTown, booking.stop, booking.seats);
       if (!check.ok) {
         return json(res, 409, {
@@ -591,7 +707,9 @@ const server = http.createServer(async (req, res) => {
     if (!booking) return json(res, 404, { error: "booking not found" });
     /* The tracking view needs the route context, not just the stored row, so the
        ride is joined in here rather than making the client fetch it separately. */
-    const src = RIDES[booking.rideId];
+    /* resolveRide covers both catalogues, so a booking made against a driver's
+       listing still shows the rider their route instead of an empty shell */
+    const src = resolveRide(booking.rideId);
     const ride = src
       ? { id: booking.rideId, from: src.from, to: src.to, depart: src.depart,
           vehicle: src.vehicle, seats: src.seats, legs: src.legs }
