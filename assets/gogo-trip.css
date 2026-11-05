@@ -1112,3 +1112,55 @@ select.gtr-i {
 
 /* the address icon sits inside the inset, not on top of the text */
 #joinForm .g-addr-anchor .g-addr-ic { margin-right: 2px; }
+
+
+/* ══ SELFIE VERDICT ═════════════════════════════════════════════════════════
+   The engine's answer, shown inside the capture sheet. Two states only: it found
+   a problem (red, with the fix), or it did not (lime, with reassurance).
+
+   The fix line is the important half. "Photo failed" teaches nothing; "face a
+   window and retake" gets the rider to a good photo in one attempt. */
+
+.g-cam-verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.g-cam-verdict[hidden] { display: none; }
+
+.g-cam-verdict b { font-size: 12.5px; font-weight: 650; }
+
+.g-cam-verdict.is-bad {
+  background: #FEF3F2;
+  border-color: #FADBD6;
+  color: #7A2A1E;
+}
+
+.g-cam-verdict.is-bad b { color: #8E2F20; }
+
+.g-cam-verdict.is-good {
+  background: #F5FAE5;
+  border-color: #DCEAB8;
+  color: #4A6A10;
+}
+
+.g-cam-verdict.is-good b { color: #3E5A0C; }
+
+.g-cam-also {
+  font-size: 11px;
+  opacity: .78;
+  margin-top: 2px;
+}
+
+/* the sheet's primary action must never look tappable while it is judging */
+#shotBtn:disabled {
+  opacity: .55;
+  cursor: progress;
+}
