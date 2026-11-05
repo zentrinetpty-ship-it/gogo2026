@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ChevronDown, CalendarDays, User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PickupSheet, type PickupResult } from "@/components/pickup-sheet";
 
 /* ── the real GOGO numbers, one source of truth ─────────────────────────── */
 export const FEE = { pickup: 19.99, platform: 9.99, parcelBooking: 19.99 };
@@ -109,6 +110,10 @@ export function BookingCard({
      guess at which town the rider is in, and every destination we show is
      filtered by that town. So we only act on a resolved address. */
   const [pickupLocked, setPickupLocked] = React.useState(false);
+  /* The pickup sheet. The card asks one question on the landing page — where do
+     we get you — and answers the rest on the results page, where the rider can
+     see what is actually leaving. */
+  const [sheetOpen, setSheetOpen] = React.useState(false);
   /* ── city resolution ───────────────────────────────────────────────────────
      Picking a suggestion does NOT open the form. It starts a lookup that asks
      the server which town this address belongs to, and only when that answers do
@@ -325,6 +330,7 @@ export function BookingCard({
   };
 
   return (
+    <>
     <form
       id="book"
       onSubmit={submit}
@@ -364,26 +370,17 @@ export function BookingCard({
             id="pickup"
             type="text"
             value={d.pickup}
-            onChange={(e) => {
-              set("pickup", e.target.value);
-              /* Deliberately does NOT open the form. Typing an address that
-                 hasn't been resolved yet tells us nothing about which town the
-                 rider is in, so opening here would present destinations from a
-                 corridor we haven't confirmed. The card opens in choosePickup,
-                 once a suggestion is actually picked. */
-              if (pickupLocked) setPickupLocked(false);
-            }}
-            onFocus={() => setFocused(true)}
-            onBlur={() => {
-              /* let a tap on a suggestion land before the list unmounts, but
-                 do not clobber a field the rider has already returned to —
-                 that race is why suggestions used to vanish on re-render */
-              setTimeout(() => {
-                if (document.activeElement?.id !== "pickup") {
-                  setFocused(false);
-                }
-              }, 150);
-            }}
+            /* readOnly on purpose: the address is entered in the sheet, where
+               the suggestions live in the panel's scroll flow and the keyboard
+               cannot cover them. Two live inputs for one value drift apart. */
+            /* readOnly: the address is entered in the sheet, where the
+               suggestions live in the panel's scroll flow and the keyboard
+               cannot cover them. Two live inputs for one value drift apart.
+               The field is a button now — it opens the sheet and nothing else. */
+            readOnly
+            onClick={() => setSheetOpen(true)}
+            onFocus={(e) => { e.currentTarget.blur(); setSheetOpen(true); }}
+            aria-haspopup="dialog"
             placeholder="Enter your pick-up address"
             autoComplete="street-address"
             /* Sharp corners and a bottom rule only — no box. Regular weight,
@@ -658,6 +655,47 @@ export function BookingCard({
         </p>
       </div>
     </form>
+
+      {/* ── the pickup sheet ────────────────────────────────────────────────
+             A sibling of the form, not a child: the sheet has its own inputs
+             and its own submit, and nested inside this form a Continue press
+             would bubble up and submit the outer one.
+
+             On done the rider goes to the results page for the town their
+             address resolved to. When no town matched we still go — carrying
+             the typed address — because the results page can search from it and
+             a dead end here is worse than an approximate search. */}
+      <PickupSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        initialPickup={d.pickup}
+        initialCity={d.city}
+        onDone={(r: PickupResult) => {
+          setSheetOpen(false);
+          set("pickup", r.pickup);
+          if (r.city) set("city", r.city);
+
+          const q = new URLSearchParams({
+            from: r.city || r.pickup,
+            seats: String(d.seats || 1),
+            when: d.when || "today",
+            luggage: d.luggage || "hand",
+            pickup: r.pickup,
+          });
+          if (r.city) q.set("city", r.city);
+
+          /* keep the draft for every page that reads it */
+          try {
+            const raw = localStorage.getItem("gogo_state_v1");
+            const state = raw ? JSON.parse(raw) : {};
+            state.bookingDraft = { ...(state.bookingDraft || {}), mode, pickup: r.pickup, city: r.city };
+            localStorage.setItem("gogo_state_v1", JSON.stringify(state));
+          } catch { /* a blocked store still leaves the URL carrying everything */ }
+
+          window.location.href = `/gogo/rides.html?${q}`;
+        }}
+      />
+    </>
   );
 }
 
