@@ -969,3 +969,146 @@ select.gtr-i {
   .gtr-selfie { padding: 11px 11px 10px; }
   .gtr-who-av { width: 36px; height: 36px; font-size: 12px; }
 }
+
+
+/* ══ ONE COLUMN, ALWAYS ═════════════════════════════════════════════════════
+   The route and the join form were two columns on a wide screen. That column
+   only existed to fill desktop whitespace, and it cost the reading order: on a
+   phone the side column trailed after the route anyway, so route -> driver ->
+   request was already the real sequence. Now the layout states it at every
+   width, and the request sits directly under the stop list a rider is reading
+   when they decide to book. */
+
+/* the wrap only owns the stack; it must not also claim a width, or it fights
+   the page gutter and the cards end up 302px wide inside a 390px screen */
+.gtr-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.gtr-main, .gtr-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ══ ROOM TO READ AND ROOM TO TAP ══════════════════════════════════════════
+   "More compact" and "add padding" are not in conflict here: the vertical rhythm
+   was loose (20px section gaps, generous internal margins) while the fields
+   themselves were tight. So sections get closer together and the fields get
+   roomier. Overall the page gets SHORTER while everything in it gets easier to
+   hit. */
+
+.gtr-card {
+  padding: 15px 15px 16px;
+}
+
+/* ── the pickup field ─────────────────────────────────────────────────────
+   A street address is the longest value a rider types into this form, and it
+   was sharing the same 12px side padding as a one-digit seat count. It gets its
+   own comfortable inset and a slightly taller box, because it is the field most
+   likely to be edited twice. */
+
+/* sections sit closer: the gaps were doing no work, they were just large */
+.gtr-sec {
+  margin: 15px 0 9px;
+  gap: 9px;
+}
+
+.gtr-sec:first-of-type { margin-top: 10px; }
+
+.gtr-sec-n {
+  width: 19px;
+  height: 19px;
+  font-size: 10.5px;
+}
+
+.gtr-sec-t { font-size: 13px; }
+.gtr-sec-s { font-size: 11px; line-height: 1.4; }
+
+/* fields breathe sideways, not vertically — tight rows, generous insets */
+#joinForm .gtr-f { gap: 4px; }
+
+#joinForm .gtr-i,
+#joinForm select.gtr-i {
+  min-height: 46px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+
+
+/* identity block: compact, since it is usually already correct */
+#whoCard { padding: 0 0 12px; margin-bottom: 2px; }
+
+.gtr-who-head { margin-bottom: 9px; }
+.gtr-who-av { width: 36px; height: 36px; font-size: 12px; }
+.gtr-who-n { font-size: 14px; }
+.gtr-who-note { margin-top: 9px; padding-top: 8px; }
+
+/* the selfie card, tightened but still comfortable to tap */
+.gtr-selfie { padding: 12px 13px 11px; }
+.gtr-selfie-why { margin-top: 9px; padding-top: 9px; gap: 5px; }
+
+/* the fare block reads as a receipt: tight rows, aligned figures */
+.gtr-fee, #joinFees .gtr-fee { margin-top: 10px; }
+#joinFees { margin-top: 4px; }
+
+/* the submit stays the biggest thing in the card even after tightening */
+.gtr-submit {
+  height: 50px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.gtr-fine { margin-top: 8px; font-size: 10.5px; }
+
+/* ── the route card leads, so it gets slightly more air than the rest ────── */
+.gtr-main .gtr-card:first-of-type { margin-bottom: 0; }
+.gtr-main > article.gtr { padding: 16px 16px 15px; }
+
+@media (max-width: 360px) {
+  .gtr-card { padding: 13px 13px 14px; }
+  #joinForm .gtr-i, #joinForm select.gtr-i { padding: 0 12px; }
+}
+
+/* ══ THE PICKUP FIELD ═══════════════════════════════════════════════════════
+   This field is NOT a plain input. gogo-address-ui.js moves the input into a
+   `.g-addr-anchor` wrapper and then strips the input's own box:
+
+     input.style.cssText += "...height:auto;padding:0;border:0;background:transparent"
+
+   Inline styles beat every stylesheet rule, so four rounds of CSS targeting
+   #jPickup — including one that set the right padding at the right specificity —
+   changed nothing at all. The wrapper is what draws the field, so the wrapper is
+   what has to be padded.
+
+   A street address is the longest value typed into this form and the one most
+   likely to be edited twice, so the row gets a wider inset than the seat counts
+   and a taller box to match. */
+#joinForm .g-addr-anchor {
+  width: 100%;
+  min-height: 52px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+#joinForm .g-addr-anchor:focus-within { border-color: #C9C9C2; }
+
+/* the inner input stays transparent and unpadded: it is a text surface inside
+   that box, not a box of its own */
+#joinForm .g-addr-anchor input {
+  padding-left: 0;
+  padding-right: 0;
+  font-size: 16px;
+}
+
+/* the address icon sits inside the inset, not on top of the text */
+#joinForm .g-addr-anchor .g-addr-ic { margin-right: 2px; }

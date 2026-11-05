@@ -1448,8 +1448,15 @@ function pageRide() {
             Hop off at any stop and pay only that leg.
           </p>
         </section>
+      </div>
 
-      <!-- ── driver + the join form ── -->
+      <!-- ── driver + the request, stacked BELOW the route ────────────────
+           These used to sit in a second column beside the route on wide screens.
+           On a phone that column simply trailed after it, so the reading order
+           was already route -> driver -> request; the layout now says so at every
+           width instead of only pretending on a desktop. It also means the join
+           form is directly under the stop list it is asking about, which is where
+           a rider is looking when they decide. -->
       <div class="gtr-side g-anim">
         <section class="gtr-card gtr-driver-card">
           <span class="gtr-label">Your driver</span>
