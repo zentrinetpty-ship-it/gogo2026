@@ -106,7 +106,32 @@ function seed() {
 
 /* ── state ──────────────────────────────────────────────────────────────── */
 let S = load();
-function load() { try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : seed(); } catch { return seed(); } }
+
+/* ── load, without trusting the store blindly ──────────────────────────────
+   The stored copy is the rider's state, but it is not the whole truth: the ride
+   catalogue belongs to the server and seed(). A store written by an older build
+   — before `rides` existed, or after a bad write — has no rides in it, and
+   returning it verbatim gave the rider a rides page with nothing on it and no
+   error. That is indistinguishable from "no rides available", which is the worst
+   possible way to fail.
+
+   So the stored copy is used for what is genuinely theirs (who they are, what
+   they have booked, alerts, threads) and seed() supplies anything structurally
+   missing. A missing catalogue is repaired, not obeyed. */
+function load() {
+  let saved = null;
+  try { const raw = localStorage.getItem(KEY); saved = raw ? JSON.parse(raw) : null; } catch { saved = null; }
+  if (!saved || typeof saved !== "object") return seed();
+
+  const base = seed();
+  if (!Array.isArray(saved.rides) || !saved.rides.length) saved.rides = base.rides;
+  if (!saved.me || typeof saved.me !== "object") saved.me = base.me;
+  ["activity", "alerts", "notices", "threads"].forEach(k => {
+    if (!Array.isArray(saved[k])) saved[k] = [];
+  });
+  if (typeof saved.seq !== "number") saved.seq = base.seq;
+  return saved;
+}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
 function reset() { S = seed(); save(); }
 
@@ -913,21 +938,53 @@ function pageHome() {
 /* ── PAGE: results ──────────────────────────────────────────────────────── */
 function pageRides() {
   const q = parseQuery();
-  const from = q.from || "East London", to = q.to || "Mthatha", seats = Number(q.seats || 1);
-  const state = { toStop: false, maxPrice: 0, onlyStops: false, sort: "time" };
+  const from = q.from || "East London";
+  const state = {
+    toStop: false, maxPrice: 0, onlyStops: false, sort: "time",
+    /* ── the live search, seeded from the URL ─────────────────────────────
+       `to` starts as whatever the rider arrived with — often nothing, because
+       the landing now only asks for a pickup. An empty destination means "show
+       me everything leaving this town", which is the whole point of this page. */
+    to: q.to || "",
+    seats: Number(q.seats || 1),
+    when: q.when || "today",
+    slot: q.slot || "",
+  };
+
+  /* ── the search bar ─────────────────────────────────────────────────────
+     Built once. Typing into it must never rebuild it, or the field loses focus
+     on the first letter — see the render split below. */
 
   $('#main').innerHTML = `
   <div class="g-wrap g-section">
-    <div class="g-card g-anim">
-      <div class="g-between">
-        <div class="g-row">
-          <span class="g-ic" aria-hidden>${GICON("compass")}</span>
-          <div>
-            <div class="g-t">${esc(from)} <span class="g-s-sm">to</span> ${esc(to)}${window.GOGOPlaces && GOGOPlaces.provinceByName(to) ? ` <span class="g-stamp g-stamp-idle">province</span>` : ""}</div>
-            <div class="g-list-s">${seats} seat${seats === 1 ? "" : "s"} · ${q.when === "tomorrow" ? "tomorrow" : q.when === "any" ? "any day" : "today"}${q.slot ? ` · 🕕 ${String(q.slot).padStart(2, "0")}:00 – ${String(Number(q.slot) + 2).padStart(2, "0")}:00` : ""}${q.pickup ? ` · pickup ${esc(q.pickup)}` : ""}</div>
-          </div>
+    <div class="grides-bar">
+      <div class="grides-bar-top">
+        <span class="grides-bar-label">Leaving ${esc(from)}</span>
+        <a class="grides-bar-edit" href="/gogo/">Change pickup</a>
+      </div>
+
+      <div class="grides-fields">
+        <label class="grides-f grides-f-dest">
+          <span class="grides-fl">Going to</span>
+          <input class="grides-i" id="destIn" type="text" inputmode="search"
+                 autocomplete="off" enterkeyhint="search"
+                 placeholder="Anywhere" value="${esc(q.to || "")}">
+        </label>
+        <label class="grides-f grides-f-seats">
+          <span class="grides-fl">Seats</span>
+          <select class="grides-i" id="seatIn">
+            ${[1,2,3,4,5,6].map(n => `<option value="${n}"${n === state.seats ? " selected" : ""}>${n}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+
+      <div class="grides-f grides-f-when">
+        <span class="grides-fl">When</span>
+        <div class="grides-seg" role="group" aria-label="Travel day">
+          <button class="grides-seg-b${(q.when || "today") === "today" ? " on" : ""}" data-when="today" type="button">Today</button>
+          <button class="grides-seg-b${q.when === "tomorrow" ? " on" : ""}" data-when="tomorrow" type="button">Tomorrow</button>
+          <button class="grides-seg-b${q.when === "any" ? " on" : ""}" data-when="any" type="button">Any day</button>
         </div>
-        <a class="g-btn g-btn-ghost g-btn-sm" href="/gogo/">Edit search</a>
       </div>
 
       <div class="grides-chips">
@@ -935,6 +992,8 @@ function pageRides() {
         <button class="grides-chip" data-f="onlyStops" type="button">Rides with stops</button>
         <button class="grides-chip" data-f="sort" type="button">Sort: earliest</button>
       </div>
+
+      <div class="grides-sug" id="destSug" hidden></div>
     </div>
 
     <div class="grides-count">
@@ -955,17 +1014,28 @@ function pageRides() {
     const same = (a, b) => (P ? P.same(a, b) : a === b);
     /* you can board a ride that starts where you are, or that stops there on the way */
     const okFrom = same(r.from, from) || cities.some(c => same(c, from));
-    /* "Going to" accepts a town or a whole province */
-    const toProv = P ? P.provinceByName(to) : null;
-    const okTo = toProv
-      ? cities.some(c => P.provinceOf(c) === toProv.p)
-      : (state.toStop ? cities.some(c => same(c, to)) : same(r.to, to) || cities.some(c => same(c, to)));
-    const okSeats = seatsOpen(r) >= seats;
+    /* "Going to" is decided by okDest above, from the live field */
+    const okSeats = seatsOpen(r) >= state.seats;
+
+    /* ── the destination, typed live ───────────────────────────────────────
+       Empty means "anywhere": the page opens on everything leaving this town,
+       because that is what the rider asked for when they gave us a pickup. The
+       moment they type, it narrows — matching the arrival town, any stop on the
+       way (which is how a minibus route actually works), or a whole province.
+       Case-insensitive substring, so "mth" finds Mthatha while typing. */
+    const destQ = String(state.to || "").trim().toLowerCase();
+    const destProv = P ? P.provinceByName(state.to) : null;
+    const okDest = !destQ || cities.some(c => {
+      const same = P ? P.same(c, state.to) : c === state.to;
+      return same || String(c).toLowerCase().includes(destQ) || (destProv && P && P.provinceOf(c) === destProv.p);
+    });
+
     /* the slot is the departure window: half-open so 08:00 lands in 08–10 */
-    const okSlot = !q.slot || (() => { const h = new Date(r.depart).getHours(); return h >= Number(q.slot) && h < Number(q.slot) + 2; })();
+    const slot = state.slot;
+    const okSlot = !slot || (() => { const h = new Date(r.depart).getHours(); return h >= Number(slot) && h < Number(slot) + 2; })();
     const okPrice = !state.maxPrice || r.fare <= state.maxPrice;
     const okStops = !state.onlyStops || r.stops.length > 0;
-    return okFrom && okTo && okSeats && okPrice && okStops && okSlot;
+    return okFrom && okDest && okSeats && okPrice && okStops && okSlot;
   }
 
   function render() {
@@ -1005,6 +1075,85 @@ function pageRides() {
     if (k === "sort") { state.sort = state.sort === "time" ? "fare" : "time"; chip("sort", state.sort === "fare", "Sort: " + (state.sort === "fare" ? "cheapest" : "earliest")); }
     else { state[k] = !state[k]; chip(k, state[k]); }
     render();
+  });
+
+  /* ── destinations reachable from here ───────────────────────────────────
+     Read from the rides themselves, not a static town list: offering a
+     destination nothing drives to is a dead end dressed up as a choice.
+
+     Computed HERE, after the list has rendered, because S.rides is not populated
+     when pageRides() starts — reading it at the top threw and took the whole page
+     down with it. */
+  const DEST_SUGGEST = (() => {
+    const set = new Set();
+    (S.rides || []).forEach(r => {
+      const cities = [r.from, ...(r.stops || []).map(x => x.city), r.to];
+      const isHere = c => (window.GOGOPlaces ? GOGOPlaces.same(c, from) : c === from);
+      if (cities.some(isHere)) cities.forEach(c => { if (!isHere(c)) set.add(c); });
+    });
+    return Array.from(set).sort();
+  })();
+
+  /* ── the live search bar ────────────────────────────────────────────────
+     THE RULE: typing re-renders the LIST, never the bar. Rebuilding the header
+     on each keystroke destroys the input element and the focus with it, so the
+     rider types one letter and the field goes dead — the classic bug in this
+     pattern. setQuery() therefore touches state, the count and #list only. */
+  const destIn = $('#destIn');
+  const seatIn = $('#seatIn');
+  const sugBox = $('#destSug');
+
+  function paintSuggestions() {
+    const t = String(state.to || "").trim();
+    if (t.length < 1 || !sugBox) { if (sugBox) { sugBox.hidden = true; sugBox.innerHTML = ""; } return; }
+    const lower = t.toLowerCase();
+    const hits = DEST_SUGGEST.filter(c => c.toLowerCase().includes(lower) && c.toLowerCase() !== lower).slice(0, 5);
+    if (!hits.length) { sugBox.hidden = true; sugBox.innerHTML = ""; return; }
+    sugBox.innerHTML = hits.map(c =>
+      `<button class="grides-sug-b" type="button" data-dest="${esc(c)}">${esc(c)}</button>`
+    ).join("");
+    sugBox.hidden = false;
+    sugBox.querySelectorAll("[data-dest]").forEach(b => {
+      b.onclick = () => {
+        state.to = b.getAttribute("data-dest");
+        if (destIn) destIn.value = state.to;
+        sugBox.hidden = true;
+        render();
+      };
+    });
+  }
+
+  function syncUrl() {
+    /* replaceState, not pushState: ten keystrokes must not become ten history
+       entries the back button has to walk through. The URL still carries the
+       search, so a refresh or a shared link reproduces it. */
+    const p = new URLSearchParams(location.search);
+    if (state.to) p.set("to", state.to); else p.delete("to");
+    p.set("seats", String(state.seats));
+    p.set("when", state.when);
+    history.replaceState(null, "", location.pathname + "?" + p.toString());
+  }
+
+  function setQuery(patch) {
+    Object.assign(state, patch);
+    paintSuggestions();
+    syncUrl();
+    render();          /* list + count only */
+  }
+
+  if (destIn) {
+    destIn.addEventListener("input", () => setQuery({ to: destIn.value }));
+    destIn.addEventListener("focus", paintSuggestions);
+    destIn.addEventListener("blur", () => setTimeout(() => { if (sugBox) sugBox.hidden = true; }, 150));
+  }
+  if (seatIn) seatIn.addEventListener("change", () => setQuery({ seats: Number(seatIn.value) }));
+
+  $$("[data-when]").forEach(b => {
+    b.onclick = () => {
+      $$("[data-when]").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      setQuery({ when: b.getAttribute("data-when") });
+    };
   });
 
   render();
@@ -2003,9 +2152,74 @@ function pageDriver() {
 
 
 /* ── boot ───────────────────────────────────────────────────────────────── */
-document.addEventListener("DOMContentLoaded", () => {
+/* ══ THE CATALOGUE COMES FROM THE SERVER ════════════════════════════════════
+   Every page used to render from the seeded copy in localStorage, and nothing
+   ever called /api/rides. So driver-published rides existed in the database and
+   in the API and were invisible in the app: the finder listed demo stock while
+   real listings sat one fetch away.
+
+   This runs BEFORE the page renderer, because a renderer that runs first paints
+   demo rides and then has to be re-run, which flashes. A failed fetch is not
+   fatal: the seeded copy still renders, so the app degrades to demo stock rather
+   than to a blank page. */
+async function hydrateCatalogue() {
+  try {
+    const res = await fetch("/api/rides", { cache: "no-store" });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!Array.isArray(data.rides) || !data.rides.length) return false;
+
+    /* convert the server's shape (legs as { town: priceInRands }) into the shape
+       the renderers already understand (stops as [{city, time, fare}]) — done
+       here, once, so no renderer has to know there are two sources */
+    S.rides = data.rides.map((r) => {
+      const stops = Object.keys(r.legs || {})
+        .filter((town) => town !== r.to)
+        .map((town) => ({ city: town, time: "", fare: Number(r.legs[town] || 0) }));
+      return {
+        id: r.id,
+        driver: r.driver || "GOGO driver",
+        rating: r.rating || 4.8,
+        trips: r.trips || 0,
+        vehicle: r.vehicle || "Minibus",
+        plate: r.plate || "",
+        colour: r.colour || "White",
+        from: r.from,
+        to: r.to,
+        /* ── the server sends a time, the client wants a moment ────────────
+           Live listings carry depart as "06:30" and date as "2026-12-15"; the
+           renderers do new Date(r.depart) and got Invalid Date, which printed
+           as a card with no departure and sorted to the top of nothing. Compose
+           the two into a real timestamp, and if either is missing fall back to
+           today rather than inventing a date the driver never chose. */
+        depart: (() => {
+          const d = r.date || new Date().toISOString().slice(0, 10);
+          const t = r.depart || "06:30";
+          const iso = new Date(`${d}T${t.length === 5 ? t : t.slice(0, 5)}:00`);
+          return isNaN(iso) ? new Date().toISOString() : iso.toISOString();
+        })(),
+        seatsTotal: r.seats,
+        luggage: r.luggage || "Boot space",
+        stops,
+        fare: Number((r.legs || {})[r.to] || 0),
+        requests: [],
+        status: "open",
+        live: Boolean(r.live),
+      };
+    });
+    save();
+    return true;
+  } catch {
+    /* offline or the API is down: seeded stock still renders */
+    return false;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
   const page = document.body.dataset.page;
   paintChrome(page);
+  /* only the pages that show a catalogue need it, and they need it first */
+  if (["home", "rides", "ride", "rider"].includes(page)) await hydrateCatalogue();
   if (page === "home") pageHome();
   if (page === "rides") pageRides();
   if (page === "ride") pageRide();
