@@ -476,11 +476,28 @@ function rideCard(r) {
 /* The search context travels with the ride link, so opening a ride from the
    results keeps the seats, day and pickup the user already chose. Nothing is
    re-asked on the next screen. */
+/* The live search, as it stands right now. pageRides keeps this current as the
+   rider types; rideQuery runs at module level and cannot see that closure, so
+   the two are reconciled here in one place rather than each guessing. */
+let LIVE_SEARCH = {};
+
 function rideQuery() {
   const q = parseQuery();
   const keep = new URLSearchParams();
-  ["from", "to", "seats", "when", "luggage", "pickup", "slot"].forEach(k => {
-    if (q[k]) keep.set(k, q[k]);
+  /* pickup and city first, because they are the rider's decisions rather than
+     the page's filters, and they must reach the join screen intact.
+
+     Read from the PAGE, not from `state`: rideQuery is a module-level helper and
+     `state` only exists inside pageRides(). Referencing it here threw
+     "state is not defined" on every card, which silently produced a results page
+     that said "4 rides found" and drew nothing — the count and the list are
+     rendered by different code paths, so the failure hid behind a correct
+     heading. */
+  ["pickup", "city", "from", "to", "seats", "when", "luggage", "slot"].forEach(k => {
+    /* LIVE_SEARCH wins: it is what the rider currently sees, and the URL may lag
+       by one keystroke before replaceState catches up */
+    const val = LIVE_SEARCH[k] !== undefined && LIVE_SEARCH[k] !== "" ? LIVE_SEARCH[k] : q[k];
+    if (val) keep.set(k, val);
   });
   const s = keep.toString();
   return s ? "&" + s : "";
@@ -990,6 +1007,17 @@ function pageRides() {
     seats: Number(q.seats || 1),
     when: q.when || "today",
     slot: q.slot || "",
+
+    /* ── the pickup address, carried the whole way ────────────────────────
+       This is the one thing the rider has actually TOLD us, and it was being
+       thrown away the moment the results page loaded: not in state, so syncUrl
+       did not preserve it, so every ride link dropped it, so the join screen
+       asked for the address again — the one question already answered.
+
+       Kept in state and written back to the URL on every change, so it survives
+       a refresh, a shared link, and the hop from list to ride. */
+    pickup: q.pickup || "",
+    city: q.city || "",
   };
 
   /* ── the search bar ─────────────────────────────────────────────────────
@@ -1172,6 +1200,17 @@ function pageRides() {
     if (state.to) p.set("to", state.to); else p.delete("to");
     p.set("seats", String(state.seats));
     p.set("when", state.when);
+    /* the pickup is not a filter, it is an answer the rider already gave */
+    if (state.pickup) p.set("pickup", state.pickup); else p.delete("pickup");
+    if (state.city) p.set("city", state.city); else p.delete("city");
+
+    /* publish for rideQuery(), which runs at module level and cannot close over
+       this state. Kept in step HERE because syncUrl is called on every change —
+       one place that owns the hand-off, rather than a second copy that drifts. */
+    LIVE_SEARCH = {
+      pickup: state.pickup, city: state.city, from: from,
+      to: state.to, seats: state.seats, when: state.when,
+    };
     history.replaceState(null, "", location.pathname + "?" + p.toString());
   }
 
@@ -1188,6 +1227,10 @@ function pageRides() {
     destIn.addEventListener("blur", () => setTimeout(() => { if (sugBox) sugBox.hidden = true; }, 150));
   }
   if (seatIn) seatIn.addEventListener("change", () => setQuery({ seats: Number(seatIn.value) }));
+
+  /* seed the module-level copy before the first render, or the first batch of
+     card links is built without the pickup that just arrived in the URL */
+  syncUrl();
 
   $$("[data-when]").forEach(b => {
     b.onclick = () => {
@@ -1303,7 +1346,7 @@ function pageRide() {
                 <span class="gtr-stop-rail" aria-hidden><i class="gtr-stop-dot${i === 0 ? " gtr-stop-first" : ""}"></i>${last ? "" : '<i class="gtr-stop-line"></i>'}</span>
                 <span class="gtr-stop-body">
                   <span class="gtr-stop-city">${esc(s.city)}</span>
-                  <span class="gtr-stop-meta">${i === 0 ? `${esc(depTime)} · we collect at your street` : last ? "arrival" : `around ${esc(s.time)}`}</span>
+                  <span class="gtr-stop-meta">${i === 0 ? `${esc(depTime)} · we collect at your street` : last ? "arrival" : (s.time ? `around ${esc(s.time)}` : "on the way")}</span>
                 </span>
                 <span class="gtr-stop-fare">${s.fare ? money(s.fare) : "—"}</span>
               </li>`;
@@ -1324,7 +1367,7 @@ function pageRide() {
             <span class="gtr-av">${esc(initials(r.driver))}</span>
             <span class="gtr-driver-t">
               <span class="gtr-driver-n">${esc(r.driver)}</span>
-              <span class="gtr-driver-s">★ ${r.rating} · ${r.trips} trips</span>
+              <span class="gtr-driver-s">${r.rating ? `★ ${r.rating} · ${r.trips} trip${r.trips === 1 ? "" : "s"}` : (r.newDriver ? "✨ New on GOGO" : "⭐ Not yet rated")}</span>
             </span>
             <span class="gtr-driver-a" aria-hidden="›</span>
           </button>
@@ -1360,7 +1403,13 @@ function pageRide() {
     /* nothing is re-asked: the join form comes pre-filled from the draft the
        passenger already typed on the landing page */
     const d = draft();
-    const prePickup = d.pickup || parseQuery().pickup || "";
+    /* ── the URL wins over the draft ─────────────────────────────────────────
+       The address the rider gave on the landing page travels in the query, so a
+       fresh answer must beat a stale draft sitting in localStorage from a
+       previous session — otherwise the join screen helpfully refills itself with
+       the wrong street. The draft is the fallback, not the authority. */
+    const uq = parseQuery();
+    const prePickup = uq.pickup || d.pickup || "";
     const preSeats = Math.min(4, Math.max(1, Number(d.seats || 1)));
     const preLug = d.luggage ? Array.from({ length: 3 }, (_, i) => ["hand", "boot", "trailer"][i]).indexOf(d.luggage) : 0;
     /* the stop they chose on the landing page is preselected, so the drop-off
@@ -1383,7 +1432,7 @@ function pageRide() {
         </div>
 
         <label class="gtr-f">
-          <span class="gtr-fl">Where we collect you</span>
+          <span class="gtr-fl">Where we collect you${prePickup ? " · kept from your search" : ""}</span>
           <input class="gtr-i g-addr-in" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
         </label>
 
@@ -1998,7 +2047,7 @@ function pageDriver() {
           <div class="g-head"><span class="g-label">Stops on this ride</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("route")}</span></div>
           ${r.stops.length ? r.stops.map(s => `
             <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("stop")}</span>
-              <div><div class="g-list-t">${esc(s.city)}</div><div class="g-list-s">around ${esc(s.time)} · ${money(s.fare)} per seat</div></div>
+              <div><div class="g-list-t">${esc(s.city)}</div><div class="g-list-s">${s.time ? "around " + esc(s.time) + " · " : ""}${money(s.fare)} per seat</div></div>
               <div class="g-list-r"><button class="g-btn g-btn-ghost g-btn-sm" data-rm="${esc(s.city)}" type="button">Remove</button></div></div>`).join("")
             : `<p class="g-s">No stops. Add one so commuters on the way can hop in.</p>`}
           <button class="g-btn g-btn-ink g-btn-block g-mt" id="addStop2" type="button"><span aria-hidden>${GICON("cross")}</span> Add a stop on the route</button>
