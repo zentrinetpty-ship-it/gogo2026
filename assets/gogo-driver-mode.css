@@ -782,3 +782,164 @@
 @media (prefers-reduced-motion: reduce) {
   .gdr-tap { transition: none; }
 }
+
+/* ══ SHEET PRIMITIVE ═════════════════════════════════════════════════════════
+   The driver screen opens sheets on top of itself — ride detail, money, stats,
+   withdrawal, new ride. All of them depend on .gsheet being a FIXED overlay.
+
+   It was defined only in gogo-overlays.css, which dashboard.html does not load.
+   With no styles at all the element fell back to position:static, so it rendered
+   as an ordinary block at the end of the document — measured at top:1340 in a
+   569px viewport, i.e. entirely below the fold. Tapping a card looked like
+   nothing happened, and the page could not scroll far enough to reveal it.
+
+   Defined here so the driver screen owns the primitive it uses. The same rules
+   live in gogo-overlays.css for the rides page; identical values, so there is no
+   conflict if a page ever loads both.
+
+   position:fixed is the whole point: a sheet anchored to the viewport does not
+   care how tall the page is or where the user has scrolled to. 100dvh rather than
+   100vh so a phone's collapsing address bar cannot push the bottom of the sheet
+   under the keyboard, and 82dvh max-height keeps the top of the screen visible
+   so the sheet reads as sitting over the page rather than replacing it. */
+
+.gsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: none;
+}
+
+.gsheet.on { display: block; }
+
+.gsheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 16, 16, .38);
+  opacity: 0;
+  transition: opacity .22s ease;
+  -webkit-backdrop-filter: blur(1.5px);
+  backdrop-filter: blur(1.5px);
+}
+
+.gsheet.shown .gsheet-scrim { opacity: 1; }
+
+.gsheet-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  border-radius: 22px 22px 0 0;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateY(100%);
+  transition: transform .26s cubic-bezier(.22,.61,.36,1);
+  max-height: 82dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  color: #1A1A1A;
+}
+
+.gsheet.shown .gsheet-body { transform: none; }
+
+.gsheet-grab {
+  width: 38px;
+  height: 4px;
+  margin: 0 auto 10px;
+  border-radius: 999px;
+  background: #E2E2DB;
+}
+
+/* on a tablet or desktop the sheet becomes a centred dialog: a bottom sheet
+   stretched across 1200px reads as a footer, not as something summoned */
+@media (min-width: 640px) {
+  .gsheet.on {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gsheet-body {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    max-width: 460px;
+    max-height: 84dvh;
+    border-radius: 20px;
+    padding: 22px 24px;
+    transform: translateY(14px);
+    opacity: 0;
+    transition: transform .24s cubic-bezier(.22,.61,.36,1), opacity .24s ease;
+    box-shadow: 0 24px 60px rgba(16, 16, 16, .22);
+  }
+
+  .gsheet.shown .gsheet-body { transform: none; opacity: 1; }
+  .gsheet-grab { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gsheet-scrim, .gsheet-body { transition: none; }
+}
+
+/* ── the sheet must never feel stuck ─────────────────────────────────────────
+   The ride sheet is taller than most phones. Without a cue, content continuing
+   below the fold looks identical to content that has been cut off — and a
+   dialog with no visible way out is the thing people describe as "hangs".
+   So: a soft fade at the foot of the scroller to say "there is more", and a
+   close button that is always reachable without hunting for the scrim. */
+
+.gsheet-body {
+  /* the fade lives on the scroller as a mask, so it travels with the content
+     instead of floating over it */
+  scrollbar-width: thin;
+}
+
+.gsheet-body::-webkit-scrollbar { width: 0; height: 0; }
+
+/* a sticky close control, pinned to the top of the scroller */
+.gsheet-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  margin: -4px -6px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #EDEDE7;
+  border-radius: 50%;
+  background: #fff;
+  color: #1A1A1A;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gsheet-close svg { width: 13px; height: 13px; }
+.gsheet-close:active { background: #F2F2EC; }
+
+/* the foot-of-scroller cue, only while there is more to see */
+.gsheet-foot-cue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 82%);
+  border-radius: 0 0 22px 22px;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.gsheet-body.is-scrollable .gsheet-foot-cue { opacity: 1; }
+.gsheet-body.at-end .gsheet-foot-cue { opacity: 0; }
+
+@media (min-width: 640px) {
+  .gsheet-foot-cue { border-radius: 0 0 20px 20px; }
+}

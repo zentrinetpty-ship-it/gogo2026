@@ -458,7 +458,64 @@
       sheet.innerHTML = '<div class="gsheet-scrim" data-close></div><div class="gsheet-body"><div class="gsheet-grab"></div><div id="gsheetIn"></div></div>';
       document.body.appendChild(sheet);
     }
+
+    /* ── last-resort inline geometry ────────────────────────────────────────
+       The sheet has to be a viewport overlay. Its rules live in this page's own
+       stylesheet now, but this guard means a missing or stale stylesheet can
+       never again render it as a static block at the foot of the document —
+       which is what happened when .gsheet was only defined in a CSS file the
+       dashboard did not load, and cost a visible sheet entirely. If the computed
+       position is not 'fixed', the essentials are written inline, because a sheet
+       nobody can see is worse than a slightly unstyled one. */
+    const cs = window.getComputedStyle(sheet);
+    if (cs.position !== "fixed") {
+      sheet.style.position = "fixed";
+      sheet.style.inset = "0";
+      sheet.style.zIndex = "900";
+      const body = sheet.querySelector(".gsheet-body");
+      if (body) {
+        body.style.position = "absolute";
+        body.style.left = "0";
+        body.style.right = "0";
+        body.style.bottom = "0";
+        body.style.maxHeight = "82dvh";
+        body.style.overflowY = "auto";
+        body.style.background = "#fff";
+        body.style.borderRadius = "22px 22px 0 0";
+        body.style.padding = "10px 20px 24px";
+      }
+    }
+
     const host = sheet.querySelector("#gsheetIn") || sheet.querySelector(".gsheet-body");
+
+    /* ── make it obvious the sheet can be dismissed and scrolled ────────────
+       A close button pinned inside the scroller, plus a foot cue that appears
+       only while there is more content below. Both are wired here rather than in
+       each sheet so every overlay — ride, money, stats, withdraw, new ride —
+       gets the same way out for free. */
+    const bodyEl = sheet.querySelector(".gsheet-body");
+    if (bodyEl && !bodyEl.querySelector(".gsheet-close")) {
+      const btn = document.createElement("button");
+      btn.className = "gsheet-close";
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Close");
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      btn.addEventListener("click", (e) => { e.stopPropagation(); hide(); });
+      bodyEl.insertBefore(btn, bodyEl.firstChild);
+
+      const cue = document.createElement("div");
+      cue.className = "gsheet-foot-cue";
+      bodyEl.appendChild(cue);
+
+      const syncCue = () => {
+        const scrollable = bodyEl.scrollHeight > bodyEl.clientHeight + 4;
+        const atEnd = bodyEl.scrollTop + bodyEl.clientHeight >= bodyEl.scrollHeight - 6;
+        bodyEl.classList.toggle("is-scrollable", scrollable && !atEnd);
+        bodyEl.classList.toggle("at-end", !scrollable || atEnd);
+      };
+      bodyEl.addEventListener("scroll", syncCue, { passive: true });
+      sheet.__syncCue = syncCue;
+    }
 
     function hide() {
       sheet.classList.remove("shown");
@@ -468,7 +525,12 @@
     function show() {
       sheet.classList.add("on");
       document.documentElement.style.overflow = "hidden";
-      requestAnimationFrame(() => sheet.classList.add("shown"));
+      requestAnimationFrame(() => {
+        sheet.classList.add("shown");
+        /* the cue is decided from the content height, which is only measurable
+           once the sheet is laid out — hence a frame later, not at build time */
+        if (sheet.__syncCue) setTimeout(sheet.__syncCue, 60);
+      });
     }
     if (!sheet.__wired) {
       sheet.addEventListener("click", e => { if (e.target.closest("[data-close]")) hide(); });
