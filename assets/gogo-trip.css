@@ -1,0 +1,548 @@
+/* GOGO trip / booking page
+   The page you land on after tapping a ride card. Same system as the rides list
+   and the dashboards: white field, hairline cards, charcoal ink, lime only on
+   the action. Scoped under .gtr. */
+
+.gtr-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 6px 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  color: #1A1A1A;
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.gtr-main, .gtr-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ── the ride itself ─────────────────────────────────────────────────────── */
+.gtr {
+  border: 1px solid #EDEDE7;
+  border-radius: 16px;
+  background: #fff;
+  padding: 17px;
+}
+
+.gtr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gtr-when { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.gtr-time {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.gtr-date { font-size: 11.5px; color: #8A8A83; }
+
+.gtr-price { text-align: right; flex: 0 0 auto; }
+
+.gtr-price b {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.028em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.gtr-price span { font-size: 10px; color: #B0B0A9; }
+
+/* the route: names as the headings, one hairline rail between them */
+.gtr-route {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 12px;
+  margin-top: 17px;
+  padding-top: 15px;
+  border-top: 1px solid #EDEDE7;
+}
+
+.gtr-end { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.gtr-end-to { text-align: right; align-items: flex-end; }
+
+.gtr-town {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -.018em;
+  line-height: 1.25;
+}
+
+.gtr-sub { font-size: 10.5px; color: #B0B0A9; line-height: 1.4; }
+
+.gtr-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  min-width: 52px;
+}
+
+.gtr-rail {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 52px;
+}
+
+.gtr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  flex: 0 0 auto;
+}
+
+.gtr-dot-end { background: #fff; border: 1.5px solid #1A1A1A; }
+
+.gtr-line {
+  flex: 1 1 auto;
+  height: 1px;
+  background: #1A1A1A;
+  opacity: .22;
+}
+
+.gtr-dur { font-size: 10px; color: #B0B0A9; white-space: nowrap; }
+
+/* facts: one rail of three, hairline divided */
+.gtr-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #EDEDE7;
+}
+
+.gtr-facts > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 10px; }
+
+.gtr-k {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+.gtr-v {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-bar {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: #EDEDE7;
+  overflow: hidden;
+  margin-top: 2px;
+  max-width: 90px;
+}
+
+.gtr-bar i { display: block; height: 100%; background: #1A1A1A; border-radius: 2px; }
+
+/* ── a plain card, used by the route and the driver ──────────────────────── */
+.gtr-card {
+  border: 1px solid #EDEDE7;
+  border-radius: 16px;
+  background: #fff;
+  padding: 15px 17px;
+}
+
+.gtr-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+  margin-bottom: 10px;
+}
+
+/* ── the stop-by-stop timeline ───────────────────────────────────────────── */
+.gtr-stops { list-style: none; margin: 0; padding: 0; }
+
+.gtr-stop {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  position: relative;
+  padding: 0 0 14px;
+  min-width: 0;
+}
+
+.gtr-stop-last { padding-bottom: 0; }
+
+.gtr-stop-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+  align-self: stretch;
+}
+
+.gtr-stop-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #C9C9C2;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+
+.gtr-stop-first { background: #1A1A1A; border-color: #1A1A1A; }
+
+.gtr-stop-line {
+  flex: 1 1 auto;
+  width: 1px;
+  background: #EDEDE7;
+  margin-top: 3px;
+  min-height: 14px;
+}
+
+.gtr-stop-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.gtr-stop-city {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-stop-meta { font-size: 10.5px; color: #8A8A83; }
+
+.gtr-stop-fare {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1A1A1A;
+  flex: 0 0 auto;
+  padding-top: 1px;
+}
+
+.gtr-hop {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #8A8A83;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: #FBFBF9;
+  border-radius: 10px;
+}
+
+.gtr-hop b { color: #1A1A1A; font-weight: 600; }
+
+/* ── driver ──────────────────────────────────────────────────────────────── */
+.gtr-driver {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid #EDEDE7;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gtr-driver:active { opacity: .62; }
+
+.gtr-av {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gtr-driver-t { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+
+.gtr-driver-n {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-driver-s { font-size: 11px; color: #8A8A83; }
+
+.gtr-driver-a { font-size: 18px; color: #C9C9C2; flex: 0 0 auto; line-height: 1; }
+
+.gtr-drow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid #EDEDE7;
+  font-size: 12px;
+}
+
+.gtr-driver + .gtr-drow { border-top: 0; }
+
+.gtr-dk { color: #B0B0A9; flex: 0 0 auto; font-size: 11px; }
+
+.gtr-dv {
+  color: #1A1A1A;
+  font-weight: 500;
+  text-align: right;
+  min-width: 0;
+}
+
+/* ── the join form ───────────────────────────────────────────────────────── */
+.gtr-form { display: flex; flex-direction: column; gap: 11px; }
+
+.gtr-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Drop-off needs room for a town name, seats needs almost none, luggage needs
+   room for "Hand luggage". Equal-ish thirds truncated both selects — "Mthath"
+   and "Hanc" are worse than a wrapped label, because the rider cannot tell what
+   they are choosing. Sized by content, with seats taking the least. */
+.gtr-grid3 { display: grid; grid-template-columns: 1.5fr .7fr 1.35fr; gap: 9px; }
+
+.gtr-f { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.gtr-fl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+.gtr-i {
+  height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #EDEDE7;
+  border-radius: 11px;
+  background: #fff;
+  font: inherit;
+  font-size: 16px;      /* 16px stops iOS zooming the page on focus */
+  color: #1A1A1A;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select.gtr-i {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8A83' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 30px;
+}
+
+.gtr-i:focus { outline: none; border-color: #C9C9C2; }
+
+.gtr-submit {
+  height: 50px;
+  margin-top: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-submit:active { transform: scale(.99); }
+.gtr-submit:disabled { background: #C9C9C2; cursor: default; }
+
+.gtr-fine {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #B0B0A9;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── the fee breakdown reads as a receipt, not a table ───────────────────── */
+#joinFees { margin-top: 2px; }
+
+#joinFees table,
+#joinFees .g-fees {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#joinFees tr,
+#joinFees .g-fee-row {
+  border: 0;
+}
+
+#joinFees td,
+#joinFees th,
+#joinFees .g-fee-row > * {
+  padding: 6px 0;
+  font-size: 12px;
+  border: 0;
+  color: #8A8A83;
+  text-align: left;
+  font-weight: 400;
+}
+
+#joinFees td:last-child,
+#joinFees th:last-child,
+#joinFees .g-fee-row > *:last-child {
+  text-align: right;
+  color: #1A1A1A;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the total row is the only heavy line in the block */
+#joinFees tr:last-child td,
+#joinFees .g-fee-total > * {
+  padding-top: 10px;
+  border-top: 1px solid #EDEDE7;
+  font-weight: 600;
+  color: #1A1A1A;
+  font-size: 13.5px;
+}
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .gtr-grid2, .gtr-grid3 { grid-template-columns: 1fr; }
+  .gtr-time { font-size: 20px; }
+  .gtr-town { font-size: 14.5px; }
+}
+
+@media (min-width: 760px) {
+  .gtr-wrap {
+    grid-template-columns: 1.15fr .85fr;
+    align-items: start;
+    gap: 16px;
+    padding-top: 14px;
+  }
+  .gtr-side { position: sticky; top: 14px; }
+  .gtr { padding: 20px; }
+  .gtr-card { padding: 17px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gtr-submit { transition: none; }
+}
+
+/* ── the selfie gate and the pay panel are built by other modules ───────────
+   They slot into the join form but were styled with the old .g-* classes, so the
+   safety block and the payment choice looked like a different app sitting inside
+   the new form. These rules restyle them without touching their handlers. */
+
+#joinForm .g-safe,
+#joinForm .g-row {
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+#joinForm .g-safe { display: block; padding: 13px; }
+#joinForm .g-safe .g-row { border: 0; padding: 0; margin: 0; }
+
+#joinForm .g-t { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+#joinForm .g-list-s { font-size: 11px; color: #8A8A83; line-height: 1.45; margin-top: 2px; }
+
+#joinForm .g-ic { width: 32px; height: 32px; border-radius: 9px; background: #FBFBF9; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+#joinForm .g-ic svg { width: 16px; height: 16px; }
+
+/* the selfie placeholder: an icon in a hairline ring, not an emoji */
+.gtr-vault {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  background: #FBFBF9;
+  color: #B0B0A9;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.gtr-vault svg { width: 20px; height: 20px; }
+.gtr-vault img { width: 100%; height: 100%; object-fit: cover; }
+
+/* a quieter variant of the form's primary button, for the optional step */
+.gtr-submit-quiet {
+  margin-top: 10px;
+  height: 44px;
+  background: #fff;
+  color: #1A1A1A;
+  border: 1px solid #EDEDE7;
+  font-size: 13px;
+}
+
+.gtr-submit-quiet:active { background: #FBFBF9; }
+
+/* the pay panel ships its own classes; line them up with the form */
+#joinForm .g-pay,
+#joinForm .g-radio,
+#joinForm .g-paychoice {
+  border-radius: 12px;
+  border-color: #EDEDE7;
+  font-size: 12.5px;
+}
+
+#joinForm .g-form-sec,
+#joinForm .g-f-k {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+/* selects never ellipsise their value: the chosen option is the whole point of
+   the control, so pad it and let the chevron sit outside the text */
+select.gtr-i {
+  text-overflow: clip;
+  white-space: nowrap;
+  padding-right: 26px;
+  font-size: 15px;
+}
+
+@media (max-width: 420px) {
+  /* on a narrow phone three selects cannot share a line legibly — two rows of
+     two, with drop-off full width, which is also the field used most */
+  .gtr-grid3 { grid-template-columns: 1fr 1fr; }
+  .gtr-grid3 > .gtr-f:first-child { grid-column: 1 / -1; }
+}
