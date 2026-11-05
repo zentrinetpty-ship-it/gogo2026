@@ -122,7 +122,12 @@ export function PickupSheet({ open, onClose, initialPickup = "", initialCity = "
             placeholder="Street number, street, suburb"
             autoComplete="street-address"
             enterKeyHint="search"
-            autoFocus
+            /* NO autoFocus, deliberately. The sheet is opened by a TAP on the
+               pickup card, which is not yet a request to type — and on iOS,
+               focusing an input summons the keyboard immediately, which covers
+               the sheet it was summoned from. The rider taps the field when they
+               are ready to type; opening a sheet and raising a keyboard are two
+               different intents and must stay two different gestures. */
           />
         </label>
 

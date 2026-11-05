@@ -81,35 +81,19 @@ export function Sheet({ open, onClose, title, sub, children, footer }: Props) {
     return () => { html.style.overflow = prev; };
   }, [open]);
 
-  /* ── focus, but only once the sheet has arrived ──────────────────────────
-     Focusing during the transition summons the keyboard mid-slide, which resizes
-     the visual viewport and jerks the panel upward. Waiting for the transform to
-     finish costs nothing and removes the whole class of jump. */
+  /* ── Escape closes; nothing else is touched on open ──────────────────────
+     There used to be a focus-the-first-field effect here, on a timer and again
+     on transitionend. It was wrong twice over: it stole focus the rider had not
+     asked to give, and on iOS it raised the keyboard the instant the sheet
+     appeared — resizing the visual viewport mid-slide and shoving the panel up.
+
+     A sheet opening is a navigation act, not a typing act. Focus belongs to the
+     rider's next tap, so this effect only listens for Escape. */
   React.useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
-
-    const el = panel.current;
-    let done = false;
-    const focusFirst = () => {
-      if (done) return;
-      done = true;
-      const first = el?.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea");
-      /* the input, not the close button: this sheet exists to be typed into */
-      if (first) first.focus({ preventScroll: true });
-    };
-    const onEnd = (e: TransitionEvent) => { if (e.propertyName === "transform") focusFirst(); };
-    el?.addEventListener("transitionend", onEnd);
-    /* a timer as backstop: if the animation never fires (reduced motion, or the
-       element was already settled) the field still gets focus */
-    const t = setTimeout(focusFirst, DURATION + 80);
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      el?.removeEventListener("transitionend", onEnd);
-      clearTimeout(t);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
   /* ── the sheet only says WHICH state, never the pixels ────────────────────

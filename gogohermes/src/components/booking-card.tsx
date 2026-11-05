@@ -366,27 +366,33 @@ export function BookingCard({
               focused || d.pickup ? "scale-x-100" : "scale-x-0"
             )}
           />
-          <input
+          {/* ══ A BUTTON, NOT AN INPUT ═══════════════════════════════════════════
+              This was an <input readOnly> that opened the sheet on focus and then
+              blurred itself. On iOS that sequence is a keyboard flash: the field
+              receives focus, the keyboard starts to rise, the blur dismisses it,
+              and the rider sees a stutter before the sheet even appears.
+
+              It is not a text field. Nothing is typed here — the address is typed
+              in the sheet, where the suggestions live in the panel's scroll flow.
+              So it is a button that looks like a field, which is honest about what
+              it does, cannot raise a keyboard on its own, and is reachable by
+              keyboard and screen reader for the right reason. */}
+          <button
             id="pickup"
-            type="text"
-            value={d.pickup}
-            /* readOnly on purpose: the address is entered in the sheet, where
-               the suggestions live in the panel's scroll flow and the keyboard
-               cannot cover them. Two live inputs for one value drift apart. */
-            /* readOnly: the address is entered in the sheet, where the
-               suggestions live in the panel's scroll flow and the keyboard
-               cannot cover them. Two live inputs for one value drift apart.
-               The field is a button now — it opens the sheet and nothing else. */
-            readOnly
+            type="button"
             onClick={() => setSheetOpen(true)}
-            onFocus={(e) => { e.currentTarget.blur(); setSheetOpen(true); }}
             aria-haspopup="dialog"
-            placeholder="Enter your pick-up address"
-            autoComplete="street-address"
-            /* Sharp corners and a bottom rule only — no box. Regular weight,
-               not bold: an address is long and bold makes it shout. */
-            className="w-full rounded-none border-0 border-b border-neutral-300 bg-transparent px-0 pb-3 pt-1 text-[16px] font-normal leading-tight text-ink outline-none transition-colors placeholder:font-normal placeholder:text-neutral-400"
-          />
+            aria-label={d.pickup ? `Pick-up: ${d.pickup}. Change it` : "Enter your pick-up address"}
+            /* Sharp corners and a bottom rule only, no box. Regular weight, not
+               bold: an address is long and bold makes it shout. 16px so iOS does
+               not zoom the page when the sheet's field takes focus later. */
+            className={cn(
+              "w-full truncate rounded-none border-0 border-b border-neutral-300 bg-transparent px-0 pb-3 pt-1 text-left text-[16px] font-normal leading-tight outline-none transition-colors",
+              d.pickup ? "text-ink" : "text-neutral-400"
+            )}
+          >
+            {d.pickup || "Enter your pick-up address"}
+          </button>
 
           {/* live suggestions, anchored under the field */}
           {focused && candidates.length > 0 && (
