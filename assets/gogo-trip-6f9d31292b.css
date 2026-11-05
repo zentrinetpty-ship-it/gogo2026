@@ -1,0 +1,1123 @@
+/* GOGO trip / booking page
+   The page you land on after tapping a ride card. Same system as the rides list
+   and the dashboards: white field, hairline cards, charcoal ink, lime only on
+   the action. Scoped under .gtr. */
+
+.gtr-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 6px 20px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  color: #1A1A1A;
+  font-family: Poppins, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.gtr-main, .gtr-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ── the ride itself ─────────────────────────────────────────────────────── */
+.gtr {
+  border: 1px solid #EDEDE7;
+  border-radius: 16px;
+  background: #fff;
+  padding: 17px;
+}
+
+.gtr-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gtr-when { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.gtr-time {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.gtr-date { font-size: 11.5px; color: #8A8A83; }
+
+.gtr-price { text-align: right; flex: 0 0 auto; }
+
+.gtr-price b {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.028em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.gtr-price span { font-size: 10px; color: #B0B0A9; }
+
+/* the route: names as the headings, one hairline rail between them */
+.gtr-route {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 12px;
+  margin-top: 17px;
+  padding-top: 15px;
+  border-top: 1px solid #EDEDE7;
+}
+
+.gtr-end { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.gtr-end-to { text-align: right; align-items: flex-end; }
+
+.gtr-town {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -.018em;
+  line-height: 1.25;
+}
+
+.gtr-sub { font-size: 10.5px; color: #B0B0A9; line-height: 1.4; }
+
+.gtr-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  min-width: 52px;
+}
+
+.gtr-rail {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 52px;
+}
+
+.gtr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  flex: 0 0 auto;
+}
+
+.gtr-dot-end { background: #fff; border: 1.5px solid #1A1A1A; }
+
+.gtr-line {
+  flex: 1 1 auto;
+  height: 1px;
+  background: #1A1A1A;
+  opacity: .22;
+}
+
+.gtr-dur { font-size: 10px; color: #B0B0A9; white-space: nowrap; }
+
+/* facts: one rail of three, hairline divided */
+.gtr-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #EDEDE7;
+}
+
+.gtr-facts > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 10px; }
+
+.gtr-k {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+.gtr-v {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-bar {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  background: #EDEDE7;
+  overflow: hidden;
+  margin-top: 2px;
+  max-width: 90px;
+}
+
+.gtr-bar i { display: block; height: 100%; background: #1A1A1A; border-radius: 2px; }
+
+/* ── a plain card, used by the route and the driver ──────────────────────── */
+.gtr-card {
+  border: 1px solid #EDEDE7;
+  border-radius: 16px;
+  background: #fff;
+  padding: 15px 17px;
+}
+
+.gtr-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .085em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+  margin-bottom: 10px;
+}
+
+/* ── the stop-by-stop timeline ───────────────────────────────────────────── */
+.gtr-stops { list-style: none; margin: 0; padding: 0; }
+
+.gtr-stop {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  position: relative;
+  padding: 0 0 14px;
+  min-width: 0;
+}
+
+.gtr-stop-last { padding-bottom: 0; }
+
+.gtr-stop-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+  align-self: stretch;
+}
+
+.gtr-stop-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #C9C9C2;
+  flex: 0 0 auto;
+  z-index: 1;
+}
+
+.gtr-stop-first { background: #1A1A1A; border-color: #1A1A1A; }
+
+.gtr-stop-line {
+  flex: 1 1 auto;
+  width: 1px;
+  background: #EDEDE7;
+  margin-top: 3px;
+  min-height: 14px;
+}
+
+.gtr-stop-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.gtr-stop-city {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-stop-meta { font-size: 10.5px; color: #8A8A83; }
+
+.gtr-stop-fare {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1A1A1A;
+  flex: 0 0 auto;
+  padding-top: 1px;
+}
+
+.gtr-hop {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #8A8A83;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  background: #FBFBF9;
+  border-radius: 10px;
+}
+
+.gtr-hop b { color: #1A1A1A; font-weight: 600; }
+
+/* ── driver ──────────────────────────────────────────────────────────────── */
+.gtr-driver {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 0 0 12px;
+  border: 0;
+  border-bottom: 1px solid #EDEDE7;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gtr-driver:active { opacity: .62; }
+
+.gtr-av {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gtr-driver-t { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+
+.gtr-driver-n {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gtr-driver-s { font-size: 11px; color: #8A8A83; }
+
+.gtr-driver-a { font-size: 18px; color: #C9C9C2; flex: 0 0 auto; line-height: 1; }
+
+.gtr-drow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-top: 1px solid #EDEDE7;
+  font-size: 12px;
+}
+
+.gtr-driver + .gtr-drow { border-top: 0; }
+
+.gtr-dk { color: #B0B0A9; flex: 0 0 auto; font-size: 11px; }
+
+.gtr-dv {
+  color: #1A1A1A;
+  font-weight: 500;
+  text-align: right;
+  min-width: 0;
+}
+
+/* ── the join form ───────────────────────────────────────────────────────── */
+.gtr-form { display: flex; flex-direction: column; gap: 11px; }
+
+.gtr-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Drop-off needs room for a town name, seats needs almost none, luggage needs
+   room for "Hand luggage". Equal-ish thirds truncated both selects — "Mthath"
+   and "Hanc" are worse than a wrapped label, because the rider cannot tell what
+   they are choosing. Sized by content, with seats taking the least. */
+.gtr-grid3 { display: grid; grid-template-columns: 1.5fr .7fr 1.35fr; gap: 9px; }
+
+.gtr-f { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+
+.gtr-fl {
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+.gtr-i {
+  height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #EDEDE7;
+  border-radius: 11px;
+  background: #fff;
+  font: inherit;
+  /* ── 15px, and why it is safe ─────────────────────────────────────────────
+     iOS zooms a focused text input below 16px. That rule applies to <input>; a
+     <select> opens a picker rather than an inline keyboard, so selects are set
+     to 15px and text inputs stay at 16. Full-width fields made the old 16px look
+     oversized, and shrinking a select is free legibility with no zoom cost. */
+  font-size: 16px;
+  color: #1A1A1A;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select.gtr-i {
+  font-size: 15px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8A83' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 30px;
+}
+
+.gtr-i:focus { outline: none; border-color: #C9C9C2; }
+
+.gtr-submit {
+  height: 50px;
+  margin-top: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-submit:active { transform: scale(.99); }
+.gtr-submit:disabled { background: #C9C9C2; cursor: default; }
+
+.gtr-fine {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #B0B0A9;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── the fee breakdown reads as a receipt, not a table ───────────────────── */
+#joinFees { margin-top: 2px; }
+
+#joinFees table,
+#joinFees .g-fees {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#joinFees tr,
+#joinFees .g-fee-row {
+  border: 0;
+}
+
+#joinFees td,
+#joinFees th,
+#joinFees .g-fee-row > * {
+  padding: 6px 0;
+  font-size: 12px;
+  border: 0;
+  color: #8A8A83;
+  text-align: left;
+  font-weight: 400;
+}
+
+#joinFees td:last-child,
+#joinFees th:last-child,
+#joinFees .g-fee-row > *:last-child {
+  text-align: right;
+  color: #1A1A1A;
+  font-variant-numeric: tabular-nums;
+}
+
+/* the total row is the only heavy line in the block */
+#joinFees tr:last-child td,
+#joinFees .g-fee-total > * {
+  padding-top: 10px;
+  border-top: 1px solid #EDEDE7;
+  font-weight: 600;
+  color: #1A1A1A;
+  font-size: 13.5px;
+}
+
+/* ── responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .gtr-grid2, .gtr-grid3 { grid-template-columns: 1fr; }
+  .gtr-time { font-size: 20px; }
+  .gtr-town { font-size: 14.5px; }
+}
+
+@media (min-width: 760px) {
+  .gtr-wrap {
+    grid-template-columns: 1.15fr .85fr;
+    align-items: start;
+    gap: 16px;
+    padding-top: 14px;
+  }
+  .gtr-side { position: sticky; top: 14px; }
+  .gtr { padding: 20px; }
+  .gtr-card { padding: 17px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gtr-submit { transition: none; }
+}
+
+/* ── the selfie gate and the pay panel are built by other modules ───────────
+   They slot into the join form but were styled with the old .g-* classes, so the
+   safety block and the payment choice looked like a different app sitting inside
+   the new form. These rules restyle them without touching their handlers. */
+
+#joinForm .g-safe,
+#joinForm .g-row {
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+#joinForm .g-safe { display: block; padding: 13px; }
+#joinForm .g-safe .g-row { border: 0; padding: 0; margin: 0; }
+
+#joinForm .g-t { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+#joinForm .g-list-s { font-size: 11px; color: #8A8A83; line-height: 1.45; margin-top: 2px; }
+
+#joinForm .g-ic { width: 32px; height: 32px; border-radius: 9px; background: #FBFBF9; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+#joinForm .g-ic svg { width: 16px; height: 16px; }
+
+/* the selfie placeholder: an icon in a hairline ring, not an emoji */
+.gtr-vault {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  background: #FBFBF9;
+  color: #B0B0A9;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.gtr-vault svg { width: 20px; height: 20px; }
+.gtr-vault img { width: 100%; height: 100%; object-fit: cover; }
+
+/* a quieter variant of the form's primary button, for the optional step */
+.gtr-submit-quiet {
+  margin-top: 10px;
+  height: 44px;
+  background: #fff;
+  color: #1A1A1A;
+  border: 1px solid #EDEDE7;
+  font-size: 13px;
+}
+
+.gtr-submit-quiet:active { background: #FBFBF9; }
+
+/* the pay panel ships its own classes; line them up with the form */
+#joinForm .g-pay,
+#joinForm .g-radio,
+#joinForm .g-paychoice {
+  border-radius: 12px;
+  border-color: #EDEDE7;
+  font-size: 12.5px;
+}
+
+#joinForm .g-form-sec,
+#joinForm .g-f-k {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+}
+
+/* selects never ellipsise their value: the chosen option is the whole point of
+   the control, so pad it and let the chevron sit outside the text */
+select.gtr-i {
+  text-overflow: clip;
+  white-space: nowrap;
+  padding-right: 26px;
+  font-size: 15px;
+}
+
+@media (max-width: 420px) {
+  /* on a narrow phone three selects cannot share a line legibly — two rows of
+     two, with drop-off full width, which is also the field used most */
+  .gtr-grid3 { grid-template-columns: 1fr 1fr; }
+  .gtr-grid3 > .gtr-f:first-child { grid-column: 1 / -1; }
+}
+
+
+/* ══ THE JOIN FORM, SECTIONED ═══════════════════════════════════════════════
+   Three numbered parts — who you are, your hike, safety — so a form with nine
+   fields reads as three decisions instead of a wall. The number is a real
+   affordance, not decoration: it tells the rider how much is left. */
+
+.gtr-sec {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0 11px;
+}
+
+.gtr-sec:first-child { margin-top: 4px; }
+
+.gtr-sec-n {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.gtr-sec-h { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.gtr-sec-t { font-size: 13.5px; font-weight: 600; color: #1A1A1A; letter-spacing: -.012em; }
+.gtr-sec-s { font-size: 11.5px; color: #8A8A83; line-height: 1.45; }
+
+/* ══ THE SAFETY SELFIE ══════════════════════════════════════════════════════
+   The block that was lost. It carries the app's actual safety promise, so it is
+   styled as a commitment rather than a footnote: a bounded card with its own
+   heading, its own action, and three plain reasons underneath. */
+
+.gtr-selfie {
+  margin-top: 4px;
+  padding: 13px 14px 12px;
+  border: 1px solid #EDEDE7;
+  border-radius: 14px;
+  background: #FBFBF9;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+/* once taken, the card stops asking and starts confirming — lime, quietly */
+.gtr-selfie.is-done {
+  background: #F7FBEA;
+  border-color: #DCEAB8;
+}
+
+.gtr-selfie-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.gtr-selfie-face {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #E7E7E0;
+  display: grid;
+  place-items: center;
+  color: #8A8A83;
+  overflow: hidden;
+}
+
+.gtr-selfie-face svg { width: 22px; height: 22px; }
+.gtr-selfie-face.has-photo { border-color: #A3E635; }
+.gtr-selfie-face.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gtr-selfie.is-done .gtr-selfie-face { color: #4A6A10; }
+
+.gtr-selfie-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gtr-selfie-txt b { font-size: 13.5px; font-weight: 600; color: #1A1A1A; letter-spacing: -.01em; }
+.gtr-selfie-txt span { font-size: 11.5px; color: #8A8A83; line-height: 1.45; }
+
+.gtr-selfie-btn {
+  flex: none;
+  height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-selfie-btn:active { transform: scale(.97); }
+.gtr-selfie.is-done .gtr-selfie-btn { background: #fff; color: #1A1A1A; border: 1px solid #DCEAB8; }
+
+.gtr-selfie-why {
+  list-style: none;
+  margin: 11px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid #EDEDE7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gtr-selfie-why li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #6E6E68;
+}
+
+.gtr-selfie-why li span { flex: none; font-size: 11px; line-height: 1.35; }
+
+/* ── the send button states the requirement instead of hiding it ────────────
+   A disabled button with no reason is how a form strands someone. When the
+   selfie is missing the label says what is missing. */
+.gtr-submit.is-blocked {
+  background: #EDEDE7;
+  color: #8A8A83;
+  box-shadow: none;
+}
+
+.gtr-submit:disabled { cursor: not-allowed; }
+
+@media (max-width: 380px) {
+  .gtr-selfie-row { gap: 9px; }
+  .gtr-selfie-face { width: 38px; height: 38px; }
+  .gtr-selfie-btn { padding: 0 12px; }
+}
+
+
+/* ══ WHO YOU ARE ════════════════════════════════════════════════════════════
+   A finished identity, not a form. Name, number and a verified badge at rest;
+   the fields only appear when the rider asks to change something.
+
+   This card sits under the route because that is the context it belongs to: the
+   driver on THIS route will see this name and number. At the top of the booking
+   form it read as a hurdle before booking; here it reads as the other half of
+   who you are travelling with — the driver card is right below it. */
+
+.gtr-who-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.gtr-who-edit {
+  flex: none;
+  height: 27px;
+  padding: 0 11px;
+  border: 1px solid #E7E7E0;
+  border-radius: 999px;
+  background: #fff;
+  color: #1A1A1A;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-who-edit:active { background: #F4F4F0; }
+
+.gtr-who-body {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.gtr-who-av {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.gtr-who-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.gtr-who-n {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -.015em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtr-who-p {
+  font-size: 12px;
+  color: #8A8A83;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* a badge that tells the truth: grey while incomplete, lime when it is real */
+.gtr-who-badge {
+  flex: none;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #F4F4F0;
+  color: #8A8A83;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gtr-who-badge.is-ok {
+  background: #F1F8DC;
+  color: #4A6A10;
+}
+
+.gtr-who-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid #F2F2EE;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gtr-who-note span { flex: none; font-size: 11px; line-height: 1.35; }
+
+.gtr-who-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F2F2EE;
+}
+
+.gtr-who-form[hidden] { display: none; }
+
+.gtr-who-fine {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gtr-who-done {
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-who-done:active { transform: scale(.99); }
+
+
+/* ══ WHO YOU ARE, now inside the request card ═══════════════════════════════
+   It arrived from the route column carrying its own .gtr-card border, which put
+   a box inside a box. Here it is the FIRST BLOCK of the request, separated by the
+   same hairline the other sections use — one card, three parts, not three cards. */
+
+#whoCard {
+  border: 0;
+  border-radius: 0;
+  padding: 0 0 14px;
+  margin: 0 0 4px;
+  border-bottom: 1px solid #F2F2EE;
+  background: transparent;
+}
+
+#whoCard .gtr-who-form { margin-top: 12px; }
+
+/* the join card's own sections start below the identity block */
+#joinForm .gtr-sec:first-of-type { margin-top: 16px; }
+
+
+/* ══ DROP-OFF + SEATS ON ONE ROW ════════════════════════════════════════════
+   The asymmetry is the point: a town name needs nearly all the width, a seat
+   count needs one digit. Giving them equal thirds wasted the column that had
+   the longest possible value and starved the one that had the shortest.
+
+   1fr + 92px: enough for "Butterworth" and "Idutywa" whole, still a comfortable
+   48px tap target for the seats select. On a very narrow phone the seats column
+   keeps its width and the town truncates with an ellipsis rather than pushing
+   the row into two lines — a select that wraps is the thing we were fixing. */
+.gtr-grid-ds {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (max-width: 340px) {
+  .gtr-grid-ds { grid-template-columns: minmax(0, 1fr) 76px; gap: 8px; }
+}
+
+#joinForm select.gtr-i {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ══ EMOJIS AS LABELS ═══════════════════════════════════════════════════════
+   These are content markers, not chrome. GOGO uses inline SVG for interface
+   icons; an emoji here does a different job — it lets a rider find "luggage" by
+   shape before they read the word, which is what a dense form needs.
+
+   Sized and aligned so a line of them reads as a rhythm rather than a jumble. */
+
+.gtr-fl span[aria-hidden] {
+  font-size: 11.5px;
+  line-height: 1;
+  margin-right: 4px;
+  vertical-align: -1.5px;
+  filter: saturate(1.1);
+}
+
+.gtr-sec-t span[aria-hidden] {
+  font-size: 15px;
+  line-height: 1;
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+
+.gtr-label span[aria-hidden] {
+  font-size: 12px;
+  line-height: 1;
+  margin-right: 5px;
+  vertical-align: -1.5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ══ RESPONSIVE FEEL ════════════════════════════════════════════════════════
+   "Responsive" here means three specific things, not a media-query count:
+     1  every tap target is at least 44px, so nothing is a near-miss
+     2  the form never reflows mid-typing — fields hold their width
+     3  the page answers the finger instantly, with no 300ms lag or scroll jump */
+
+#joinForm .gtr-i,
+#joinForm select.gtr-i {
+  min-height: 48px;
+  touch-action: manipulation;   /* kills the double-tap zoom delay on fields */
+}
+
+#joinForm button,
+.gtr-selfie-btn,
+.gtr-who-edit,
+.gtr-who-done {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .12s ease, background-color .18s ease, border-color .18s ease;
+}
+
+#joinForm button:active,
+.gtr-selfie-btn:active,
+.gtr-who-edit:active,
+.gtr-who-done:active {
+  transform: scale(.985);
+}
+
+/* the fare rows animate in when the seat count changes, so the total visibly
+   moves rather than silently swapping number */
+.gtr-fee-v, .gtr-total-v { transition: color .2s ease; }
+
+/* sections arrive in sequence on first paint — a form that assembles itself
+   reads as faster than one that appears all at once, even at the same speed */
+@keyframes gtrIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+#joinForm .gtr-sec,
+#whoCard,
+.gtr-selfie {
+  animation: gtrIn .34s cubic-bezier(.22,.61,.36,1) both;
+}
+
+#whoCard     { animation-delay: .02s; }
+#joinForm .gtr-sec:nth-of-type(1) { animation-delay: .06s; }
+.gtr-selfie  { animation-delay: .14s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #joinForm .gtr-sec, #whoCard, .gtr-selfie { animation: none; }
+  #joinForm button, .gtr-selfie-btn { transition: none; }
+}
+
+/* ── very small phones: tighten without shrinking targets ─────────────────── */
+@media (max-width: 360px) {
+  .gtr-sec-s { font-size: 11px; }
+  .gtr-selfie { padding: 11px 11px 10px; }
+  .gtr-who-av { width: 36px; height: 36px; font-size: 12px; }
+}
+
+
+/* ══ ONE COLUMN, ALWAYS ═════════════════════════════════════════════════════
+   The route and the join form were two columns on a wide screen. That column
+   only existed to fill desktop whitespace, and it cost the reading order: on a
+   phone the side column trailed after the route anyway, so route -> driver ->
+   request was already the real sequence. Now the layout states it at every
+   width, and the request sits directly under the stop list a rider is reading
+   when they decide to book. */
+
+/* the wrap only owns the stack; it must not also claim a width, or it fights
+   the page gutter and the cards end up 302px wide inside a 390px screen */
+.gtr-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.gtr-main, .gtr-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* ══ ROOM TO READ AND ROOM TO TAP ══════════════════════════════════════════
+   "More compact" and "add padding" are not in conflict here: the vertical rhythm
+   was loose (20px section gaps, generous internal margins) while the fields
+   themselves were tight. So sections get closer together and the fields get
+   roomier. Overall the page gets SHORTER while everything in it gets easier to
+   hit. */
+
+.gtr-card {
+  padding: 15px 15px 16px;
+}
+
+/* ── the pickup field ─────────────────────────────────────────────────────
+   A street address is the longest value a rider types into this form, and it
+   was sharing the same 12px side padding as a one-digit seat count. It gets its
+   own comfortable inset and a slightly taller box, because it is the field most
+   likely to be edited twice. */
+
+/* sections sit closer: the gaps were doing no work, they were just large */
+.gtr-sec {
+  margin: 15px 0 9px;
+  gap: 9px;
+}
+
+.gtr-sec:first-of-type { margin-top: 10px; }
+
+.gtr-sec-n {
+  width: 19px;
+  height: 19px;
+  font-size: 10.5px;
+}
+
+.gtr-sec-t { font-size: 13px; }
+.gtr-sec-s { font-size: 11px; line-height: 1.4; }
+
+/* fields breathe sideways, not vertically — tight rows, generous insets */
+#joinForm .gtr-f { gap: 4px; }
+
+#joinForm .gtr-i,
+#joinForm select.gtr-i {
+  min-height: 46px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+}
+
+
+/* identity block: compact, since it is usually already correct */
+#whoCard { padding: 0 0 12px; margin-bottom: 2px; }
+
+.gtr-who-head { margin-bottom: 9px; }
+.gtr-who-av { width: 36px; height: 36px; font-size: 12px; }
+.gtr-who-n { font-size: 14px; }
+.gtr-who-note { margin-top: 9px; padding-top: 8px; }
+
+/* the selfie card, tightened but still comfortable to tap */
+.gtr-selfie { padding: 12px 13px 11px; }
+.gtr-selfie-why { margin-top: 9px; padding-top: 9px; gap: 5px; }
+
+/* the fare block reads as a receipt: tight rows, aligned figures */
+.gtr-fee, #joinFees .gtr-fee { margin-top: 10px; }
+#joinFees { margin-top: 4px; }
+
+/* the submit stays the biggest thing in the card even after tightening */
+.gtr-submit {
+  height: 50px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.gtr-fine { margin-top: 8px; font-size: 10.5px; }
+
+/* ── the route card leads, so it gets slightly more air than the rest ────── */
+.gtr-main .gtr-card:first-of-type { margin-bottom: 0; }
+.gtr-main > article.gtr { padding: 16px 16px 15px; }
+
+@media (max-width: 360px) {
+  .gtr-card { padding: 13px 13px 14px; }
+  #joinForm .gtr-i, #joinForm select.gtr-i { padding: 0 12px; }
+}
+
+/* ══ THE PICKUP FIELD: ONE BOX, ONE BORDER ══════════════════════════════════
+   The field drew two rectangles inside each other: a 1px #EDEDE7 box with a 12px
+   radius (the anchor the address widget wraps around the input), and a second
+   1px #E4E4E4 box with a 14px radius on the input itself, 17px inside it.
+
+   Four attempts to remove the inner one failed. The input carried `border: 0px`
+   INLINE, from the widget's own mount code, and still computed 1px solid — no
+   same-origin rule matched it, so the declaration winning the cascade lives in a
+   stylesheet the browser will not let us enumerate. Only `!important` displaced
+   it, which was verified by injecting an important rule, seeing the border go to
+   0px, and watching it return on removal.
+
+   So: the input keeps the box it insists on drawing, and the anchor stops drawing
+   one. One element, one border, no specificity war to maintain. The inset moves
+   from the anchor's padding to the input's padding so the text still has room.
+*/
+#joinForm .g-addr-anchor {
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#joinForm .g-addr-anchor input,
+#joinForm .g-addr-anchor input.gtr-i,
+#joinForm .g-addr-anchor input.g-addr-in {
+  /* padding and height must be important for the same reason the border was */
+  padding-left: 15px !important;
+  padding-right: 42px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  width: 100% !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  font-size: 16px !important;
+}
+
+/* one focus treatment, on the element that actually has the border */
+#joinForm .g-addr-anchor input:focus,
+#joinForm .g-addr-anchor input:focus-visible {
+  outline: none !important;
+  border-color: #C9C9C2 !important;
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .22) !important;
+}

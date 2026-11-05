@@ -1075,92 +1075,49 @@ select.gtr-i {
   #joinForm .gtr-i, #joinForm select.gtr-i { padding: 0 12px; }
 }
 
-/* ══ THE PICKUP FIELD ═══════════════════════════════════════════════════════
-   This field is NOT a plain input. gogo-address-ui.js moves the input into a
-   `.g-addr-anchor` wrapper and then strips the input's own box:
+/* ══ THE PICKUP FIELD: ONE BOX, ONE BORDER ══════════════════════════════════
+   The field drew two rectangles inside each other: a 1px #EDEDE7 box with a 12px
+   radius (the anchor the address widget wraps around the input), and a second
+   1px #E4E4E4 box with a 14px radius on the input itself, 17px inside it.
 
-     input.style.cssText += "...height:auto;padding:0;border:0;background:transparent"
+   Four attempts to remove the inner one failed. The input carried `border: 0px`
+   INLINE, from the widget's own mount code, and still computed 1px solid — no
+   same-origin rule matched it, so the declaration winning the cascade lives in a
+   stylesheet the browser will not let us enumerate. Only `!important` displaced
+   it, which was verified by injecting an important rule, seeing the border go to
+   0px, and watching it return on removal.
 
-   Inline styles beat every stylesheet rule, so four rounds of CSS targeting
-   #jPickup — including one that set the right padding at the right specificity —
-   changed nothing at all. The wrapper is what draws the field, so the wrapper is
-   what has to be padded.
-
-   A street address is the longest value typed into this form and the one most
-   likely to be edited twice, so the row gets a wider inset than the seat counts
-   and a taller box to match. */
+   So: the input keeps the box it insists on drawing, and the anchor stops drawing
+   one. One element, one border, no specificity war to maintain. The inset moves
+   from the anchor's padding to the input's padding so the text still has room.
+*/
 #joinForm .g-addr-anchor {
-  width: 100%;
-  min-height: 52px;
-  padding-left: 16px;
-  padding-right: 16px;
-  border: 1px solid #EDEDE7;
-  border-radius: 12px;
-  background: #fff;
-  box-sizing: border-box;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-#joinForm .g-addr-anchor:focus-within { border-color: #C9C9C2; }
-
-/* the inner input stays transparent and unpadded: it is a text surface inside
-   that box, not a box of its own */
-#joinForm .g-addr-anchor input {
-  padding-left: 0;
-  padding-right: 0;
-  font-size: 16px;
+#joinForm .g-addr-anchor input,
+#joinForm .g-addr-anchor input.gtr-i,
+#joinForm .g-addr-anchor input.g-addr-in {
+  /* padding and height must be important for the same reason the border was */
+  padding-left: 15px !important;
+  padding-right: 42px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  width: 100% !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  font-size: 16px !important;
 }
 
-/* the address icon sits inside the inset, not on top of the text */
-#joinForm .g-addr-anchor .g-addr-ic { margin-right: 2px; }
-
-
-/* ══ SELFIE VERDICT ═════════════════════════════════════════════════════════
-   The engine's answer, shown inside the capture sheet. Two states only: it found
-   a problem (red, with the fix), or it did not (lime, with reassurance).
-
-   The fix line is the important half. "Photo failed" teaches nothing; "face a
-   window and retake" gets the rider to a good photo in one attempt. */
-
-.g-cam-verdict {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin: 10px 0 4px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.g-cam-verdict[hidden] { display: none; }
-
-.g-cam-verdict b { font-size: 12.5px; font-weight: 650; }
-
-.g-cam-verdict.is-bad {
-  background: #FEF3F2;
-  border-color: #FADBD6;
-  color: #7A2A1E;
-}
-
-.g-cam-verdict.is-bad b { color: #8E2F20; }
-
-.g-cam-verdict.is-good {
-  background: #F5FAE5;
-  border-color: #DCEAB8;
-  color: #4A6A10;
-}
-
-.g-cam-verdict.is-good b { color: #3E5A0C; }
-
-.g-cam-also {
-  font-size: 11px;
-  opacity: .78;
-  margin-top: 2px;
-}
-
-/* the sheet's primary action must never look tappable while it is judging */
-#shotBtn:disabled {
-  opacity: .55;
-  cursor: progress;
+/* one focus treatment, on the element that actually has the border */
+#joinForm .g-addr-anchor input:focus,
+#joinForm .g-addr-anchor input:focus-visible {
+  outline: none !important;
+  border-color: #C9C9C2 !important;
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, .22) !important;
 }
