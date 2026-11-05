@@ -546,3 +546,140 @@ select.gtr-i {
   .gtr-grid3 { grid-template-columns: 1fr 1fr; }
   .gtr-grid3 > .gtr-f:first-child { grid-column: 1 / -1; }
 }
+
+
+/* ══ THE JOIN FORM, SECTIONED ═══════════════════════════════════════════════
+   Three numbered parts — who you are, your hike, safety — so a form with nine
+   fields reads as three decisions instead of a wall. The number is a real
+   affordance, not decoration: it tells the rider how much is left. */
+
+.gtr-sec {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0 11px;
+}
+
+.gtr-sec:first-child { margin-top: 4px; }
+
+.gtr-sec-n {
+  flex: none;
+  width: 21px;
+  height: 21px;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.gtr-sec-h { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.gtr-sec-t { font-size: 13.5px; font-weight: 600; color: #1A1A1A; letter-spacing: -.012em; }
+.gtr-sec-s { font-size: 11.5px; color: #8A8A83; line-height: 1.45; }
+
+/* ══ THE SAFETY SELFIE ══════════════════════════════════════════════════════
+   The block that was lost. It carries the app's actual safety promise, so it is
+   styled as a commitment rather than a footnote: a bounded card with its own
+   heading, its own action, and three plain reasons underneath. */
+
+.gtr-selfie {
+  margin-top: 4px;
+  padding: 13px 14px 12px;
+  border: 1px solid #EDEDE7;
+  border-radius: 14px;
+  background: #FBFBF9;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+/* once taken, the card stops asking and starts confirming — lime, quietly */
+.gtr-selfie.is-done {
+  background: #F7FBEA;
+  border-color: #DCEAB8;
+}
+
+.gtr-selfie-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.gtr-selfie-face {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #E7E7E0;
+  display: grid;
+  place-items: center;
+  color: #8A8A83;
+  overflow: hidden;
+}
+
+.gtr-selfie-face svg { width: 22px; height: 22px; }
+.gtr-selfie-face.has-photo { border-color: #A3E635; }
+.gtr-selfie-face.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gtr-selfie.is-done .gtr-selfie-face { color: #4A6A10; }
+
+.gtr-selfie-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gtr-selfie-txt b { font-size: 13.5px; font-weight: 600; color: #1A1A1A; letter-spacing: -.01em; }
+.gtr-selfie-txt span { font-size: 11.5px; color: #8A8A83; line-height: 1.45; }
+
+.gtr-selfie-btn {
+  flex: none;
+  height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-selfie-btn:active { transform: scale(.97); }
+.gtr-selfie.is-done .gtr-selfie-btn { background: #fff; color: #1A1A1A; border: 1px solid #DCEAB8; }
+
+.gtr-selfie-why {
+  list-style: none;
+  margin: 11px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid #EDEDE7;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gtr-selfie-why li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #6E6E68;
+}
+
+.gtr-selfie-why li span { flex: none; font-size: 11px; line-height: 1.35; }
+
+/* ── the send button states the requirement instead of hiding it ────────────
+   A disabled button with no reason is how a form strands someone. When the
+   selfie is missing the label says what is missing. */
+.gtr-submit.is-blocked {
+  background: #EDEDE7;
+  color: #8A8A83;
+  box-shadow: none;
+}
+
+.gtr-submit:disabled { cursor: not-allowed; }
+
+@media (max-width: 380px) {
+  .gtr-selfie-row { gap: 9px; }
+  .gtr-selfie-face { width: 38px; height: 38px; }
+  .gtr-selfie-btn { padding: 0 12px; }
+}

@@ -1511,15 +1511,33 @@ function pageRide() {
     box.innerHTML = `
       <span class="gtr-label">Request to join</span>
       <form id="joinForm" class="gtr-form">
-        <div class="gtr-grid2">
-          <label class="gtr-f">
-            <span class="gtr-fl">Your name</span>
-            <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" required>
-          </label>
-          <label class="gtr-f">
-            <span class="gtr-fl">Phone</span>
-            <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
-          </label>
+
+        <!-- ══ 1 · WHO YOU ARE ══════════════════════════════════════════════ -->
+        <div class="gtr-sec">
+          <span class="gtr-sec-n" aria-hidden="true">1</span>
+          <div class="gtr-sec-h">
+            <span class="gtr-sec-t">Who you are</span>
+            <span class="gtr-sec-s">Your driver needs a name and a number to reach you.</span>
+          </div>
+        </div>
+
+        <label class="gtr-f">
+          <span class="gtr-fl">Your name</span>
+          <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" placeholder="Full name" required>
+        </label>
+
+        <label class="gtr-f">
+          <span class="gtr-fl">Phone</span>
+          <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
+        </label>
+
+        <!-- ══ 2 · YOUR HIKE ═════════════════════════════════════════════════ -->
+        <div class="gtr-sec">
+          <span class="gtr-sec-n" aria-hidden="true">2</span>
+          <div class="gtr-sec-h">
+            <span class="gtr-sec-t">Your hike</span>
+            <span class="gtr-sec-s">${prePickup ? "We kept the address you searched with." : "Where we collect you, and where you get off."}</span>
+          </div>
         </div>
 
         <label class="gtr-f">
@@ -1528,7 +1546,7 @@ function pageRide() {
         </label>
 
         <div class="gtr-grid3">
-          <label class="gtr-f">
+          <label class="gtr-f grides-f-dest">
             <span class="gtr-fl">Drop me at</span>
             <select class="gtr-i" id="jOff">${[r.to, ...r.stops.map(s => s.city)].map(c => `<option${c === preOff ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
           </label>
@@ -1544,7 +1562,39 @@ function pageRide() {
 
         <div id="joinFees"></div>
 
-        <button class="gtr-submit" type="submit" ${left ? "" : "disabled"}>${left ? "Send request" : "This ride is full"}</button>
+        <!-- ══ 3 · SAFETY ════════════════════════════════════════════════════
+             This is the block that was lost when the form was redesigned. It is
+             not a nicety: the app tells riders that BOTH sides take a selfie so
+             nobody rides anonymously, and without this the claim is false. -->
+        <div class="gtr-sec">
+          <span class="gtr-sec-n" aria-hidden="true">3</span>
+          <div class="gtr-sec-h">
+            <span class="gtr-sec-t">Safety check</span>
+            <span class="gtr-sec-s">Both you and your driver take one. So nobody rides anonymous.</span>
+          </div>
+        </div>
+
+        <section class="gtr-selfie" id="selfieGate" aria-live="polite">
+          <div class="gtr-selfie-row">
+            <span class="gtr-selfie-face" id="selfieFace" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="13" r="7.5"/><path d="M8.5 4.5h7"/><circle cx="9.5" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="12" r=".9" fill="currentColor" stroke="none"/><path d="M9.5 16c1.6 1.2 3.4 1.2 5 0"/>
+              </svg>
+            </span>
+            <div class="gtr-selfie-txt">
+              <b id="selfieTitle">Take your safety selfie</b>
+              <span id="selfieSub">Kept for this ride only. Deleted 24h after it ends.</span>
+            </div>
+            <button type="button" class="gtr-selfie-btn" id="selfieBtn">Take</button>
+          </div>
+          <ul class="gtr-selfie-why">
+            <li><span aria-hidden="true">👁</span> Shown only to the person you travel with</li>
+            <li><span aria-hidden="true">🔒</span> Never posted, never sold, never indexed</li>
+            <li><span aria-hidden="true">🗑</span> You can delete it yourself once the ride is done</li>
+          </ul>
+        </section>
+
+        <button class="gtr-submit" type="submit" id="jSend" ${left ? "" : "disabled"}>${left ? "Send request" : "This ride is full"}</button>
         <p class="gtr-fine">The driver accepts before anything is confirmed. Nothing is charged until they do.</p>
       </form>`;
 
@@ -1584,11 +1634,80 @@ function pageRide() {
     seatSel.onchange = showFees;
     $('#jSeats').onchange = showFees;
     showFees();
+    /* ══ THE SAFETY SELFIE GATE ══════════════════════════════════════════════
+       The engine (GOGOSafety.capture) was never broken — only this block, which
+       offered it, was lost in the redesign. Wired back here.
+
+       It is REQUIRED, and the button says so before it is pressed rather than
+       refusing afterwards. A form that silently declines at the last step feels
+       broken; one that shows an unmet requirement and explains it does not. */
+    const selfieGate = box.querySelector('#selfieGate');
+    const selfieBtn = box.querySelector('#selfieBtn');
+    const selfieTitle = box.querySelector('#selfieTitle');
+    const selfieSub = box.querySelector('#selfieSub');
+    const jSend = box.querySelector('#jSend');
+
+    const rideRef = r.id;
+    const mySelfie = () => {
+      try {
+        return (GOGOSafety.forRide(rideRef, "passenger") || [])
+          .find(x => (x.who || "").replace(/[^\d]/g, "") === (S.me.phone || "").replace(/[^\d]/g, "")) || null;
+      } catch { return null; }
+    };
+
+    function paintGate() {
+      const mineSnap = mySelfie();
+      const done = Boolean(mineSnap);
+      selfieGate.classList.toggle("is-done", done);
+      if (done) {
+        selfieTitle.textContent = "Safety selfie taken";
+        selfieSub.textContent = "Only your driver sees it. Deleted 24h after the ride.";
+        selfieBtn.textContent = "Retake";
+        const face = box.querySelector('#selfieFace');
+        if (face && mineSnap && mineSnap.photo) {
+          face.innerHTML = `<img alt="" src="${esc(mineSnap.photo)}">`;
+          face.classList.add("has-photo");
+        }
+      } else {
+        selfieTitle.textContent = "Take your safety selfie";
+        selfieSub.textContent = "Kept for this ride only. Deleted 24h after it ends.";
+        selfieBtn.textContent = "Take";
+      }
+      /* the send button states the requirement instead of failing at it */
+      if (jSend && !jSend.dataset.full) {
+        jSend.disabled = !done;
+        jSend.textContent = done ? "Send request" : "Take your selfie to continue";
+        jSend.classList.toggle("is-blocked", !done);
+      }
+      return done;
+    }
+
+    if (selfieBtn) {
+      selfieBtn.onclick = () => {
+        if (!window.GOGOSafety) { toast("<b>Safety check unavailable right now</b>"); return; }
+        GOGOSafety.capture({
+          rideRef,
+          role: "passenger",
+          name: ($('#jName') || {}).value || S.me.name || "Passenger",
+          onSaved: () => { paintGate(); toast("<b>Selfie saved</b> · your driver can see it"); },
+        });
+      };
+    }
+    if (left === 0 && jSend) { jSend.dataset.full = "1"; }
+    paintGate();
+
     box.querySelector('#joinForm').onsubmit = e => {
       e.preventDefault();
       const need = [['#jName', 'Add your name'], ['#jPhone', 'Add a phone number so the driver can reach you'], ['#jPickup', 'Add the address we should collect you from']]
         .find(([sel, msg]) => { const el = box.querySelector(sel); return el && !el.value.trim(); });
       if (need) { toast('<b>' + need[1] + '</b>'); const el = box.querySelector(need[0]); if (el) el.focus(); return; }
+      /* belt and braces: the button is disabled without a selfie, but a form can
+         still be submitted by pressing Enter on a text field */
+      if (!mySelfie()) {
+        toast("<b>Take your safety selfie first</b>");
+        if (selfieGate) selfieGate.scrollIntoView({ block: "center", behavior: "smooth" });
+        return;
+      }
       const getOff = seatSel.value, seats = Number($('#jSeats').value);
       if (seatsOpen(r) < seats) { toast("<b>Only " + seatsOpen(r) + " seat(s) left</b> on this ride"); return; }
 
