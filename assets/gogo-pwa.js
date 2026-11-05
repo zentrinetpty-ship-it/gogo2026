@@ -158,11 +158,23 @@
     return "One tap from your home screen, no browser bar, and faster on a weak signal.";
   }
 
-  /* ── register the worker so the app is actually installable ───────────── */
+  /* ── register the worker so the app is actually installable ─────────────
+     `updateViaCache: "none"` stops the browser serving sw.js itself from its
+     HTTP cache, which otherwise delays a new worker by up to 24 hours. Without
+     that, a caching fix cannot reach the phones that are already stuck — the
+     thing being fixed is the thing that delivers the fix.
+
+     update() is called on every load for the same reason: a new worker becomes
+     available immediately, and skipWaiting + clients.claim in the worker means
+     it takes control without waiting for every tab to close. */
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("/gogo/sw.js", { scope: "/gogo/" })
-        .catch(function () {});
+      navigator.serviceWorker.register("/gogo/sw.js", {
+        scope: "/gogo/",
+        updateViaCache: "none",
+      }).then(function (reg) {
+        if (reg && reg.update) reg.update().catch(function () {});
+      }).catch(function () {});
     });
   }
 
