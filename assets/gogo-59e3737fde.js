@@ -1036,11 +1036,23 @@ function pageRides() {
         <label class="grides-f grides-f-dest" style="position:relative">
           <span class="grides-fl">Going to</span>
           <input class="grides-i" id="destIn" type="text" inputmode="search"
-                 autocomplete="off" enterkeyhint="search"
+                 enterkeyhint="search"
                  placeholder="Destination city" value="${esc(q.to || "")}"
                  aria-label="Destination city"
                  aria-autocomplete="list" aria-controls="destSug"
                  autocomplete="off" autocorrect="off" spellcheck="false">
+
+          <!-- ── the suggestion list belongs to THIS field ───────────────────
+               It used to sit at the bottom of the card, after the chips, so it
+               opened below the whole search panel instead of under the box being
+               typed into — the rider's eye had to travel past Seats, When and
+               three filter chips to find what the field was offering.
+
+               It lives inside the label now: the label is the positioning
+               context, so the list is anchored to the input by construction
+               rather than by a pixel offset that has to be kept in step with the
+               layout. -->
+          <div class="grides-sug" id="destSug" hidden></div>
         </label>
         <label class="grides-f grides-f-seats">
           <span class="grides-fl">Seats</span>
@@ -1065,7 +1077,6 @@ function pageRides() {
         <button class="grides-chip" data-f="sort" type="button">Sort: earliest</button>
       </div>
 
-      <div class="grides-sug" id="destSug" hidden></div>
     </div>
 
     <div class="grides-count">

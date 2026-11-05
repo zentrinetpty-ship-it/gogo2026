@@ -922,11 +922,20 @@ select.grides-i { font-size: 16px; padding-right: 30px; }
    floats, so the list behind never jumps while the rider types. */
 
 .grides-sug {
+  /* ── anchored to the FIELD, not to the card ───────────────────────────────
+     The list is a child of the destination label, which is the positioning
+     context, so left/right/top are measured from that field. Previously it was
+     a sibling at the bottom of the panel and opened under the filter chips —
+     visually detached from the input the rider was typing into.
+
+     top:100% puts it immediately below the input whatever height the label takes,
+     so a change to input padding or the label text cannot leave a gap. */
   position: absolute;
-  left: 15px;
-  right: 15px;
+  left: 0;
+  right: 0;
+  top: 100%;
   z-index: 60;
-  margin-top: 4px;
+  margin-top: 5px;
   padding: 4px;
   background: #fff;
   border: 1px solid #EDEDE7;
@@ -976,6 +985,5 @@ select.grides-i { font-size: 16px; padding-right: 30px; }
 }
 
 @media (max-width: 400px) {
-  .grides-sug { left: 14px; right: 14px; }
   .grides-sug-b { padding: 10px 10px; }
 }
