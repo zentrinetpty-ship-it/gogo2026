@@ -683,3 +683,144 @@ select.gtr-i {
   .gtr-selfie-face { width: 38px; height: 38px; }
   .gtr-selfie-btn { padding: 0 12px; }
 }
+
+
+/* ══ WHO YOU ARE ════════════════════════════════════════════════════════════
+   A finished identity, not a form. Name, number and a verified badge at rest;
+   the fields only appear when the rider asks to change something.
+
+   This card sits under the route because that is the context it belongs to: the
+   driver on THIS route will see this name and number. At the top of the booking
+   form it read as a hurdle before booking; here it reads as the other half of
+   who you are travelling with — the driver card is right below it. */
+
+.gtr-who-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.gtr-who-edit {
+  flex: none;
+  height: 27px;
+  padding: 0 11px;
+  border: 1px solid #E7E7E0;
+  border-radius: 999px;
+  background: #fff;
+  color: #1A1A1A;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-who-edit:active { background: #F4F4F0; }
+
+.gtr-who-body {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.gtr-who-av {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #1A1A1A;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.gtr-who-txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.gtr-who-n {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -.015em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gtr-who-p {
+  font-size: 12px;
+  color: #8A8A83;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* a badge that tells the truth: grey while incomplete, lime when it is real */
+.gtr-who-badge {
+  flex: none;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #F4F4F0;
+  color: #8A8A83;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gtr-who-badge.is-ok {
+  background: #F1F8DC;
+  color: #4A6A10;
+}
+
+.gtr-who-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid #F2F2EE;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gtr-who-note span { flex: none; font-size: 11px; line-height: 1.35; }
+
+.gtr-who-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F2F2EE;
+}
+
+.gtr-who-form[hidden] { display: none; }
+
+.gtr-who-fine {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gtr-who-done {
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: #1A1A1A;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gtr-who-done:active { transform: scale(.99); }

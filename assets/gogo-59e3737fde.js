@@ -1448,6 +1448,59 @@ function pageRide() {
             Hop off at any stop and pay only that leg.
           </p>
         </section>
+
+        <!-- ══ WHO YOU ARE ═══════════════════════════════════════════════════
+             Moved out of the booking form and onto the ROUTE side, immediately
+             after the stop-by-stop list.
+
+             Why: identity is not part of the booking decision, it is context for
+             it. Sitting at the top of the form it read as the first thing you
+             must do; sitting under the route it reads as what the driver will
+             see about you on that route — which is what a name and number
+             actually are here. The form is now purely about the seat.
+
+             Rebuilt as its own card so it carries its own heading, its own
+             verified state and its own edit affordance, instead of three loose
+             fields. -->
+        <section class="gtr-card" id="whoCard">
+          <div class="gtr-who-head">
+            <span class="gtr-label">Who you are</span>
+            <button class="gtr-who-edit" type="button" id="whoEdit">Edit</button>
+          </div>
+
+          <div class="gtr-who-body">
+            <span class="gtr-who-av" id="whoAv">${esc(initials(S.me.name || "You"))}</span>
+            <div class="gtr-who-txt">
+              <span class="gtr-who-n" id="whoName">${esc(S.me.name || "Add your name")}</span>
+              <span class="gtr-who-p" id="whoPhone">${esc(S.me.phone || "Add a number the driver can reach")}</span>
+            </div>
+            <span class="gtr-who-badge" id="whoBadge">${
+              (S.me.phone && String(S.me.phone).replace(/\D/g, "").length >= 9)
+                ? "Verified"
+                : "Incomplete"
+            }</span>
+          </div>
+
+          <div class="gtr-who-note">
+            <span aria-hidden="true">🔒</span>
+            Only the driver on this ride sees your number, and only after they accept.
+          </div>
+
+          <!-- the fields live here, hidden until Edit — so the card reads as a
+               finished thing rather than a form waiting to be filled -->
+          <div class="gtr-who-form" id="whoForm" hidden>
+            <label class="gtr-f">
+              <span class="gtr-fl">Full name</span>
+              <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" placeholder="e.g. Thandi Mbeki" required>
+            </label>
+            <label class="gtr-f">
+              <span class="gtr-fl">Mobile number</span>
+              <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
+            </label>
+            <p class="gtr-who-fine">The driver calls this number if they are running late. It is never shown publicly.</p>
+            <button class="gtr-who-done" type="button" id="whoDone">Save</button>
+          </div>
+        </section>
       </div>
 
       <!-- ── driver + the join form ── -->
@@ -1512,28 +1565,9 @@ function pageRide() {
       <span class="gtr-label">Request to join</span>
       <form id="joinForm" class="gtr-form">
 
-        <!-- ══ 1 · WHO YOU ARE ══════════════════════════════════════════════ -->
+        <!-- ══ YOUR HIKE ═════════════════════════════════════════════════════ -->
         <div class="gtr-sec">
           <span class="gtr-sec-n" aria-hidden="true">1</span>
-          <div class="gtr-sec-h">
-            <span class="gtr-sec-t">Who you are</span>
-            <span class="gtr-sec-s">Your driver needs a name and a number to reach you.</span>
-          </div>
-        </div>
-
-        <label class="gtr-f">
-          <span class="gtr-fl">Your name</span>
-          <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" placeholder="Full name" required>
-        </label>
-
-        <label class="gtr-f">
-          <span class="gtr-fl">Phone</span>
-          <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
-        </label>
-
-        <!-- ══ 2 · YOUR HIKE ═════════════════════════════════════════════════ -->
-        <div class="gtr-sec">
-          <span class="gtr-sec-n" aria-hidden="true">2</span>
           <div class="gtr-sec-h">
             <span class="gtr-sec-t">Your hike</span>
             <span class="gtr-sec-s">${prePickup ? "We kept the address you searched with." : "Where we collect you, and where you get off."}</span>
@@ -1567,7 +1601,7 @@ function pageRide() {
              not a nicety: the app tells riders that BOTH sides take a selfie so
              nobody rides anonymously, and without this the claim is false. -->
         <div class="gtr-sec">
-          <span class="gtr-sec-n" aria-hidden="true">3</span>
+          <span class="gtr-sec-n" aria-hidden="true">2</span>
           <div class="gtr-sec-h">
             <span class="gtr-sec-t">Safety check</span>
             <span class="gtr-sec-s">Both you and your driver take one. So nobody rides anonymous.</span>
@@ -1634,6 +1668,74 @@ function pageRide() {
     seatSel.onchange = showFees;
     $('#jSeats').onchange = showFees;
     showFees();
+    /* ══ WHO YOU ARE ═════════════════════════════════════════════════════════
+       The fields are hidden behind an Edit action so the card reads as a finished
+       identity at a glance. Two states, one card:
+         resting  avatar, name, number, verified badge
+         editing  the same card with its fields open and a Save action
+       Nothing is lost by hiding them: the values are always in the DOM, so the
+       submit handler reads the truth whether or not the rider ever tapped Edit. */
+    const whoForm = document.getElementById('whoForm');
+    const whoEdit = document.getElementById('whoEdit');
+    const whoDone = document.getElementById('whoDone');
+
+    function paintWho() {
+      const nm = (document.getElementById('jName') || {}).value || "";
+      const ph = (document.getElementById('jPhone') || {}).value || "";
+      const digits = ph.replace(/\D/g, "");
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      set('whoName', nm || "Add your name");
+      set('whoPhone', ph || "Add a number the driver can reach");
+      set('whoAv', (nm.trim() ? nm.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join("") : "You").toUpperCase());
+      const badge = document.getElementById('whoBadge');
+      if (badge) {
+        const ok = nm.trim().length > 1 && digits.length >= 9;
+        badge.textContent = ok ? "Verified" : "Incomplete";
+        badge.classList.toggle('is-ok', ok);
+      }
+    }
+
+    if (whoEdit && whoForm) {
+      whoEdit.onclick = () => {
+        whoForm.hidden = !whoForm.hidden;
+        whoEdit.textContent = whoForm.hidden ? "Edit" : "Close";
+        if (!whoForm.hidden) {
+          const first = document.getElementById('jName');
+          if (first) { first.focus({ preventScroll: true }); whoForm.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+        }
+      };
+    }
+    if (whoDone && whoForm) {
+      whoDone.onclick = () => {
+        paintWho();
+        /* persist so the next ride does not ask again — identity is not per-ride */
+        try {
+          const st = JSON.parse(localStorage.getItem('gogo_state_v1') || "{}");
+          st.me = st.me || {};
+          st.me.name = (document.getElementById('jName') || {}).value || st.me.name;
+          st.me.phone = (document.getElementById('jPhone') || {}).value || st.me.phone;
+          localStorage.setItem('gogo_state_v1', JSON.stringify(st));
+        } catch (err) { /* storage full or blocked: the form still works for this ride */ }
+        whoForm.hidden = true;
+        if (whoEdit) whoEdit.textContent = "Edit";
+        toast("<b>Saved</b> · your driver will see this name and number");
+      };
+    }
+    ['jName', 'jPhone'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => {
+        const badge = document.getElementById('whoBadge');
+        if (badge) {
+          const nm = (document.getElementById('jName') || {}).value || "";
+          const dg = ((document.getElementById('jPhone') || {}).value || "").replace(/\D/g, "");
+          const ok = nm.trim().length > 1 && dg.length >= 9;
+          badge.textContent = ok ? "Verified" : "Incomplete";
+          badge.classList.toggle('is-ok', ok);
+        }
+      });
+    });
+    paintWho();
+
     /* ══ THE SAFETY SELFIE GATE ══════════════════════════════════════════════
        The engine (GOGOSafety.capture) was never broken — only this block, which
        offered it, was lost in the redesign. Wired back here.
@@ -1688,7 +1790,7 @@ function pageRide() {
         GOGOSafety.capture({
           rideRef,
           role: "passenger",
-          name: ($('#jName') || {}).value || S.me.name || "Passenger",
+          name: (document.querySelector('#jName') || {}).value || S.me.name || "Passenger",
           onSaved: () => { paintGate(); toast("<b>Selfie saved</b> · your driver can see it"); },
         });
       };
@@ -1698,9 +1800,29 @@ function pageRide() {
 
     box.querySelector('#joinForm').onsubmit = e => {
       e.preventDefault();
+      /* ── validation must REVEAL the field, not just complain about it ──────
+         The identity fields now live behind an Edit action on a different card,
+         so focusing one without opening that card would put the cursor in an
+         invisible input and the rider would see nothing happen. If the missing
+         field is inside the identity card, open it first, then focus. */
       const need = [['#jName', 'Add your name'], ['#jPhone', 'Add a phone number so the driver can reach you'], ['#jPickup', 'Add the address we should collect you from']]
-        .find(([sel, msg]) => { const el = box.querySelector(sel); return el && !el.value.trim(); });
-      if (need) { toast('<b>' + need[1] + '</b>'); const el = box.querySelector(need[0]); if (el) el.focus(); return; }
+        .find(([sel, msg]) => { const el = document.querySelector(sel); return el && !el.value.trim(); });
+      if (need) {
+        toast('<b>' + need[1] + '</b>');
+        const el = document.querySelector(need[0]);
+        if (el) {
+          const card = el.closest('#whoCard');
+          if (card) {
+            const form = card.querySelector('#whoForm');
+            if (form) form.hidden = false;
+            const btn = card.querySelector('#whoEdit');
+            if (btn) btn.textContent = "Close";
+          }
+          el.focus({ preventScroll: true });
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        return;
+      }
       /* belt and braces: the button is disabled without a selfie, but a form can
          still be submitted by pressing Enter on a text field */
       if (!mySelfie()) {
@@ -1742,7 +1864,7 @@ function pageRide() {
               /* the server's price is what the rider pays, and it is what the
                  local record shows, so the two can never disagree */
               const req = {
-                id: booked.id, name: $('#jName').value, phone: $('#jPhone').value,
+                id: booked.id, name: document.querySelector('#jName').value, phone: document.querySelector('#jPhone').value,
                 pickup: $('#jPickup').value, getOff, seats, luggage: $('#jLug').value,
                 fare: booked.rows[0].cents / 100, status: "pending", at: booked.at,
                 paymentMethod: booked.payMethod,
