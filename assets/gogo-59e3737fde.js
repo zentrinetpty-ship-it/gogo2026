@@ -1033,11 +1033,14 @@ function pageRides() {
       </div>
 
       <div class="grides-fields">
-        <label class="grides-f grides-f-dest">
+        <label class="grides-f grides-f-dest" style="position:relative">
           <span class="grides-fl">Going to</span>
           <input class="grides-i" id="destIn" type="text" inputmode="search"
                  autocomplete="off" enterkeyhint="search"
-                 placeholder="Anywhere" value="${esc(q.to || "")}">
+                 placeholder="Destination city" value="${esc(q.to || "")}"
+                 aria-label="Destination city"
+                 aria-autocomplete="list" aria-controls="destSug"
+                 autocomplete="off" autocorrect="off" spellcheck="false">
         </label>
         <label class="grides-f grides-f-seats">
           <span class="grides-fl">Seats</span>
@@ -1119,7 +1122,7 @@ function pageRides() {
       <div class="g-12 g-card g-anim">
         <div class="g-empty">
           <span class="g-ic g-ic-lg" aria-hidden>🕐</span>
-          <h3 class="g-h3">No rides to ${esc(to)} yet</h3>
+          <h3 class="g-h3">${state.to ? `No rides to ${esc(state.to)} yet` : `No rides from ${esc(from)} yet`}</h3>
           <p class="g-s g-mt-sm">Nothing on this route right now. Set an alert and we will tell you the moment a driver lists it, or widen the search.</p>
           <div class="g-row g-mt" style="justify-content:center">
             <button class="g-btn g-btn-ghost g-btn-sm" id="relax" type="button">Show all rides</button>
@@ -1131,9 +1134,9 @@ function pageRides() {
     const alert = $('#alertMe');
     if (alert) alert.onclick = () => {
       if (!S.alerts) S.alerts = [];
-      S.alerts.push({ from, to, when: new Date().toISOString() });
+      S.alerts.push({ from, to: state.to || "anywhere", when: new Date().toISOString() });
       save();
-      alert.outerHTML = `<span class="g-stamp g-stamp-full">alert set · ${esc(from)} → ${esc(to)}</span>`;
+      alert.outerHTML = `<span class="g-stamp g-stamp-full">alert set · ${esc(from)} → ${esc(state.to || "anywhere")}</span>`;
       toast("<b>Alert set</b> · we will notify you when a driver lists this route");
     };
     grow(); reveal();
@@ -1172,23 +1175,100 @@ function pageRides() {
   const seatIn = $('#seatIn');
   const sugBox = $('#destSug');
 
+  /* ══ AUTOCOMPLETE FOR "GOING TO" ══════════════════════════════════════════
+     Typing "Mthat" has to answer the question the rider is actually asking: is
+     there a van, when does it leave, and what does it cost. A bare list of town
+     names makes them guess and type the rest.
+
+     Every suggestion is built from the rides currently on screen, so it can never
+     offer a destination nothing drives to — which is the failure mode of a static
+     town list. Matching is prefix-first then substring, because someone typing
+     "Mth" wants Mthatha at the top, not Butterworth because it happens to contain
+     nothing similar. */
+  function destIndex() {
+    const byTown = new Map();
+    (S.rides || []).forEach(r => {
+      const towns = [r.to, ...(r.stops || []).map(x => x.city)];
+      towns.forEach(town => {
+        if (!town) return;
+        const key = window.GOGOPlaces && GOGOPlaces.canonical ? GOGOPlaces.canonical(town) : town;
+        if (!byTown.has(key)) byTown.set(key, { town: key, fares: [], times: [] });
+        const e = byTown.get(key);
+        if (typeof r.fare === "number") e.fares.push(r.fare);
+        if (r.depart) e.times.push(new Date(r.depart).getTime());
+      });
+    });
+    return Array.from(byTown.values()).map(e => ({
+      town: e.town,
+      from: e.fares.length ? Math.min(...e.fares) : null,
+      count: e.fares.length,
+      soonest: e.times.length ? Math.min(...e.times) : null,
+    }));
+  }
+
   function paintSuggestions() {
-    const t = String(state.to || "").trim();
-    if (t.length < 1 || !sugBox) { if (sugBox) { sugBox.hidden = true; sugBox.innerHTML = ""; } return; }
-    const lower = t.toLowerCase();
-    const hits = DEST_SUGGEST.filter(c => c.toLowerCase().includes(lower) && c.toLowerCase() !== lower).slice(0, 5);
-    if (!hits.length) { sugBox.hidden = true; sugBox.innerHTML = ""; return; }
-    sugBox.innerHTML = hits.map(c =>
-      `<button class="grides-sug-b" type="button" data-dest="${esc(c)}">${esc(c)}</button>`
-    ).join("");
+    const raw = String(state.to || "").trim();
+    if (!sugBox) return;
+    if (!raw) { sugBox.hidden = true; sugBox.innerHTML = ""; return; }
+
+    const lower = raw.toLowerCase();
+    const all = destIndex();
+    const canon = t => (window.GOGOPlaces && GOGOPlaces.canonical ? GOGOPlaces.canonical(t) : t).toLowerCase();
+
+    /* prefix hits first, then anything containing the letters — so "Mthat" puts
+       Mthatha above a town that merely has those letters buried in it */
+    const scored = all
+      .map(d => {
+        const low = canon(d.town);
+        const at = low.indexOf(lower);
+        return at === -1 ? null : { d, rank: at === 0 ? 0 : 1, at };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.rank - b.rank || a.at - b.at || a.d.town.localeCompare(b.d.town))
+      .slice(0, 6);
+
+    if (!scored.length) {
+      sugBox.innerHTML = `<div class="grides-sug-none">Nothing goes there from ${esc(from)} yet</div>`;
+      sugBox.hidden = false;
+      return;
+    }
+
+    sugBox.innerHTML = scored.map(({ d }) => {
+      const fare = d.from != null ? money(d.from) : "";
+      const when = d.soonest ? new Date(d.soonest).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const meta = [when, fare && fare + " per seat", d.count === 1 ? "1 ride" : d.count + " rides"]
+        .filter(Boolean).join(" · ");
+      /* ── bold the letters that actually matched ────────────────────────
+         This used to bold the FIRST n characters, which is only correct for a
+         prefix match. Typing "B" matched Ngcobo by substring and highlighted its
+         leading N — so the list told the rider the opposite of why the row was
+         there, and looked broken while doing it.
+         Now the match is located and only those characters are emphasised. */
+      const low = canon(d.town);
+      const at = low.indexOf(lower);
+      const name = at === -1
+        ? esc(d.town)
+        : esc(d.town.slice(0, at)) +
+          `<b>${esc(d.town.slice(at, at + raw.length))}</b>` +
+          esc(d.town.slice(at + raw.length));
+      return `<button class="grides-sug-b" type="button" data-dest="${esc(d.town)}">
+                <span class="grides-sug-n">${name}</span>
+                <span class="grides-sug-m">${esc(meta)}</span>
+              </button>`;
+    }).join("");
     sugBox.hidden = false;
+
     sugBox.querySelectorAll("[data-dest]").forEach(b => {
       b.onclick = () => {
         state.to = b.getAttribute("data-dest");
         if (destIn) destIn.value = state.to;
         sugBox.hidden = true;
+        syncUrl();
         render();
       };
+      /* mousedown, not click: the input's blur fires first and would hide the box
+         out from under the finger on some Android browsers */
+      b.addEventListener("mousedown", e => e.preventDefault());
     });
   }
 
