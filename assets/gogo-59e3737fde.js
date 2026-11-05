@@ -173,7 +173,7 @@ function paintChrome(active) {
   const items = [
     ["/gogo/",           "Home",      "home"],
     ["/gogo/dashboard",  "Dashboard", "grid"],
-    ["/gogo/messages",   "Messages",  "chat"],
+    ["/gogo/account.html", "Account", "person"],
     ["/gogo/why.html",   "More",      "dots"],
   ];
 
@@ -181,6 +181,10 @@ function paintChrome(active) {
     home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>',
     chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.4-.65L4 21l1.2-4.2A8.5 8.5 0 1 1 20.5 12Z"/></svg>',
+    /* the Account tab. A head-and-shoulders in a ring, matching the weight of the
+       other three: adding the tab without its glyph rendered the literal word
+       "undefined" beside the label, which is how a missing key fails here. */
+    person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20.2a7.6 7.6 0 0 1 14.4 0"/></svg>',
     dots: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>',
   };
 
@@ -190,7 +194,7 @@ function paintChrome(active) {
   const PAGE_TO_TAB = {
     index: "home", home: "home", app: "home",
     dashboard: "grid", rider: "grid", ride: "grid", rides: "grid", ticket: "grid",
-    messages: "chat", chats: "chat", parcel: "chat",
+    account: "person", chats: "chat", parcel: "chat",
     more: "dots", why: "dots", safety: "dots", auth: "dots", driver: "dots",
     ops: "dots", terms: "dots", privacy: "dots", "404": "dots", track: "grid",
   };
@@ -1047,91 +1051,108 @@ function pageRide() {
 
   $('#main').innerHTML = `
   <div class="g-wrap g-section">
-    <div class="g-trip">
+    <div class="gtr-wrap">
 
       <!-- ── the ride, in the same shape as the card it was picked from ── -->
-      <div class="g-trip-main g-anim">
-        <article class="g-rc g-trip-card">
-          <header class="g-rc-top">
-            <span class="g-rc-badge" aria-hidden>${VAN_SVG}</span>
-            <span class="g-rc-head">
-              <b class="g-rc-veh">${esc(r.vehicle)}</b>
-              <span class="g-rc-driver">${esc(r.driver)} · ★ ${r.rating} · ${r.trips} trips</span>
-            </span>
-            <span class="g-rc-when">
-              <b>${timeTxt}</b>
-              <span>${dateTxt}</span>
-            </span>
+      <div class="gtr-main g-anim">
+        <article class="gtr">
+          <!-- the same hierarchy as the list card they arrived from: time and
+               price first, then the towns by NAME. The two-letter codes are gone
+               from the visual layer entirely — "XA" told nobody anything, and
+               they were the biggest thing on the page. -->
+          <header class="gtr-top">
+            <div class="gtr-when">
+              <b class="gtr-time">${timeTxt}</b>
+              <span class="gtr-date">${dateTxt}</span>
+            </div>
+            <div class="gtr-price">
+              <b>${money(r.fare)}</b>
+              <span>per seat</span>
+            </div>
           </header>
 
-          <div class="g-rc-route">
-            <span class="g-rc-end">
-              <b class="g-rc-code">${esc(dep.code)}</b>
-              <span class="g-rc-town">${esc(dep.name)}</span>
+          <div class="gtr-route">
+            <span class="gtr-end">
+              <span class="gtr-town">${esc(r.from)}</span>
+              <span class="gtr-sub">${esc(depTime)} · we collect at your street</span>
             </span>
-            <span class="g-rc-mid">
-              <span class="g-rc-line" aria-hidden><i></i><span class="g-rc-van">${VAN_SVG}</span><i></i></span>
-              <span class="g-rc-dur">${dur}</span>
-              <span class="g-rc-stops-n">${r.stops.length ? `${r.stops.length} stop${r.stops.length === 1 ? "" : "s"}` : "Direct"}</span>
+            <span class="gtr-mid" aria-hidden>
+              <span class="gtr-rail"><i class="gtr-dot"></i><i class="gtr-line"></i><i class="gtr-dot gtr-dot-end"></i></span>
+              <span class="gtr-dur">${dur}</span>
             </span>
-            <span class="g-rc-end g-rc-end-to">
-              <b class="g-rc-code">${esc(arr.code)}</b>
-              <span class="g-rc-town">${esc(arr.name)}</span>
+            <span class="gtr-end gtr-end-to">
+              <span class="gtr-town">${esc(r.to)}</span>
+              <span class="gtr-sub">${r.stops.length ? `${r.stops.length} stop${r.stops.length === 1 ? "" : "s"} on the way` : "Direct"}</span>
             </span>
           </div>
 
-          <div class="g-rc-dash" aria-hidden></div>
-
-          <footer class="g-rc-foot">
-            <span class="g-rc-seats">
-              <span class="g-rc-seats-n"><b>${taken}</b> of ${r.seatsTotal} seats taken</span>
-              <span class="g-rc-bar" aria-hidden><i style="width:${pct}%"></i></span>
-            </span>
-            <span class="g-rc-price"><b>${money(r.fare)}</b><span>per seat</span></span>
-            <span class="g-trip-lug"><span aria-hidden>${GICON("luggage")}</span> ${esc(r.luggage)}</span>
-          </footer>
+          <div class="gtr-facts">
+            <div>
+              <span class="gtr-k">Seats</span>
+              <span class="gtr-v">${taken} of ${r.seatsTotal} taken</span>
+              <span class="gtr-bar" aria-hidden><i style="width:${pct}%"></i></span>
+            </div>
+            <div>
+              <span class="gtr-k">Vehicle</span>
+              <span class="gtr-v">${esc(r.vehicle)}</span>
+            </div>
+            <div>
+              <span class="gtr-k">Luggage</span>
+              <span class="gtr-v">${esc(r.luggage)}</span>
+            </div>
+          </div>
         </article>
 
         <!-- the stops as a clean timeline -->
-        <section class="g-card g-trip-stops">
-          <div class="g-head"><span class="g-label">The route, stop by stop</span></div>
-          <ol class="g-timeline">
+        <section class="gtr-card">
+          <span class="gtr-label">The route, stop by stop</span>
+          <ol class="gtr-stops">
             ${stops.map((s, i) => {
               const last = i === stops.length - 1;
-              const code = townCodeOf(s.city);
-              return `<li class="g-tl-item">
-                <span class="g-tl-rail" aria-hidden><i class="g-tl-dot${i === 0 ? " g-tl-first" : ""}"></i>${last ? "" : `<i class="g-tl-line"></i>`}</span>
-                <span class="g-tl-body">
-                  <span class="g-tl-city"><b>${esc(code.code)}</b> ${esc(s.city)}</span>
-                  <span class="g-tl-meta">${i === 0 ? `${esc(depTime)} · we collect at your street` : last ? "arrival" : `around ${esc(s.time)}`}</span>
+              return `<li class="gtr-stop${last ? " gtr-stop-last" : ""}">
+                <span class="gtr-stop-rail" aria-hidden><i class="gtr-stop-dot${i === 0 ? " gtr-stop-first" : ""}"></i>${last ? "" : '<i class="gtr-stop-line"></i>'}</span>
+                <span class="gtr-stop-body">
+                  <span class="gtr-stop-city">${esc(s.city)}</span>
+                  <span class="gtr-stop-meta">${i === 0 ? `${esc(depTime)} · we collect at your street` : last ? "arrival" : `around ${esc(s.time)}`}</span>
                 </span>
-                <span class="g-tl-fare">${s.fare ? money(s.fare) : "—"}</span>
+                <span class="gtr-stop-fare">${s.fare ? money(s.fare) : "—"}</span>
               </li>`;
             }).join("")}
           </ol>
-          <div class="g-trip-hop">
-            <span aria-hidden>${GICON("stop")}</span>
-            <span><b>Going only as far as ${r.stops[0] ? esc(r.stops[0].city) : "a stop"}?</b> Hop off at any stop and pay only that leg.</span>
-          </div>
+          <p class="gtr-hop">
+            <b>Going only as far as ${r.stops[0] ? esc(r.stops[0].city) : "a stop"}?</b>
+            Hop off at any stop and pay only that leg.
+          </p>
         </section>
       </div>
 
       <!-- ── driver + the join form ── -->
-      <div class="g-trip-side g-anim">
-        <section class="g-card">
-          <div class="g-head"><span class="g-label">Your driver</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
-          <div class="g-driver">
-            <div class="g-avatar">${esc(initials(r.driver))}</div>
-            <div>
-              <div class="g-t">${esc(r.driver)}</div>
-              <div class="g-list-s"><span class="g-stars">★ ${r.rating}</span> · ${r.trips} trips</div>
-            </div>
+      <div class="gtr-side g-anim">
+        <section class="gtr-card gtr-driver-card">
+          <span class="gtr-label">Your driver</span>
+          <button class="gtr-driver" type="button" data-driver-profile>
+            <span class="gtr-av">${esc(initials(r.driver))}</span>
+            <span class="gtr-driver-t">
+              <span class="gtr-driver-n">${esc(r.driver)}</span>
+              <span class="gtr-driver-s">★ ${r.rating} · ${r.trips} trips</span>
+            </span>
+            <span class="gtr-driver-a" aria-hidden="›</span>
+          </button>
+          <div class="gtr-drow">
+            <span class="gtr-dk">Vehicle</span>
+            <span class="gtr-dv">${esc(r.vehicle)}</span>
           </div>
-          <div class="g-list-row g-mt-sm"><span class="g-ic g-ic-sm" aria-hidden>${van()}</span><div><div class="g-list-t">${esc(r.vehicle)}</div><div class="g-list-s">${myAcceptedSeat(r) ? `${esc(r.colour)} · ${esc(r.plate)}` : `<span aria-hidden>${GICON("lock")}</span> Plate shared once your seat is confirmed`}</div></div></div>
-          <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON("phone")}</span><div><div class="g-list-t">Number shared after accepting</div><div class="g-list-s">GOGO hides numbers until the driver agrees</div></div></div>
+          <div class="gtr-drow">
+            <span class="gtr-dk">Plate</span>
+            <span class="gtr-dv">${myAcceptedSeat(r) ? `${esc(r.colour)} · ${esc(r.plate)}` : "Shared once your seat is confirmed"}</span>
+          </div>
+          <div class="gtr-drow">
+            <span class="gtr-dk">Number</span>
+            <span class="gtr-dv">Shared after the driver accepts</span>
+          </div>
         </section>
 
-        <section class="g-card g-mt" id="joinBox"></section>
+        <section class="gtr-card" id="joinBox"></section>
       </div>
     </div>
   </div>`;
@@ -1158,44 +1179,43 @@ function pageRide() {
       ? d.destination : r.to;
     const lugNames = ["Hand luggage", "One bag", "Big bag + bags"];
     box.innerHTML = `
-      <div class="g-head"><span class="g-label">Request to join</span><span class="g-ic g-ic-sm g-ic-lime" aria-hidden>${GICON("person")}</span></div>
-      <form id="joinForm" class="g-form">
-        <div class="g-field">
-          <label class="g-f-k" for="jName">Your name</label>
-          <input class="g-input" id="jName" value="${esc(S.me.name)}" required>
-        </div>
-        <div class="g-field">
-          <label class="g-f-k" for="jPhone">Phone</label>
-          <input class="g-input" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" required>
-        </div>
-
-        <div class="g-form-sec">Where we collect you</div>
-
-        <div class="g-field">
-          <label class="g-f-k" for="jPickup">Pick me up at</label>
-          <input class="g-input g-addr-in" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
+      <span class="gtr-label">Request to join</span>
+      <form id="joinForm" class="gtr-form">
+        <div class="gtr-grid2">
+          <label class="gtr-f">
+            <span class="gtr-fl">Your name</span>
+            <input class="gtr-i" id="jName" value="${esc(S.me.name)}" autocomplete="name" required>
+          </label>
+          <label class="gtr-f">
+            <span class="gtr-fl">Phone</span>
+            <input class="gtr-i" id="jPhone" type="tel" inputmode="tel" value="${esc(S.me.phone)}" placeholder="078 000 0000" autocomplete="tel" required>
+          </label>
         </div>
 
-        <div class="g-form-sec">Your hike</div>
+        <label class="gtr-f">
+          <span class="gtr-fl">Where we collect you</span>
+          <input class="gtr-i g-addr-in" id="jPickup" type="text" name="pickup" value="${esc(prePickup)}" placeholder="Street, town or landmark" autocomplete="street-address" enterkeyhint="next" required>
+        </label>
 
-        <div class="g-field">
-          <label class="g-f-k" for="jOff">Drop me at</label>
-          <select class="g-input" id="jOff">${[r.to, ...r.stops.map(s => s.city)].map(c => `<option${c === preOff ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
+        <div class="gtr-grid3">
+          <label class="gtr-f">
+            <span class="gtr-fl">Drop me at</span>
+            <select class="gtr-i" id="jOff">${[r.to, ...r.stops.map(s => s.city)].map(c => `<option${c === preOff ? " selected" : ""}>${esc(c)}</option>`).join("")}</select>
+          </label>
+          <label class="gtr-f">
+            <span class="gtr-fl">Seats</span>
+            <select class="gtr-i" id="jSeats">${Array.from({ length: Math.max(1, Math.min(4, seatsOpen(r))) }, (_, i) => `<option${i + 1 === preSeats ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
+          </label>
+          <label class="gtr-f">
+            <span class="gtr-fl">Luggage</span>
+            <select class="gtr-i" id="jLug">${lugNames.map((n, i) => `<option${i === preLug ? " selected" : ""}>${n}</option>`).join("")}</select>
+          </label>
         </div>
 
-        <div class="g-2col">
-          <div class="g-field">
-            <label class="g-f-k" for="jSeats">Seats</label>
-            <select class="g-input" id="jSeats">${Array.from({ length: Math.max(1, Math.min(4, seatsOpen(r))) }, (_, i) => `<option${i + 1 === preSeats ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
-          </div>
-          <div class="g-field">
-            <label class="g-f-k" for="jLug">Luggage</label>
-            <select class="g-input" id="jLug">${lugNames.map((n, i) => `<option${i === preLug ? " selected" : ""}>${n}</option>`).join("")}</select>
-          </div>
-        </div>
         <div id="joinFees"></div>
-        <button class="g-btn g-btn-ink g-btn-block" type="submit" ${left ? "" : "disabled"}><span aria-hidden>${GICON("mobile")}</span> ${left ? "Send request" : "Trip is full"}</button>
-        <p class="g-s-sm g-mt-sm" style="text-align:center">The driver accepts before anything is confirmed</p>
+
+        <button class="gtr-submit" type="submit" ${left ? "" : "disabled"}>${left ? "Send request" : "This ride is full"}</button>
+        <p class="gtr-fine">The driver accepts before anything is confirmed. Nothing is charged until they do.</p>
       </form>`;
 
     /* form is live: wrap the address field now */

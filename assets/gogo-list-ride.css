@@ -1,0 +1,265 @@
+/* ══ LIST A RIDE ════════════════════════════════════════════════════════════
+   The driver's listing form. Four numbered sections in the order a driver thinks
+   in: the trip, the route, the seats, then a preview of what riders will see.
+
+   Scoped under .gnew so it cannot touch the other driver sheets (ride detail,
+   money, stats, withdrawal) which share the same panel. */
+
+/* ── section headers ──────────────────────────────────────────────────────── */
+.gnew-sec {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 10px;
+}
+
+.gnew-sec-gap { margin-top: 24px; padding-top: 18px; border-top: 1px solid #EDEDE7; }
+
+/* a numbered disc, not a bullet: the order matters and this says so */
+.gnew-sec-n {
+  flex: 0 0 auto;
+  width: 21px;
+  height: 21px;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #1A1A1A;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.gnew-sec-h { min-width: 0; }
+
+.gnew-sec-t {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.012em;
+  color: #1A1A1A;
+}
+
+.gnew-sec-s {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+/* ── the stop builder ─────────────────────────────────────────────────────── */
+.gnew-stops { display: flex; flex-direction: column; gap: 8px; }
+
+.gnew-stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 1fr 26px;
+  gap: 9px;
+  align-items: start;
+  padding: 11px 11px 11px 9px;
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* the stop number sits in the same column as the section numbers, so the form
+   reads as one continuous spine rather than boxes floating beside a list */
+.gnew-stop-n {
+  width: 18px;
+  height: 18px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid #E2E2DB;
+  background: #FBFBF9;
+  color: #8A8A83;
+  font-size: 9.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.gnew-stop-body { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+
+.gnew-stop-city { font-weight: 500; }
+
+.gnew-stop-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.gnew-stop-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+.gnew-stop-l {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: #B0B0A9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the hint translates the cumulative fare the driver typed into the leg price a
+   rider joining at this stop actually pays — the number drivers get wrong */
+.gnew-stop-hint {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gnew-stop-hint:empty { display: none; }
+
+.gnew-stop-x {
+  width: 26px;
+  height: 26px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #C9C9C2;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gnew-stop-x svg { width: 12px; height: 12px; }
+.gnew-stop-x:active { background: #FBFBF9; color: #1A1A1A; }
+
+/* ── add a stop ───────────────────────────────────────────────────────────── */
+.gnew-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 42px;
+  margin-top: 8px;
+  border: 1px dashed #D8D8D1;
+  border-radius: 11px;
+  background: #fff;
+  color: #1A1A1A;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .16s ease, background .16s ease;
+}
+
+.gnew-add span { font-size: 15px; line-height: 1; color: #8A8A83; }
+.gnew-add:active { background: #FBFBF9; border-color: #C9C9C2; }
+
+.gnew-note {
+  margin: 7px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #B0B0A9;
+  text-align: center;
+}
+
+/* ── the live preview ─────────────────────────────────────────────────────── */
+.gnew-preview {
+  border: 1px solid #EDEDE7;
+  border-radius: 12px;
+  padding: 12px 13px;
+  background: #FBFBF9;
+}
+
+.gnew-warn {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.gnew-line { list-style: none; margin: 0; padding: 0; }
+
+.gnew-ln {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  gap: 9px;
+  align-items: start;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.gnew-ln:last-child { padding-bottom: 0; }
+
+/* the rail is drawn per row so a removed stop closes the gap automatically */
+.gnew-ln-dot {
+  width: 6px;
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #C9C9C2;
+  z-index: 1;
+}
+
+.gnew-ln:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 2.5px;
+  top: 10px;
+  bottom: 0;
+  width: 1px;
+  background: #E2E2DB;
+}
+
+.gnew-ln-end .gnew-ln-dot { background: #1A1A1A; border-color: #1A1A1A; }
+
+.gnew-ln-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.gnew-ln-city {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gnew-ln-sub { font-size: 10.5px; color: #8A8A83; }
+
+.gnew-ln-fare {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #1A1A1A;
+  white-space: nowrap;
+}
+
+/* ── the page-level submit ────────────────────────────────────────────────── */
+.gnew .gwd-btn { margin-top: 18px; }
+
+.gnew-fine {
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #B0B0A9;
+  text-align: center;
+}
+
+/* ── narrow phones ───────────────────────────────────────────────────────── */
+@media (max-width: 360px) {
+  .gnew-stop-row { grid-template-columns: 1fr; }
+  .gnew-ln { grid-template-columns: 12px 1fr; }
+  .gnew-ln-fare { grid-column: 2; justify-self: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gnew-add { transition: none; }
+}

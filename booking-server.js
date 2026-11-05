@@ -424,11 +424,64 @@ const server = http.createServer(async (req, res) => {
   /* ── GET /rides ── the catalogue, so the client can render without
      inventing prices of its own ── */
   if (req.method === "GET" && route === "/rides") {
+    /* ── the demo catalogue, plus every ride a real driver has listed ────────
+       This endpoint used to serve RIDES and nothing else, so a driver could
+       publish a ride with a full route of stops and no rider would ever see it.
+       The whole listing flow wrote to drivers-data.json and the catalogue never
+       read it — the two halves of the product were not connected.
+
+       Shape kept identical to what the rider client already understands:
+         legs  { stopName: priceFromOrigin }  — the same cumulative figure the
+               driver typed, which is what the join form prices a partial leg
+               against. Not converted here, deliberately: the client and
+               /quote already agree on this shape and changing it in one place
+               would break the other. */
     const list = Object.keys(RIDES).map((id) => ({
       id, from: RIDES[id].from, to: RIDES[id].to,
       depart: RIDES[id].depart, vehicle: RIDES[id].vehicle,
       seats: RIDES[id].seats, legs: RIDES[id].legs,
     }));
+
+    try {
+      const ops = require("./driver-ops");
+      const db = ops.load();
+      const today = new Date().toISOString().slice(0, 10);
+
+      (db.rides || []).forEach((r) => {
+        /* only what a rider can actually book: open, not in the past, and with
+           a seat free. A cancelled or sold-out ride in the finder is a dead end. */
+        if (r.status !== "open") return;
+        if (r.date && r.date < today) return;
+
+        const sold = (db.sales || []).filter((s) => s.rideId === r.id && s.state !== "refunded").length;
+        const free = Number(r.seatsTotal || 0) - sold;
+        if (free <= 0) return;
+
+        const legs = {};
+        (r.stops || []).forEach((st) => {
+          if (st.city) legs[st.city] = Math.round(Number(st.fare || 0)) / 100;
+        });
+        legs[r.to] = Math.round(Number(r.fare || 0)) / 100;
+
+        list.push({
+          id: r.id,
+          from: r.from,
+          to: r.to,
+          depart: r.depart,
+          vehicle: r.vehicle || "Minibus",
+          seats: free,
+          legs,
+          /* marks this as a real listing rather than demo stock, so the UI can
+             tell the difference if it ever needs to */
+          live: true,
+        });
+      });
+    } catch (e) {
+      /* A broken driver store must not take the rider catalogue down with it:
+         riders can still book demo stock while the fault is fixed. */
+      console.error("[rides] driver catalogue unavailable:", e.message);
+    }
+
     return json(res, 200, { rides: list, feeVersion: FEES.version });
   }
 

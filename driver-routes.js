@@ -235,6 +235,71 @@ module.exports = function driverRoutes(req, res, route, url, ctx) {
       }
     }
 
+    /* ── stops ────────────────────────────────────────────────────────────
+       Taken from the request unvalidated until now, which let a driver publish a
+       route with a stop after the destination, a fare that goes DOWN as you
+       travel further, or a time before departure. A fare that decreases is not
+       cosmetic: a rider can buy a short leg cheaply and ride past it, and the
+       driver loses money on every seat sold that way.
+
+       Each stop is { city, time, fare } where fare is CUMULATIVE from the origin
+       — what someone travelling from the start pays to reach that town. So the
+       sequence must increase, and the full fare must be at least the last stop.
+       Empty or half-filled rows are dropped rather than rejected: a driver who
+       added a row and did not fill it has not made an error, they have changed
+       their mind. */
+    let stops = [];
+    if (Array.isArray(body.stops)) {
+      const raw = body.stops.slice(0, 8);
+      let prevFare = 0;
+      let prevMin = -1;
+
+      for (let i = 0; i < raw.length; i += 1) {
+        const st = raw[i] || {};
+        const city = String(st.city || "").trim();
+        if (!city) continue;                       /* a blank row is not a stop */
+
+        const time = String(st.time || "").trim();
+        const stopFare = Number(st.fare);
+
+        if (!/^\d{2}:\d{2}$/.test(time)) {
+          errors["stop" + i] = "Give " + city + " a time.";
+        } else {
+          /* strictly after the previous stop, and after departure */
+          const mins = (hhmm) => {
+            const p = String(hhmm).split(":");
+            return Number(p[0]) * 60 + Number(p[1]);
+          };
+          const at = mins(time);
+          if (prevMin >= 0 && at <= prevMin) {
+            errors["stop" + i] = city + " must be reached after the stop before it.";
+          } else if (mins(depart) && at <= mins(depart)) {
+            errors["stop" + i] = city + " must be reached after you leave " + from + ".";
+          }
+          prevMin = at;
+        }
+
+        if (!Number.isFinite(stopFare) || stopFare <= 0) {
+          errors["stop" + i] = "What does a rider from " + from + " pay to reach " + city + "?";
+        } else if (prevFare && stopFare < prevFare) {
+          errors["stop" + i] = city + " cannot cost less than the stop before it.";
+        } else if (Number.isFinite(fare) && stopFare >= fare) {
+          errors["stop" + i] = city + " must cost less than the full fare to " + to + ".";
+        } else {
+          prevFare = stopFare;
+        }
+
+        stops.push({ city, time, fare: ops.cents(stopFare) });
+      }
+
+      /* a stop named the same as either end is a typo, not a route */
+      stops = stops.filter((st) => {
+        const clash = st.city.toLowerCase() === from.toLowerCase() || st.city.toLowerCase() === to.toLowerCase();
+        if (clash) errors.stops = "A stop is the same as the start or the end.";
+        return !clash;
+      });
+    }
+
     if (Object.keys(errors).length) {
       return json(res, 400, { ok: false, errors, error: "Check the highlighted fields." });
     }
@@ -245,9 +310,10 @@ module.exports = function driverRoutes(req, res, route, url, ctx) {
       from, to, date, depart,
       fare: ops.cents(fare),
       seatsTotal,
+      luggage: ["Hand luggage only", "Boot space", "Trailer"].includes(body.luggage) ? body.luggage : "Boot space",
       vehicle: driver.vehicle,
       plate: driver.plate,
-      stops: Array.isArray(body.stops) ? body.stops.slice(0, 8) : [],
+      stops,
       status: "open",
       createdAt: new Date().toISOString(),
     };

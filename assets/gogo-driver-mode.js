@@ -727,40 +727,282 @@
     }
     const host = sheet.querySelector("#gsheetIn") || sheet.querySelector(".gsheet-body");
 
+    /* ── what a stop is ───────────────────────────────────────────────────
+       Two numbers, and they are not the same number:
+         time  the clock time the van reaches the town
+         fare  the price FROM THE ORIGIN to that town — cumulative
+       The rider joining at a stop pays the DIFFERENCE from that stop onward,
+       which the app computes from the cumulative figures. So the driver types
+       what someone travelling the whole way pays to get there, and the form
+       shows them what that means for a rider joining at the stop. */
+    let stops = [];
+
     host.innerHTML = `
-      <div class="gwd">
+      <div class="gwd gnew">
         <h2 class="gwd-h">List a ride</h2>
-        <p class="gwd-avail">Riders on this corridor will see it straight away.</p>
+        <p class="gwd-avail">Riders boarding anywhere along this route will see it.</p>
+
         <form id="gnewRide" novalidate>
-          <div class="gwd-row2">
-            <label class="gwd-f"><span class="gwd-l">From</span><input class="gwd-i" name="from" placeholder="East London" required><em class="gwd-e" data-e="from"></em></label>
-            <label class="gwd-f"><span class="gwd-l">To</span><input class="gwd-i" name="to" placeholder="Mthatha" required><em class="gwd-e" data-e="to"></em></label>
+
+          <!-- ══ 1. the trip ═════════════════════════════════════════════ -->
+          <div class="gnew-sec">
+            <span class="gnew-sec-n">1</span>
+            <div class="gnew-sec-h">
+              <h3 class="gnew-sec-t">The trip</h3>
+              <p class="gnew-sec-s">Where it starts, where it ends, and when it leaves.</p>
+            </div>
           </div>
+
           <div class="gwd-row2">
-            <label class="gwd-f"><span class="gwd-l">Date</span><input class="gwd-i" name="date" type="date" value="${iso}" required><em class="gwd-e" data-e="date"></em></label>
-            <label class="gwd-f"><span class="gwd-l">Depart</span><input class="gwd-i" name="depart" type="time" value="06:30" required><em class="gwd-e" data-e="depart"></em></label>
+            <label class="gwd-f">
+              <span class="gwd-l">Leaves from</span>
+              <input class="gwd-i" name="from" placeholder="East London" required>
+              <em class="gwd-e" data-e="from"></em>
+            </label>
+            <label class="gwd-f">
+              <span class="gwd-l">Goes to</span>
+              <input class="gwd-i" name="to" placeholder="Mthatha" required>
+              <em class="gwd-e" data-e="to"></em>
+            </label>
           </div>
+
           <div class="gwd-row2">
-            <label class="gwd-f"><span class="gwd-l">Fare per seat (R)</span><input class="gwd-i" name="fare" type="number" min="1" step="1" placeholder="240" required><em class="gwd-e" data-e="fare"></em></label>
-            <label class="gwd-f"><span class="gwd-l">Seats</span><input class="gwd-i" name="seatsTotal" type="number" min="1" max="22" value="7" required><em class="gwd-e" data-e="seatsTotal"></em></label>
+            <label class="gwd-f">
+              <span class="gwd-l">Date</span>
+              <input class="gwd-i" name="date" type="date" value="${iso}" required>
+              <em class="gwd-e" data-e="date"></em>
+            </label>
+            <label class="gwd-f">
+              <span class="gwd-l">Leaves at</span>
+              <input class="gwd-i" name="depart" type="time" value="06:30" required>
+              <em class="gwd-e" data-e="depart"></em>
+            </label>
           </div>
+
+          <!-- ══ 2. the route ════════════════════════════════════════════ -->
+          <div class="gnew-sec gnew-sec-gap">
+            <span class="gnew-sec-n">2</span>
+            <div class="gnew-sec-h">
+              <h3 class="gnew-sec-t">The route</h3>
+              <p class="gnew-sec-s">Towns you pass through. Each one you add is a place a rider can board or get off.</p>
+            </div>
+          </div>
+
+          <div class="gnew-stops" id="gnewStops"></div>
+
+          <button class="gnew-add" id="gnewAddStop" type="button">
+            <span aria-hidden>+</span> Add a stop
+          </button>
+          <p class="gnew-note" id="gnewStopNote">No stops yet.</p>
+
+          <!-- ══ 3. the vehicle ══════════════════════════════════════════ -->
+          <div class="gnew-sec gnew-sec-gap">
+            <span class="gnew-sec-n">3</span>
+            <div class="gnew-sec-h">
+              <h3 class="gnew-sec-t">Seats and luggage</h3>
+              <p class="gnew-sec-s">How many riders you can take, and what they can bring.</p>
+            </div>
+          </div>
+
+          <div class="gwd-row2">
+            <label class="gwd-f">
+              <span class="gwd-l">Seats available</span>
+              <input class="gwd-i" name="seatsTotal" type="number" min="1" max="22" value="7" required>
+              <em class="gwd-e" data-e="seatsTotal"></em>
+            </label>
+            <label class="gwd-f">
+              <span class="gwd-l">Full fare (R)</span>
+              <input class="gwd-i" name="fare" type="number" min="1" step="1" placeholder="240" required>
+              <em class="gwd-e" data-e="fare"></em>
+            </label>
+          </div>
+
+          <label class="gwd-f">
+            <span class="gwd-l">Luggage allowed</span>
+            <select class="gwd-i" name="luggage">
+              <option value="Hand luggage only">Hand luggage only</option>
+              <option value="Boot space" selected>Boot space</option>
+              <option value="Trailer">Trailer</option>
+            </select>
+          </label>
+
+          <!-- ══ 4. review ═══════════════════════════════════════════════ -->
+          <div class="gnew-sec gnew-sec-gap">
+            <span class="gnew-sec-n">4</span>
+            <div class="gnew-sec-h">
+              <h3 class="gnew-sec-t">How riders will see it</h3>
+              <p class="gnew-sec-s">Check the times and prices before you publish.</p>
+            </div>
+          </div>
+
+          <div class="gnew-preview" id="gnewPreview"></div>
+
           <button class="gwd-btn" type="submit">List this ride</button>
+          <p class="gnew-fine">Riders book and pay through GOGO. You are paid out after each seat is completed.</p>
         </form>
       </div>`;
 
     const form = host.querySelector("#gnewRide");
+    const stopsBox = host.querySelector("#gnewStops");
+    const note = host.querySelector("#gnewStopNote");
+    const preview = host.querySelector("#gnewPreview");
+
+    const val = (n) => (form.querySelector(`[name="${n}"]`) || {}).value || "";
+    const money = (n) => "R" + Number(n || 0).toFixed(2);
+
+    /* ── stop rows ────────────────────────────────────────────────────────
+       The fare input is labelled "paying from <origin>", because that is what
+       they are typing: the cumulative price, not the leg. Getting this backwards
+       is the single most common way to list a route that loses money, so the
+       label says it and the hint under it converts to a leg price live. */
+    function renderStops() {
+      stopsBox.innerHTML = stops.map((st, i) => `
+        <div class="gnew-stop" data-i="${i}">
+          <span class="gnew-stop-n">${i + 1}</span>
+          <div class="gnew-stop-body">
+            <input class="gwd-i gnew-stop-city" name="stopCity${i}" placeholder="Town" value="${esc(st.city || "")}">
+            <div class="gnew-stop-row">
+              <label class="gnew-stop-f">
+                <span class="gnew-stop-l">Reach by</span>
+                <input class="gwd-i" name="stopTime${i}" type="time" value="${esc(st.time || "")}">
+              </label>
+              <label class="gnew-stop-f">
+                <span class="gnew-stop-l gnew-stop-l-from">Pays from the start</span>
+                <input class="gwd-i" name="stopFare${i}" type="number" min="1" placeholder="120" value="${st.fare || ""}">
+              </label>
+            </div>
+            <p class="gnew-stop-hint" data-hint="${i}"></p>
+          </div>
+          <button class="gnew-stop-x" type="button" data-del="${i}" aria-label="Remove stop ${i + 1}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>`).join("");
+
+      stopsBox.querySelectorAll("[data-del]").forEach(b => {
+        b.onclick = () => { stops.splice(Number(b.dataset.del), 1); renderStops(); paint(); };
+      });
+
+      /* every edit re-reads the DOM back into `stops`, so nothing is lost on
+         re-render when a row is removed */
+      const sync = () => {
+        stops = stops.map((st, i) => ({
+          city: (stopsBox.querySelector(`[name="stopCity${i}"]`) || {}).value || "",
+          time: (stopsBox.querySelector(`[name="stopTime${i}"]`) || {}).value || "",
+          fare: Number((stopsBox.querySelector(`[name="stopFare${i}"]`) || {}).value || 0) || 0,
+        }));
+        paint();
+      };
+      stopsBox.querySelectorAll("input").forEach(inp => {
+        inp.oninput = sync;
+        inp.onchange = sync;
+      });
+
+      note.textContent = stops.length
+        ? `${stops.length} stop${stops.length === 1 ? "" : "s"}: riders can board or get off at any of them.`
+        : "No stops: riders can only ride from the start straight to the end.";
+
+      paint();
+    }
+
+    /* ── the live preview ────────────────────────────────────────────────
+       The whole journey, in the order a rider reads it, updating as the driver
+       types. This is the section that catches mistakes before publishing: a
+       stop out of order, a fare that goes down, a time before departure. */
+    function paint() {
+      const from = val("from").trim() || "Start";
+      const to = val("to").trim() || "End";
+      const fare = Number(val("fare")) || 0;
+      const depart = val("depart") || "";
+
+      const rows = [];
+      rows.push({ kind: "end", city: from, time: depart, fare: 0, sub: "departs" });
+
+      let prevFare = 0;
+      let problem = "";
+      stops.forEach((st, i) => {
+        const leg = st.fare ? st.fare - prevFare : 0;
+        if (st.fare && prevFare && st.fare < prevFare) {
+          problem = `Stop ${i + 1} (${st.city || "unnamed"}) is cheaper than the stop before it. Fares must go up as you travel further.`;
+        }
+        if (st.city) {
+          rows.push({ kind: "stop", city: st.city, time: st.time, fare: st.fare, leg, sub: leg > 0 ? `+${money(leg)} from the stop before` : "" });
+        }
+        if (st.fare) prevFare = st.fare;
+      });
+
+      const lastLeg = fare && prevFare && fare < prevFare;
+      if (lastLeg) problem = `The full fare (${money(fare)}) is less than the last stop (${money(prevFare)}).`;
+      rows.push({ kind: "end", city: to, time: "", fare, sub: "arrives", leg: fare && prevFare ? fare - prevFare : 0 });
+
+      preview.innerHTML = `
+        ${problem ? `<p class="gnew-warn">${esc(problem)}</p>` : ""}
+        <ol class="gnew-line">
+          ${rows.map(r => `
+            <li class="gnew-ln gnew-ln-${r.kind}">
+              <span class="gnew-ln-dot" aria-hidden></span>
+              <span class="gnew-ln-body">
+                <span class="gnew-ln-city">${esc(r.city)}</span>
+                ${r.sub ? `<span class="gnew-ln-sub">${esc(r.sub)}${r.time ? " · " + esc(r.time) : ""}</span>` : ""}
+              </span>
+              <span class="gnew-ln-fare">${r.fare ? money(r.fare) : ""}</span>
+            </li>`).join("")}
+        </ol>`;
+
+      /* per-stop hint: what a rider joining here actually pays */
+      stops.forEach((st, i) => {
+        const hint = stopsBox.querySelector(`[data-hint="${i}"]`);
+        if (!hint) return;
+        if (!st.fare || !fare) { hint.textContent = ""; return; }
+        const pays = fare - st.fare;
+        hint.textContent = pays > 0
+          ? `A rider joining here pays ${money(pays)} to reach ${to}.`
+          : "";
+      });
+    }
+
+    host.querySelector("#gnewAddStop").onclick = () => {
+      if (stops.length >= 8) return;
+      stops.push({ city: "", time: "", fare: 0 });
+      renderStops();
+      const first = stopsBox.querySelector(`[name="stopCity${stops.length - 1}"]`);
+      if (first) first.focus();
+    };
+
+    form.querySelectorAll('[name="from"],[name="to"],[name="depart"],[name="fare"]').forEach(i => {
+      i.oninput = paint;
+      i.onchange = paint;
+    });
+
+    renderStops();
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       host.querySelectorAll(".gwd-e").forEach(x => (x.textContent = ""));
-      const fd = new FormData(form);
+
+      /* read stops out of the DOM one last time: the driver may have typed and
+         hit List without ever leaving the field */
+      stops = stops.map((st, i) => ({
+        city: (stopsBox.querySelector(`[name="stopCity${i}"]`) || {}).value || "",
+        time: (stopsBox.querySelector(`[name="stopTime${i}"]`) || {}).value || "",
+        fare: Number((stopsBox.querySelector(`[name="stopFare${i}"]`) || {}).value || 0) || 0,
+      }));
+
       const payload = {
-        from: (fd.get("from") || "").trim(),
-        to: (fd.get("to") || "").trim(),
-        date: fd.get("date"),
-        depart: fd.get("depart"),
-        fare: Number(fd.get("fare")),
-        seatsTotal: Number(fd.get("seatsTotal")),
+        from: val("from").trim(),
+        to: val("to").trim(),
+        date: val("date"),
+        depart: val("depart"),
+        fare: Number(val("fare")),
+        seatsTotal: Number(val("seatsTotal")),
+        luggage: val("luggage"),
+        /* only complete stops travel: a half-filled row is a draft, not a stop */
+        stops: stops.filter(s => s.city.trim()).map(s => ({
+          city: s.city.trim(),
+          time: s.time || "",
+          fare: s.fare || 0,
+        })),
       };
+
       const btn = form.querySelector(".gwd-btn");
       btn.disabled = true;
       btn.textContent = "Listing…";
