@@ -138,6 +138,7 @@ const GOGODashboard = (() => {
         ${tab("trips", "My trips", false)}
         ${tab("parcels", "Parcels", false)}
         ${tab("plan", "Plan", false)}
+        ${tab("driver", "Driver", false)}
       </div>
 
       <div class="gdb-panels">
@@ -145,6 +146,7 @@ const GOGODashboard = (() => {
         ${panel("trips", false, tripsPane(data))}
         ${panel("parcels", false, parcelsPane(data))}
         ${panel("plan", false, planPane(home))}
+        ${panel("driver", false, '<div id="gdbDriverHost" class="gdb-driver-host"></div>')}
       </div>
 
       <!-- ── quiet footer rows ────────────────────────────────────────── -->
@@ -393,9 +395,108 @@ const GOGODashboard = (() => {
 
     animateIn(host);
     wireTabs(host);
+
+    /* ── the Driver tab ───────────────────────────────────────────────────────
+       boot() has just rendered the tablist, so this is the first moment the driver
+       host exists. ?tab=driver - and the Account page's ?mode=driver - must both
+       OPEN the tab and RENDER into it. A click handler alone can do neither on a
+       cold load: there is no click. */
+    const params = new URLSearchParams(location.search);
+    if (params.get("mode") === "driver" || params.get("tab") === "driver") {
+      const dt = document.querySelector('.gdb-tab[data-tab="driver"]');
+      if (dt) dt.click();
+      mountDriver();
+    }
   }
 
   return { boot, render };
+
+  /* ══ DRIVER MODE ═══════════════════════════════════════════════════════════
+     GOGODriver has been sitting unused since the dashboard was rebuilt. The
+     Account page still links to dashboard.html?mode=driver, and that link went
+     nowhere because no page loaded the module — so the Driver tab vanished
+     without anyone deleting it.
+
+     Rendered lazily on first use, so a passenger who never drives does not pay
+     for /driver/me on every dashboard visit. */
+  function mountDriver() {
+    const host = document.getElementById("gdbDriverHost");
+    if (!host || !window.GOGODriver) return;
+    /* mark only AFTER the render resolves. Setting it first meant a render that
+       was still in flight blocked the retry, so the panel could stay empty for
+       good on a slow connection. */
+    if (host.dataset.mounted === "1") return;
+    Promise.resolve(GOGODriver.render(host))
+      .then(() => { host.dataset.mounted = "1"; })
+      .catch(() => { host.dataset.mounted = ""; });
+  }
+
+  function selectTab(id) {
+    const t = document.querySelector(`.gdb-tab[data-tab="${id}"]`);
+    if (t) t.click();
+  }
+
+  /* ?mode=driver from the Account page, or ?tab=driver from a link */
+  const params = new URLSearchParams(location.search);
+  const wantDriver = params.get("mode") === "driver" || params.get("tab") === "driver";
+  if (wantDriver) selectTab("driver");
+
+  document.querySelectorAll('.gdb-tab').forEach(t => {
+    t.addEventListener("click", () => {
+      if (t.dataset.tab === "driver") mountDriver();
+    });
+  });
+
+  /* ══ DRIVER MODE ═══════════════════════════════════════════════════════════
+     GOGODriver has sat unused since the dashboard was rebuilt. The Account page
+     still links to dashboard.html?mode=driver, and that link went nowhere because
+     no page loaded the module - so the Driver tab disappeared without anyone
+     deleting it, which is the worst way for a feature to vanish.
+
+     Rendered lazily on first use, so a passenger who never drives does not pay
+     for a /driver/me request on every dashboard visit. */
+  function mountDriver() {
+    const host = document.getElementById("gdbDriverHost");
+    if (!host || !window.GOGODriver) return;
+    if (host.dataset.mounted === "1") return;
+    host.dataset.mounted = "1";
+    GOGODriver.render(host);
+  }
+
+  function selectTab(id) {
+    const t = document.querySelector('.gdb-tab[data-tab="' + id + '"]');
+    if (t) t.click();
+  }
+
+  /* ══ TIMING ═══════════════════════════════════════════════════════════════
+     This ran at the end of the IIFE, before the dashboard had rendered its tabs,
+     so querySelectorAll(".gdb-tab") found nothing and the listener was never
+     attached — the Driver tab switched to an empty panel and stayed empty.
+
+     The tabs are built during boot, so the listener is delegated from document
+     (survives re-render) and the ?mode=driver case waits for the first paint. */
+  function wireDriver() {
+    document.addEventListener("click", e => {
+      const t = e.target.closest && e.target.closest('.gdb-tab[data-tab="driver"]');
+      if (t) mountDriver();
+    });
+
+    const params = new URLSearchParams(location.search);
+    const wantDriver = params.get("mode") === "driver" || params.get("tab") === "driver";
+    if (!wantDriver) return;
+
+    /* one frame after boot, when the panels exist */
+    const start = () => {
+      selectTab("driver");
+      mountDriver();
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => setTimeout(start, 0));
+    } else {
+      setTimeout(start, 0);
+    }
+  }
+  wireDriver();
 })();
 
 window.GOGODashboard = GOGODashboard;
