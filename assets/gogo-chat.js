@@ -296,77 +296,98 @@ const GOGOChat = (() => {
     const st = GOGOSafety;
     const selfies = (S.safety && S.safety.selfies) || [];
     const rides = S.rides.filter(r => (r.requests || []).length);
+    const safeCount = rides.reduce((n, r) => {
+      const acc = (r.requests || []).filter(q => q.status === "accepted");
+      return n + acc.filter(q => (r.safe || {})[q.phone]).length;
+    }, 0);
+
+    /* countdown for anything currently waiting to be purged */
+    const due = rides.filter(r => r.purgeAt).length;
+
+    const row = (icon, label, sub, right, opts) => {
+      const o = opts || {};
+      return `<div class="gsf-row${o.quiet ? " gsf-row-quiet" : ""}">
+        <span class="gsf-ic${o.lime ? " gsf-ic-lime" : ""}" aria-hidden>${GICON(icon)}</span>
+        <span class="gsf-row-t">
+          <span class="gsf-row-l">${label}</span>
+          ${sub ? `<span class="gsf-row-s">${sub}</span>` : ""}
+        </span>
+        ${right ? `<span class="gsf-row-r">${right}</span>` : ""}
+      </div>`;
+    };
 
     $('#main').innerHTML = `
-    <div class="g-wrap g-section">
-      <div class="g-between g-anim">
-        <div><span class="g-label">Safety centre</span><h1 class="g-h2 g-mt-sm">Your safety photos and how long we keep them</h1>
-          <p class="g-s">Every driver and passenger takes one selfie before the ride. It is the security record for that ride session: if anything goes wrong on the trip, we know who was on board. It is shown only to the person you are travelling with, and deleted automatically ${st.RETENTION_H} hours after the trip ends and you tap "I am safe".</p></div>
-        <div class="g-row">
-          <a class="g-btn g-btn-outline g-btn-sm" href="messages"><span aria-hidden>${GICON("chat")}</span> Support chat</a>
-          <button class="g-btn g-btn-ink g-btn-sm" id="wipeAll" type="button"><span aria-hidden>${GICON("trash")}</span> Delete my photos now</button>
-        </div>
+    <div class="gsf g-wrap g-section">
+
+      <header class="gsf-hero" data-anim="1">
+        <span class="gsf-eyebrow">Safety centre</span>
+        <h1 class="gsf-h1">Your photos, and exactly how long we keep them</h1>
+        <p class="gsf-lede">Every driver and passenger takes one selfie before the ride. It is the
+          security record for that trip, shown only to the person you travel with, and deleted
+          automatically ${st.RETENTION_H} hours after it ends.</p>
+      </header>
+
+      <div class="gsf-actions" data-anim="2">
+        <a class="gsf-btn gsf-btn-ink" href="messages">${GICON("chat")}<span>Support</span></a>
+        <button class="gsf-btn gsf-btn-outline" id="wipeAll" type="button">${GICON("trash")}<span>Delete my photos</span></button>
       </div>
 
-      <div class="g-grid g-mt-lg">
-        <div class="g-7 g-anim">
-          <div class="g-card">
-            <div class="g-head"><span class="g-label">Safety photo vault</span><span class="g-s-sm">${selfies.length} on file</span></div>
-            <div class="g-vault" id="vault"></div>
-          </div>
-
-          <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Retention rules</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("doc")}</span></div>
-            ${[
-              ["mobile", "Taken when you book or list", "One selfie per person, per ride. Both sides are checked, so nobody rides anonymously."],
-              ["lock", "Held only for the ride", "Visible to the other person on that ride only. Never public, never used for marketing."],
-              ["clock", `Deleted ${st.RETENTION_H} hours after the trip`, "The clock starts when the ride is completed and every passenger has tapped “I am safe”."],
-              ["trash", "You can delete early", "One tap removes your photo immediately, on top of the automatic deletion."],
-              ["info", "If someone never confirms safe", `After ${st.ESCALATE_H} hours the ride is escalated to platform review and the photos are held for that investigation instead of silently expiring.`],
-            ].map(([e, t, s]) => `
-              <div class="g-list-row"><span class="g-ic g-ic-sm" aria-hidden>${GICON(e)}</span>
-                <div><div class="g-list-t">${t}</div><div class="g-list-s">${s}</div></div></div>`).join("")}
-            <p class="g-s-sm g-mt">South African law (POPIA) treats a face photo as special personal information. GOGO stores it with your explicit consent, for one purpose only, for the shortest possible time.</p>
-          </div>
+      <section class="gsf-card" data-anim="3">
+        <div class="gsf-card-head">
+          <span class="gsf-card-t">Your safety photos</span>
+          <span class="gsf-card-n">${selfies.length} on file</span>
         </div>
+        <div class="gsf-vault" id="vault"></div>
+      </section>
 
-        <div class="g-5 g-anim">
-          <div class="g-card">
-            <div class="g-head"><span class="g-label">Ride safeguards</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("shield")}</span></div>
-            ${rides.length ? rides.map(r => {
-              const accepted = (r.requests || []).filter(q => q.status === "accepted");
-              const safeCount = accepted.filter(q => (r.safe || {})[q.phone]).length;
-              const photos = st.forRide(r.id).length;
-              return `
-              <div class="g-list-row">
-                <span class="g-ic g-ic-sm ${r.status === "completed" ? "g-ic-lime" : ""}" aria-hidden>${r.status === "completed" ? "✅" : (window.GOGO && GOGO.van ? GOGO.van() : '')}</span>
-                <div><div class="g-list-t">${esc(r.from)} → ${esc(r.to)}</div>
-                  <div class="g-list-s">${photos} photo${photos === 1 ? "" : "s"} · ${safeCount}/${accepted.length} safe confirmed</div></div>
-                <div class="g-list-r">${r.purgeAt ? `<span class="g-count">${st.countdown(r.purgeAt)}</span><div class="g-list-s">until deletion</div>` : `<span class="g-stamp ${r.status === "completed" ? "g-stamp-open" : "g-stamp-idle"}">${r.status === "completed" ? "awaiting safe" : esc(r.status)}</span>`}</div>
-              </div>`;
-            }).join("") : `<p class="g-s">No rides yet. Your protection starts the moment you book one.</p>`}
-          </div>
+      <section class="gsf-card" data-anim="4">
+        <div class="gsf-card-head"><span class="gsf-card-t">How we hold them</span></div>
+        ${row("mobile", "Taken when you book or list", "One per person, per ride. Both sides are checked, so nobody rides anonymous.")}
+        ${row("lock", "Visible only on that ride", "The other person on the trip sees it. Never public, never used for marketing or profiles.")}
+        ${row("clock", `Deleted ${st.RETENTION_H} hours after the trip`, "The clock starts when the ride is complete and every passenger has tapped I am safe.")}
+        ${row("trash", "You can delete early", "One tap removes it now, on top of the automatic deletion.")}
+        ${row("info", "If nobody confirms safe", `After ${st.ESCALATE_H} hours the ride goes to platform review and the photos are held for that investigation instead of expiring.`)}
+      </section>
 
-          <div class="g-card g-mt">
-            <div class="g-head"><span class="g-label">Audit trail</span><span class="g-ic g-ic-sm" aria-hidden>${GICON("receipt")}</span></div>
-            <div class="g-audit" id="audit"></div>
-            <p class="g-s-sm g-mt">Every capture, retention decision and deletion is logged with a timestamp.</p>
-          </div>
+      <section class="gsf-card" data-anim="5">
+        <div class="gsf-card-head">
+          <span class="gsf-card-t">Ride safeguards</span>
+          <span class="gsf-card-n">${rides.length ? safeCount + " confirmed safe" : ""}</span>
         </div>
-      </div>
+        ${rides.length ? rides.map(r => {
+          const accepted = (r.requests || []).filter(q => q.status === "accepted");
+          const safe = accepted.filter(q => (r.safe || {})[q.phone]).length;
+          const photos = st.forRide(r.id).length;
+          const right = r.purgeAt
+            ? `<span class="gsf-count">${st.countdown(r.purgeAt)}</span><span class="gsf-row-s">until deletion</span>`
+            : `<span class="gsf-pill ${r.status === "completed" ? "gsf-pill-lime" : ""}">${r.status === "completed" ? "awaiting safe" : esc(r.status)}</span>`;
+          return `<div class="gsf-row">
+            <span class="gsf-ic${r.status === "completed" ? " gsf-ic-lime" : ""}" aria-hidden>${GICON(r.status === "completed" ? "check" : "route")}</span>
+            <span class="gsf-row-t">
+              <span class="gsf-row-l">${esc(r.from)} → ${esc(r.to)}</span>
+              <span class="gsf-row-s">${photos} photo${photos === 1 ? "" : "s"} · ${safe}/${accepted.length} safe confirmed</span>
+            </span>
+            <span class="gsf-row-r">${right}</span>
+          </div>`;
+        }).join("") : `<div class="gsf-empty">
+            <p class="gsf-empty-t">No rides yet</p>
+            <p class="gsf-empty-s">Your protection starts the moment you book one.</p>
+          </div>`}
+      </section>
+
+      <section class="gsf-card" data-anim="6">
+        <div class="gsf-card-head"><span class="gsf-card-t">Audit trail</span></div>
+        <div class="gsf-audit" id="audit"></div>
+      </section>
+
+      <p class="gsf-legal" data-anim="7">South African law (POPIA) treats a face photo as special
+        personal information. GOGO stores it with your explicit consent, for one purpose only, for
+        the shortest possible time.</p>
+
     </div>`;
 
     renderVault();
     renderAudit();
-    $('#wipeAll').onclick = () => {
-      const res = selfies.map(s => GOGOSafety.purgeNow(s.id));
-      const gone = res.filter(r => r.ok).length;
-      const held = res.length - gone;
-      toast(held
-        ? `<b>${gone} deleted</b> · ${held} still held until the ride is finished`
-        : "<b>Deleted</b> · your safety photos are gone");
-      setTimeout(() => location.reload(), 700);
-    };
   }
 
   function renderVault() {
