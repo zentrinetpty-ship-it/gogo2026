@@ -1055,14 +1055,9 @@ function pageRides() {
                layout. -->
           <div class="grides-sug" id="destSug" hidden></div>
         </label>
-        <label class="grides-f grides-f-seats">
-          <span class="grides-fl">Seats</span>
-          <select class="grides-i" id="seatIn">
-            ${[1,2,3,4,5,6].map(n => `<option value="${n}"${n === state.seats ? " selected" : ""}>${n}</option>`).join("")}
-          </select>
-        </label>
       </div>
 
+      <div class="grides-row2">
       <div class="grides-f grides-f-when">
         <span class="grides-fl">When</span>
         <div class="grides-seg" role="group" aria-label="Travel day">
@@ -1070,6 +1065,14 @@ function pageRides() {
           <button class="grides-seg-b${q.when === "tomorrow" ? " on" : ""}" data-when="tomorrow" type="button">Tomorrow</button>
           <button class="grides-seg-b${q.when === "any" ? " on" : ""}" data-when="any" type="button">Any day</button>
         </div>
+      </div>
+
+      <label class="grides-f grides-f-seats">
+        <span class="grides-fl">Seats</span>
+        <select class="grides-i" id="seatIn">
+          ${[1,2,3,4,5,6].map(n => `<option value="${n}"${n === state.seats ? " selected" : ""}>${n}</option>`).join("")}
+        </select>
+      </label>
       </div>
 
       <div class="grides-chips">
