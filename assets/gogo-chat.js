@@ -407,9 +407,12 @@ const GOGOChat = (() => {
           <div class="g-mt-sm">${state}</div>
         </div>
         ${GOGOSafety.canDelete(s.id).ok
-          ? `<button class="g-btn g-btn-outline g-btn-sm" data-del="${s.id}" type="button">Delete</button>`
-          : `<div class="g-vault-locked"><span aria-hidden>${GICON("lock")}</span><span>${esc(GOGOSafety.canDelete(s.id).reason)}</span></div>`}
-      </div>`;
+          ? `<button class="g-btn g-btn-outline g-btn-sm gsf-del" data-del="${s.id}" type="button">Delete</button>`
+          : ""}
+      </div>
+      ${GOGOSafety.canDelete(s.id).ok
+        ? ""
+        : `<p class="gsf-vault-note">${GICON("lock")}<span>${esc(GOGOSafety.canDelete(s.id).reason)}</span></p>`}`;
     }).join("") : `
       <div class="g-empty"><span class="g-ic g-ic-lg" aria-hidden>${GICON("shield")}</span>
         <h3 class="g-h3">No safety photos stored</h3>

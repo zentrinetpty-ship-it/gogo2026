@@ -19,7 +19,7 @@
    every cache that is not the current SHELL, so a new version is what actually
    evicts the old pinned copies from phones that already installed the PWA.
    gogo-v2: stop treating ?v=N as immutable. */
-const VERSION = "gogo-v2";
+const VERSION = "gogo-v3";
 const SHELL = VERSION + "-shell";
 
 /* The landing and its icons — enough to render something offline. */

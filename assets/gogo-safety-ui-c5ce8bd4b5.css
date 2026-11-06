@@ -1,0 +1,383 @@
+/* ══ SAFETY CENTRE ══════════════════════════════════════════════════════════
+   Rebuilt to the account page's grammar, which is the current standard across
+   GOGO: hairline cards at 14px radius, 32px icon tiles, rows separated by a
+   single hairline, and a hero that carries no card around it.
+
+   The previous version used the .g-card / .g-label / .g-list-row language from
+   the generation before that, so a rider moving from Account to Safety crossed a
+   visual border into a different app.
+
+   Loaded only by safety.html. Nothing here reaches any other page. */
+
+.gsf { padding-bottom: 28px; }
+
+/* ── hero: no card, because a headline does not need a box ────────────────── */
+.gsf-hero { padding: 18px 0 4px; }
+
+.gsf-eyebrow {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #8A8A83;
+  margin-bottom: 9px;
+}
+
+.gsf-h1 {
+  margin: 0;
+  font-size: clamp(23px, 6.4vw, 28px);
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -.028em;
+  color: #1A1A1A;
+  text-wrap: balance;
+}
+
+.gsf-lede {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #6E6E68;
+  max-width: 46ch;
+}
+
+/* ── the two actions ─────────────────────────────────────────────────────── */
+.gsf-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.gsf-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform .12s ease, opacity .14s ease;
+}
+
+.gsf-btn svg { width: 16px; height: 16px; flex: none; }
+.gsf-btn:active { transform: scale(.985); }
+
+.gsf-btn-ink { background: #1A1A1A; color: #fff; }
+.gsf-btn-outline { background: #fff; border-color: #E7E7E0; color: #1A1A1A; }
+
+@media (max-width: 340px) {
+  .gsf-actions { grid-template-columns: 1fr; }
+}
+
+/* ── cards ───────────────────────────────────────────────────────────────── */
+.gsf-card {
+  border: 1px solid #EDEDE7;
+  border-radius: 14px;
+  background: #fff;
+  padding: 2px 14px;
+  margin-top: 12px;
+}
+
+.gsf-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 0 11px;
+  border-bottom: 1px solid #F2F2EE;
+}
+
+.gsf-card-t { font-size: 13px; font-weight: 650; color: #1A1A1A; letter-spacing: -.012em; }
+
+.gsf-card-n {
+  font-size: 11.5px;
+  color: #8A8A83;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── rows ────────────────────────────────────────────────────────────────── */
+.gsf-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 0;
+  border-top: 1px solid #F2F2EE;
+}
+
+.gsf-card-head + .gsf-row,
+.gsf-card .gsf-vault + .gsf-row { border-top: 0; }
+.gsf-card > .gsf-row:first-child { border-top: 0; }
+
+.gsf-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #F5F5F1;
+  color: #1A1A1A;
+}
+
+.gsf-ic svg { width: 16px; height: 16px; }
+.gsf-ic-lime { background: #F1F8DC; color: #4A6A10; }
+
+.gsf-row-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1 1 auto; }
+
+.gsf-row-l {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: #1A1A1A;
+  letter-spacing: -.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gsf-row-s {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #8A8A83;
+}
+
+.gsf-row-r {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  text-align: right;
+}
+
+.gsf-count {
+  font-size: 12px;
+  font-weight: 650;
+  color: #4A6A10;
+  font-variant-numeric: tabular-nums;
+}
+
+.gsf-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 21px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #F5F5F1;
+  color: #8A8A83;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.gsf-pill-lime { background: #F1F8DC; color: #4A6A10; }
+
+/* ── the photo vault ─────────────────────────────────────────────────────── */
+.gsf-vault { display: flex; flex-direction: column; }
+
+.gsf-vault .g-vault-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #F2F2EE;
+}
+
+.gsf-vault .g-vault-item:first-child { border-top: 0; }
+
+.gsf-vault .g-vault-face {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #F5F5F1;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}
+
+.gsf-vault .g-vault-face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* the audit list keeps its own renderer; only its chrome is restyled here */
+.gsf-audit { padding: 4px 0 8px; }
+
+.gsf-audit > * {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #6E6E68;
+  padding: 5px 0;
+  border-top: 1px solid #F5F5F1;
+}
+
+.gsf-audit > *:first-child { border-top: 0; }
+
+/* ── empty state ─────────────────────────────────────────────────────────── */
+.gsf-empty { padding: 18px 0 20px; }
+
+.gsf-empty-t {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -.012em;
+}
+
+.gsf-empty-s {
+  margin: 3px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8A8A83;
+}
+
+/* ── legal note: present, not prominent ──────────────────────────────────── */
+.gsf-legal {
+  margin: 18px 0 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #A0A099;
+  max-width: 52ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gsf-btn { transition: none; }
+}
+
+/* ══ THE VAULT ROW ══════════════════════════════════════════════════════════
+   The old .g-vault-* rules from gogo-live were still live on these elements and
+   fought the new layout: a .g-vault-locked div 387px tall sat as a THIRD flex
+   column, crushing the text column to 59px, and every word wrapped onto its own
+   line. That is the scattered column and the giant padlock.
+
+   One row, three parts, fixed: a 44px photo, the text taking all remaining width,
+   and a Delete button that does not shrink. The locked REASON is no longer in the
+   row at all - it is a footnote underneath, because it is an explanation, not a
+   control, and giving it a column was what broke the layout. */
+
+.gsf-vault .g-vault-item {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid #F2F2EE;
+  min-height: 0;
+}
+
+.gsf-vault .g-vault-item:first-child { border-top: 0; }
+
+.gsf-vault .g-vault-face {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #F5F5F1;
+  display: grid;
+  place-items: center;
+}
+
+.gsf-vault .g-vault-face img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* the text column: this is the part that was being squeezed to 59px */
+.gsf-vault .g-vault-item > div:nth-of-type(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+}
+
+.gsf-vault .g-vault-item .g-list-t {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -.012em;
+  white-space: normal;
+  overflow: visible;
+}
+
+.gsf-vault .g-vault-item .g-list-s {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #8A8A83;
+  margin-top: 2px;
+  white-space: normal;
+  overflow: visible;
+}
+
+.gsf-vault .g-vault-item .g-mt-sm { margin-top: 6px; }
+
+/* the state chip inside the row */
+.gsf-vault .g-stamp {
+  display: inline-flex;
+  align-items: center;
+  height: 21px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 650;
+  background: #F5F5F1;
+  color: #8A8A83;
+  border: 0;
+  white-space: nowrap;
+}
+
+.gsf-vault .g-stamp-open { background: #F1F8DC; color: #4A6A10; }
+
+.gsf-vault .g-count {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 650;
+  color: #4A6A10;
+  font-variant-numeric: tabular-nums;
+}
+
+.gsf-vault .g-count-soon { color: #B4541C; }
+
+/* Delete: never shrinks, never wraps */
+.gsf-del {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* the lock reason, as a footnote */
+.gsf-vault-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 0 0 12px 56px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #9A9A93;
+}
+
+.gsf-vault-note svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  margin-top: 2px;
+  color: #B0B0A8;
+}
+
+/* the old lock block must never lay out again, even if a cached page has it */
+.g-vault-locked { display: none !important; }
