@@ -37,6 +37,31 @@ const RULES = {
   minProbability: 0.72,   // detector confidence in the face itself
   minFaceFraction: 0.055, // face box area as a share of the image
   maxFaceFraction: 0.92,  // tighter than this and it is a close-up of skin
+
+  /* ══ FACING THE CAMERA ══════════════════════════════════════════════════════
+     A detector will happily box a face that is turned away, tilted down, or
+     cropped at the chin. Those photos have eyes, so a "is there a face" check
+     passes them, and then nobody can recognise the person at the roadside.
+
+     Two measured signals catch it:
+
+     pose    yaw   = left/right turn. Beyond ~22 degrees one ear is hidden and the
+                     photo stops being a likeness.
+             pitch = up/down tilt. Beyond ~18 degrees the chin is foreshortened
+                     against the neck and the jawline disappears.
+
+     chin    the 5 landmark points end at the MOUTH CORNERS, so the detector's own
+             box always extends below the lowest landmark by roughly the chin.
+             Measured on a real frontal-ish photo: landmarks ended at y=351 in a
+             box ending at y=417, i.e. 22% of the box height was chin. That is the
+             healthy ratio. When the chin is cropped, cut off, or tilted away, the
+             landmarks sit much closer to the bottom edge of the box - which is the
+             "eyes but no chin" photo. */
+  maxYaw: 22,
+  maxPitch: 18,
+  /* chinSpace = (boxBottom - lowestLandmarkY) / boxHeight. Below this, the chin
+     is not really in the picture. */
+  minChinSpace: 0.13,
   /* A detector reports a box that fits the face it found, so "inside the frame"
      is really about a box that runs off an EDGE — a rider half out of shot, or
      turned away. 0.55 let a third of someone's face be outside the picture and
@@ -108,7 +133,10 @@ async function detect(imageBuffer, mime, filename) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 12000);
   try {
-    const res = await fetch(CORE + "/find_faces?det_prob_threshold=0.5&limit=0", {
+    /* landmarks and pose are what let us tell "a face with eyes" from "a whole
+       face looking at the camera". Without them the detector happily returns a
+       box for somebody turned away and looking down. */
+    const res = await fetch(CORE + "/find_faces?det_prob_threshold=0.5&limit=0&face_plugins=landmarks,pose", {
       method: "POST",
       body: form,
       signal: ctl.signal,
@@ -198,9 +226,63 @@ function judge(faces, imgW, imgH) {
     );
   }
 
+  /* ── is the person actually FACING the camera, chin included? ─────────────
+     Everything above only proved a face exists. These three prove it is usable
+     as a likeness: turned straight on, not tilted, and with the chin in frame. */
+
+  const pose = f.pose || null;
+  if (pose) {
+    const yaw = Math.abs(Number(pose.yaw) || 0);
+    const pitch = Math.abs(Number(pose.pitch) || 0);
+
+    if (yaw > RULES.maxYaw) {
+      return fail(
+        "turned",
+        "Look straight at the camera",
+        "Turn to face the phone directly — we can only see one side of your face from there.",
+        { yaw: +yaw.toFixed(1) }
+      );
+    }
+
+    if (pitch > RULES.maxPitch) {
+      return fail(
+        "tilted",
+        Number(pose.pitch) < 0 ? "Lift your head" : "Bring your chin down",
+        Number(pose.pitch) < 0
+          ? "Raise your chin a little so the camera sees your whole face."
+          : "Lower your chin slightly, you are looking up.",
+        { pitch: +Number(pose.pitch).toFixed(1) }
+      );
+    }
+  }
+
+  /* the chin: the landmarks end at the mouth corners, so a healthy frontal photo
+     always has clear box below the lowest one. If there is not, the chin is cut
+     off by the frame or foreshortened by the tilt. */
+  const lm = f.landmarks;
+  if (Array.isArray(lm) && lm.length && h) {
+    const lowestY = Math.max.apply(null, lm.map(p => Number(p[1]) || 0));
+    const chinSpace = (Number(box.y_max || 0) - lowestY) / h;
+
+    if (chinSpace < RULES.minChinSpace) {
+      return fail(
+        "nochin",
+        "We cannot see your chin",
+        "Tilt the phone down a little, or step back, so your whole face from forehead to chin is in the frame.",
+        { chinSpace: +chinSpace.toFixed(3) }
+      );
+    }
+  }
+
   return {
     ok: true,
-    face: { box, probability: prob, faceFraction: +frac.toFixed(3) },
+    face: {
+      box,
+      probability: prob,
+      faceFraction: +frac.toFixed(3),
+      yaw: pose ? +Number(pose.yaw).toFixed(1) : null,
+      pitch: pose ? +Number(pose.pitch).toFixed(1) : null,
+    },
     say: "Clear photo",
   };
 }
