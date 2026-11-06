@@ -1955,10 +1955,30 @@ function pageRide() {
             /* the server refused, or could not be reached. Either way this is
                NOT booked, and the rider must not be told otherwise. */
             const why = out.body && out.body.error;
-            if (out.status === 409 && why === "price mismatch") {
+
+            /* ══ ONLY BLAME THE SEATS WHEN THE SERVER SAYS SO ══════════════════
+               This used to treat every 409 as "those seats have gone". A 409 is
+               just a conflict; the wording has to come from the server, because a
+               409 can mean a price change, a leg that is full, or a request that
+               never reached the API at all.
+
+               That last case was live for weeks: the app posts to /gogo/api/book,
+               and a Caddy rule was sending every /gogo/* path to the static server,
+               which answered with its 404 HTML page. JSON.parse failed, out.body
+               was null, and the rider was told the seats had gone when nothing had
+               even been asked. The seat check never ran.
+
+               So: if the reply was not JSON, we do not know what happened, and we
+               say exactly that. */
+            if (!out.body) {
+              finish("Could not reach the booking service. Nothing was sent to the driver.", false);
+            } else if (out.status === 409 && why === "price mismatch") {
               finish("The price changed. Reload and book again.", false);
+            } else if (out.status === 409 && why === "not enough seats") {
+              const d = out.body.detail || "";
+              finish(d ? "Those seats have gone: " + d.charAt(0).toUpperCase() + d.slice(1) + "." : "Those seats have gone on this ride.", false);
             } else if (out.status === 409) {
-              finish("Those seats have gone on this ride.", false);
+              finish("Could not send that request. Reload and try again.", false);
             } else if (out.status === 401) {
               finish("Sign in first, then send the request.", false);
               if (window.GOGOAuth && GOGOAuth.require) {
