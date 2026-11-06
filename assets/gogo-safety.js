@@ -313,12 +313,16 @@ const GOGOSafety = (() => {
           <span class="g-cam-exp">Deleted ${RETENTION_H}h after the trip</span>
         </div>
 
-        <div class="g-cam" id="camBox">
+        <div class="g-cam is-waiting" id="camBox">
           <video id="camVideo" playsinline autoplay muted></video>
           <img id="camShot" alt="" style="display:none">
-          <div class="g-cam-frame" aria-hidden></div>
-          <div class="g-cam-hint" id="camHint">Look at the camera</div>
+          <div class="g-cam-frame" id="camFrame" aria-hidden></div>
+          <!-- the guide sits over the live preview and changes as the rider moves:
+               one instruction at a time, phrased as the next thing to do -->
+          <div class="g-cam-guide" id="guideEl" aria-live="polite">Getting ready</div>
         </div>
+        <p class="g-cam-sub" id="guideSub">Hold the phone up so your face is in the frame.</p>
+        <p class="g-cam-hint" id="camHint" aria-live="polite"></p>
 
         <div class="g-consent">
           <input type="checkbox" id="consentBox">
@@ -326,7 +330,7 @@ const GOGOSafety = (() => {
         </div>
 
         <div class="g-row g-mt" id="camBtns">
-          <button class="g-btn g-btn-ink" id="shotBtn" type="button"><span aria-hidden>${GEMO("camera")}</span> Take selfie</button>
+          <button class="g-btn g-btn-ink is-locked" id="shotBtn" type="button" disabled aria-disabled="true"><span aria-hidden>${GEMO("camera")}</span> Take selfie</button>
           <button class="g-btn g-btn-outline" id="retakeBtn" type="button" style="display:none">Retake</button>
           <button class="g-btn g-btn-outline" id="fileBtn" type="button"><span aria-hidden>${GICON("camera")}</span> Use a photo</button>
           <button class="g-btn g-btn-ghost" id="cancelBtn" type="button">Cancel</button>
@@ -342,6 +346,9 @@ const GOGOSafety = (() => {
     const hint = sheet.querySelector("#camHint");
     const consent = sheet.querySelector("#consentBox");
     const shotBtn = sheet.querySelector("#shotBtn");
+    const frame = sheet.querySelector("#camFrame");
+    const guideEl = sheet.querySelector("#guideEl");
+    const guideSub = sheet.querySelector("#guideSub");
     const retakeBtn = sheet.querySelector("#retakeBtn");
     const note = sheet.querySelector("#camNote");
     let stream = null, dataUrl = existing ? existing.dataUrl : null, confirmed = false;
@@ -358,6 +365,9 @@ const GOGOSafety = (() => {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 640 }, audio: false });
         video.srcObject = stream; video.style.display = "block"; shot.style.display = "none";
         shotBtn.innerHTML = `<span aria-hidden>${GEMO("camera")}</span> Take selfie`;
+        /* only start scoring once there is a real frame to score */
+        video.addEventListener("loadeddata", () => startLive(), { once: true });
+        if (video.readyState >= 2) startLive();
       } catch (e) {
         video.style.display = "none";
         hint.textContent = "No camera access — use a photo instead";
@@ -366,7 +376,133 @@ const GOGOSafety = (() => {
     }
     startCam();
 
-    function stopCam() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+    function stopCam() {
+      stopLive();
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    }
+
+    /* ══ LIVE SELFIE ANALYSIS ═══════════════════════════════════════════════════
+       The camera stays open and frames are sampled continuously. Nothing is ever
+       "taken and then judged" — the shutter is physically disabled until a frame
+       has been confirmed good, so an unusable selfie cannot be captured at all.
+
+       Each sample is a 256px square: small enough to upload in a few tens of
+       kilobytes over a phone connection, big enough for the detector to find a
+       face and for us to judge how much of the frame it fills. */
+    const SAMPLE_MS = 700;
+    const SAMPLE_SIDE = 256;
+    let live = { running: false, inFlight: false, good: 0, last: null, timer: null };
+
+    function sampleFrame() {
+      const c = document.createElement("canvas");
+      c.width = SAMPLE_SIDE; c.height = SAMPLE_SIDE;
+      const ctx = c.getContext("2d");
+      const vw = video.videoWidth || 640, vh = video.videoHeight || 640;
+      const side = Math.min(vw, vh);
+      ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, SAMPLE_SIDE, SAMPLE_SIDE);
+      return c.toDataURL("image/jpeg", 0.72);
+    }
+
+    /* the one instruction to show, phrased as an action */
+    const GUIDE = {
+      none:       { say: "Look at the camera",        fix: "Point the phone at your face and hold it up." },
+      multiple:   { say: "Just you in the photo",     fix: "Move so nobody else is in the frame." },
+      small:      { say: "Come a little closer",      fix: "Your face should fill most of the circle." },
+      tooclose:   { say: "Hold the phone further",    fix: "Arm's length, so your whole face fits." },
+      offcentre:  { say: "Centre your face",          fix: "Keep your whole face inside the frame." },
+      low_conf:   { say: "Hold still a moment",       fix: "Steady the phone, or move to better light." },
+      dark:       { say: "Find more light",           fix: "Face a window, or turn on a light." },
+      blown:      { say: "Too much light behind you", fix: "Turn so the light is on your face, not behind it." },
+      flat:       { say: "Look at the camera",        fix: "Point the phone at your face." },
+      unavailable:{ say: "Hang on a moment",          fix: "Still warming up." },
+    };
+
+    function paintLive(state, detail) {
+      if (!frame) return;
+      frame.classList.remove("is-waiting", "is-good", "is-bad");
+      frame.classList.add(state === "good" ? "is-good" : state === "bad" ? "is-bad" : "is-waiting");
+      if (guideEl) {
+        guideEl.textContent = detail && detail.say ? detail.say : "";
+        guideEl.hidden = !(detail && detail.say);
+      }
+      if (guideSub) guideSub.textContent = detail && detail.fix ? detail.fix : "";
+      if (shotBtn) {
+        const can = state === "good";
+        shotBtn.disabled = !can;
+        shotBtn.setAttribute("aria-disabled", can ? "false" : "true");
+        shotBtn.classList.toggle("is-locked", !can);
+      }
+    }
+
+    async function liveTick() {
+      if (!live.running || live.inFlight) return;
+      if (!stream || video.readyState < 2 || !video.videoWidth) return;
+
+      live.inFlight = true;
+      try {
+        const shot = sampleFrame();
+        const blob = await (await fetch(shot)).blob();
+        const fd = new FormData();
+        fd.append("file", blob, "frame.jpg");
+
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 9000);
+        let res;
+        try {
+          res = await fetch(`/api/selfie/check?w=${SAMPLE_SIDE}&h=${SAMPLE_SIDE}`, {
+            method: "POST", body: fd, signal: ctl.signal,
+          });
+        } finally { clearTimeout(t); }
+
+        const out = await res.json();
+        live.last = out;
+
+        if (out.code === "unavailable") {
+          /* the detector is warming up or briefly down. We must not flash red at
+             the rider for our own fault, and we must not unlock the shutter on an
+             unchecked frame either. Hold at "waiting". */
+          paintLive("waiting", GUIDE.unavailable);
+          live.good = 0;
+          return;
+        }
+
+        if (out.ok) {
+          /* one good frame can be a lucky frame. Require TWO in a row before the
+             shutter unlocks, so a mid-blink or mid-turn sample cannot pass. */
+          live.good += 1;
+          if (live.good >= 2) {
+            paintLive("good", { say: "That's a good one", fix: "Tap the button to keep it." });
+            hint.textContent = "Ready";
+          } else {
+            paintLive("waiting", { say: "Hold that", fix: "Just a moment more." });
+          }
+          return;
+        }
+
+        live.good = 0;
+        paintLive("bad", GUIDE[out.code] || { say: out.say, fix: out.hint });
+      } catch (e) {
+        /* a dropped sample is not a reason to alarm anyone */
+        paintLive("waiting", GUIDE.unavailable);
+        live.good = 0;
+      } finally {
+        live.inFlight = false;
+      }
+    }
+
+    function startLive() {
+      if (live.running) return;
+      live.running = true;
+      live.good = 0;
+      paintLive("waiting", { say: "Getting ready", fix: "Hold the phone up so your face is in the frame." });
+      live.timer = setInterval(liveTick, SAMPLE_MS);
+      setTimeout(liveTick, 300);
+    }
+
+    function stopLive() {
+      live.running = false;
+      if (live.timer) { clearInterval(live.timer); live.timer = null; }
+    }
 
     function toDataUrl(source, w, h) {
       const c = document.createElement("canvas");
@@ -476,9 +612,34 @@ const GOGOSafety = (() => {
       if (confirmed && dataUrl && verdict) { return; }
 
       if (video.style.display !== "none" && video.videoWidth) {
+        /* ══ THE SHUTTER ONLY FIRES ON A CONFIRMED FRAME ═══════════════════════
+           The button is disabled until the live loop has seen two good frames in
+           a row, so this is the second of two guards rather than the only one -
+           a disabled attribute can be removed from a devtools console, and a
+           safety record that can be forced is not a record.
+
+           If the loop has not confirmed the frame we do NOT capture. We say what
+           to do instead, which is the whole point of a live viewfinder. */
+        if (!(live.good >= 2 && live.last && live.last.ok)) {
+          const g = (live.last && !live.last.ok && GUIDE[live.last.code]) || { say: "Look at the camera", fix: "Hold the phone so your face fills the frame." };
+          paintLive("bad", g);
+          toast("<b>" + g.say + "</b> — " + g.fix);
+          return;
+        }
+
         dataUrl = toDataUrl(video, video.videoWidth, video.videoHeight);
-        confirmed = true; verdict = null;
-        judge(dataUrl, video.videoWidth, video.videoHeight);
+        confirmed = true; verdict = { pass: true, score: 100, problems: [],
+                                      note: "Clear photo — your driver will see this." };
+        stopLive();
+        /* stop the preview and show the captured frame, so the rider can see
+           exactly what will be stored */
+        stopCam();
+        video.style.display = "none";
+        shot.src = dataUrl; shot.style.display = "block";
+        paintLive("good", { say: "That's a good one", fix: "Tap Keep this selfie to save it." });
+        shotBtn.innerHTML = `<span aria-hidden>${GICON("check")}</span> Keep this selfie`;
+        shotBtn.disabled = false;
+        shotBtn.onclick = () => finish();
       } else {
         sheet.querySelector("#camFile").click();                   // no camera: pick a photo
       }

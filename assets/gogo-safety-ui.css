@@ -381,3 +381,111 @@
 
 /* the old lock block must never lay out again, even if a cached page has it */
 .g-vault-locked { display: none !important; }
+
+/* ══ THE LIVE SELFIE VIEWFINDER ═════════════════════════════════════════════
+   The camera is a ring that reports state as you move, not a box you point and
+   hope with. Three states, and the border colour is the whole message:
+
+     waiting  amber hairline   still looking for a face
+     good     lime ring        confirmed, shutter unlocked
+     bad      red ring         something to fix, and the guide says what
+
+   Green at the moment it is actually true is worth more than any amount of
+   explanation afterwards. */
+
+.g-cam { position: relative; }
+
+.g-cam-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 3px solid rgba(180, 180, 170, .55);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.g-cam.is-waiting .g-cam-frame { border-color: #D9A93E; box-shadow: inset 0 0 0 1px rgba(217,169,62,.25); }
+.g-cam.is-good .g-cam-frame    { border-color: #A3E635; box-shadow: 0 0 0 3px rgba(163,230,53,.25), inset 0 0 0 1px rgba(163,230,53,.35); }
+.g-cam.is-bad .g-cam-frame     { border-color: #D2503C; box-shadow: inset 0 0 0 1px rgba(210,80,60,.22); }
+
+/* the one instruction, over the preview */
+.g-cam-guide {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  background: rgba(18, 18, 18, .74);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  text-align: center;
+  line-height: 1.3;
+  transition: opacity .16s ease;
+}
+
+.g-cam.is-good .g-cam-guide { background: rgba(58, 92, 12, .84); color: #EAFBC8; }
+.g-cam.is-bad .g-cam-guide  { background: rgba(120, 32, 22, .84); color: #FFE2DC; }
+
+/* the second line, under the viewfinder: what to actually do about it */
+.g-cam-sub {
+  margin: 9px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #6E6E68;
+  text-align: center;
+  min-height: 18px;
+}
+
+/* a locked shutter must LOOK locked: a disabled button that still looks live is
+   the reason people tap it and think the app is broken */
+#shotBtn.is-locked,
+#shotBtn[disabled] {
+  background: #E9E9E3;
+  color: #A6A69E;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#shotBtn.is-locked:active,
+#shotBtn[disabled]:active { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .g-cam-frame { transition: none; }
+}
+
+/* ── the ring wins over gogo-chat.css ──────────────────────────────────────
+   .g-cam-frame there is a 2px DASHED lime circle at inset 12%, which read as
+   "green, therefore good" no matter what the detector actually said. This is the
+   whole message of the viewfinder, so it is full-bleed, solid, and driven by the
+   .is-waiting / .is-good / .is-bad class on the parent. */
+.g-cam .g-cam-frame,
+.g-cam.is-waiting .g-cam-frame,
+.g-cam.is-good .g-cam-frame,
+.g-cam.is-bad .g-cam-frame {
+  inset: 0;
+  border-radius: inherit;
+  border-style: solid;
+  border-width: 3px;
+}
+
+.g-cam.is-waiting .g-cam-frame { border-color: #D9A93E; }
+.g-cam.is-good    .g-cam-frame { border-color: #A3E635; }
+.g-cam.is-bad     .g-cam-frame { border-color: #D2503C; }
+
+/* the old hint pinned itself to the bottom of the preview, where it collided
+   with the guide. It is plain text under the viewfinder now. */
+.g-cam .g-cam-hint {
+  position: static;
+  left: auto; right: auto; bottom: auto;
+  color: #8A8A83;
+  text-shadow: none;
+  font-size: 11.5px;
+  font-weight: 500;
+  margin: 4px 0 0;
+  text-align: center;
+}
