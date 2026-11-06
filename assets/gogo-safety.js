@@ -361,6 +361,38 @@ const GOGOSafety = (() => {
     }
 
     async function startCam() {
+      /* ══ RESET BEFORE RE-OPENING ═════════════════════════════════════════════
+         startCam() is called on first open AND on every retake. It only ever set
+         up the stream, so on a retake the previous run's state was still on the
+         element: the captured image still showed, the guide still said "That's a
+         good one", a lime ring still claimed the shot was confirmed, and the old
+         live loop was still ticking. That is the "camera guide card doesn't go
+         away" and the "keeps saving in the background" — an orphaned interval
+         kept sampling and POSTing after the sheet had moved on.
+
+         Everything is reset here, in one place, so there is no path into the
+         camera that skips it. */
+      stopLive();
+      live.good = 0;
+      live.last = null;
+      dataUrl = null;
+      confirmed = false;
+      checking = false;
+      verdict = null;
+
+      shot.src = ""; shot.style.display = "none";
+      video.style.display = "block";
+      shotBtn.disabled = true;
+      shotBtn.classList.add("is-locked");
+      shotBtn.innerHTML = `<span aria-hidden>${GEMO("camera")}</span> Take selfie`;
+      shotBtn.onclick = shutterHandler;
+      retakeBtn.style.display = "none";
+
+      const vb = sheet.querySelector("#camVerdict");
+      if (vb) { vb.hidden = true; vb.innerHTML = ""; }
+      hint.textContent = "";
+      paintLive("waiting", { say: "Getting ready", fix: "Hold the phone up so your face is in the frame." });
+
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 640, height: 640 }, audio: false });
         video.srcObject = stream; video.style.display = "block"; shot.style.display = "none";
@@ -422,8 +454,19 @@ const GOGOSafety = (() => {
 
     function paintLive(state, detail) {
       if (!frame) return;
-      frame.classList.remove("is-waiting", "is-good", "is-bad");
-      frame.classList.add(state === "good" ? "is-good" : state === "bad" ? "is-bad" : "is-waiting");
+      /* ══ THE STATE CLASS BELONGS ON THE PARENT ══════════════════════════════
+         The CSS reads .g-cam.is-good .g-cam-frame — state on the container,
+         styling on the ring inside it. This set the class on the ring instead, so
+         nothing matched and the border never changed: it stayed on whatever class
+         the markup shipped with (lime), which reads as "confirmed" no matter what
+         the detector said. Both are set now, so either selector works. */
+      const set = (el) => {
+        if (!el) return;
+        el.classList.remove("is-waiting", "is-good", "is-bad");
+        el.classList.add(state === "good" ? "is-good" : state === "bad" ? "is-bad" : "is-waiting");
+      };
+      set(frame);
+      set(frame.parentElement);
       if (guideEl) {
         guideEl.textContent = detail && detail.say ? detail.say : "";
         guideEl.hidden = !(detail && detail.say);
@@ -561,7 +604,7 @@ const GOGOSafety = (() => {
               : "");
         }
         shotBtn.innerHTML = `<span aria-hidden>${GICON("camera")}</span> Retake`;
-        shotBtn.onclick = () => { dataUrl = null; confirmed = false; verdict = null; startCam(); };
+        shotBtn.onclick = () => startCam();
         return;
       }
 
@@ -608,7 +651,7 @@ const GOGOSafety = (() => {
        Now there is exactly one exit: finish() is only reachable from paint() once
        a verdict exists AND it passed. There is no path from a raw photo to a saved
        record. */
-    shotBtn.onclick = () => {
+    function shutterHandler() {
       if (!consent.checked) { toast("Please tick the consent box first"); return; }
 
       /* a verdict already exists and passed: paint() owns the action, so let it */
@@ -646,9 +689,11 @@ const GOGOSafety = (() => {
       } else {
         sheet.querySelector("#camFile").click();                   // no camera: pick a photo
       }
-    };
+    }
 
-    retakeBtn.onclick = () => { dataUrl = null; confirmed = false; verdict = null; startCam(); };
+    shotBtn.onclick = shutterHandler;
+
+    retakeBtn.onclick = () => startCam();
     sheet.querySelector("#fileBtn").onclick = () => sheet.querySelector("#camFile").click();
     sheet.querySelector("#camFile").onchange = e => {
       const f = e.target.files && e.target.files[0]; if (!f) return;
