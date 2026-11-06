@@ -49,6 +49,18 @@
   <link rel="stylesheet" href="/gogo/assets/gogo-install.css?v=1793074404">
 <link rel="stylesheet" href="assets/gogo-support.css">
 <link rel="stylesheet" href="assets/gogo-support-fab.css">
+
+<!-- ══ THE STYLESHEETS THIS PAGE ACTUALLY NEEDS ══════════════════════════════
+     Neither of these was linked, and gogo-live-*.css - the only sheet the page
+     was loading - contains ZERO gdb-, gdr- or gmode rules. So the dashboard and
+     the whole driver console rendered as raw unstyled text: correct markup, no
+     cards, no money hero, no borders, no switch styling.
+
+     gogo-dashboard-new.css  the dashboard: hero, cards, tab strip, items, footer
+     gogo-driver-mode.css    the driver console: gdr- money/stats/rides AND the
+                             gmode Passenger/Driver switch it renders itself -->
+<link rel="stylesheet" href="assets/gogo-dashboard-new-002bd71fdc.css">
+<link rel="stylesheet" href="assets/gogo-driver-mode-b94443458e.css">
 </head>
 <body data-page="dashboard" class="g-dock-body">
 <a class="g-skip" href="#main">Skip to content</a>
