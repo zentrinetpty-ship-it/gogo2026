@@ -105,6 +105,8 @@ const GOGODashboard = (() => {
     return `
     <div class="gdb">
 
+      ${window.GOGODriver ? window.GOGODriver.switchHtml("passenger") : ""}
+
       <!-- ── hero ──────────────────────────────────────────────────────── -->
       <section class="gdb-hero" data-anim="1">
         <p class="gdb-eyebrow">${esc(timeOfDay())}${onboarded ? ", " + esc(name) : ""}</p>
@@ -380,16 +382,6 @@ const GOGODashboard = (() => {
     const host = document.getElementById("main");
     if (!host) return;
 
-    /* ══ MODE FIRST ═══════════════════════════════════════════════════════════
-       If the mode is driver, the driver console IS this page. Rendering the rider
-       shell first and swapping afterwards showed a flash of the wrong screen and,
-       worse, nothing swapped at all when boot() was the only entry point. */
-    if (window.GOGODriver && GOGODriver.getMode() === "driver") {
-      host.innerHTML = '<div class="g-wrap g-section"><div id="gdbDriverHost"></div></div>';
-      GOGODriver.render(document.getElementById("gdbDriverHost"));
-      return;
-    }
-
     /* who is signed in. The dashboard gate has already redirected guests, so
        this should always resolve — but it must not render a name it cannot
        verify, so a failure falls back to a generic greeting. */
@@ -398,126 +390,41 @@ const GOGODashboard = (() => {
       if (typeof GOGOAuth !== "undefined" && GOGOAuth.me) user = await GOGOAuth.me();
     } catch (e) { /* generic greeting */ }
 
+    /* ── driver mode ──────────────────────────────────────────────────────
+       A rider and a driver are one account with two views, so the choice lives
+       here rather than in a separate app. The remembered mode is read before
+       anything renders: showing passenger content first and swapping a moment
+       later flashes the wrong screen at the person who drives for a living. */
+    const mode = window.GOGODriver ? window.GOGODriver.getMode() : "passenger";
+
+    if (mode === "driver" && window.GOGODriver) {
+      window.GOGODriver.render(host);
+      return;
+    }
+
     const data = readStore();
     host.innerHTML = render(user, data);
 
     animateIn(host);
     wireTabs(host);
-    paintModeSwitch();
-
-    /* ── the Driver tab ───────────────────────────────────────────────────────
-       boot() has just rendered the tablist, so this is the first moment the driver
-       host exists. ?tab=driver - and the Account page's ?mode=driver - must both
-       OPEN the tab and RENDER into it. A click handler alone can do neither on a
-       cold load: there is no click. */
-    /* ══ PASSENGER / DRIVER IS A MODE, NOT A TAB ══════════════════════════════
-       This was built as a fifth tab, which is the wrong shape entirely. There is
-       one account with two entire views: a rider's dashboard and a driver's
-       console with money, listings, load, and payouts. Everything a driver needs
-       lives in GOGODriver.render() - it was never a tab's worth of content.
-
-       So when the mode is driver, the whole dashboard is replaced by the driver
-       screen, and the switch it renders at the top brings you back. */
-    if (window.GOGODriver && GOGODriver.getMode() === "driver") {
-      mountDriver();
-    }
+    wireMode(host);
   }
 
-  return { boot, render };
-
-  /* ══ DRIVER MODE ═══════════════════════════════════════════════════════════
-     GOGODriver has been sitting unused since the dashboard was rebuilt. The
-     Account page still links to dashboard.html?mode=driver, and that link went
-     nowhere because no page loaded the module — so the Driver tab vanished
-     without anyone deleting it.
-
-     Rendered lazily on first use, so a passenger who never drives does not pay
-     for /driver/me on every dashboard visit. */
-  /* ══ THE DRIVER SCREEN REPLACES THE DASHBOARD ═════════════════════════════
-     GOGODriver.render(host) already builds everything: the Passenger/Driver
-     switch, the balance with Withdraw, earned / pending / paid out, load factor,
-     seats sold, rating, the ride list with List a ride, and the ledger. It expects
-     a whole page, so it is given the page - not a tab panel a few hundred pixels
-     tall. */
-  function mountDriver() {
-    const main = document.getElementById("main");
-    if (!main || !window.GOGODriver) return;
-    main.innerHTML = '<div class="g-wrap g-section"><div id="gdbDriverHost"></div></div>';
-    return Promise.resolve(GOGODriver.render(document.getElementById("gdbDriverHost")));
-  }
-
-  /* the way IN: a switch on the passenger dashboard, mirroring the one the driver
-     screen renders for coming back */
-  function paintModeSwitch() {
-    const main = document.getElementById("main");
-    if (!main || !window.GOGODriver || main.querySelector(".gmode-dash")) return;
-    const isDriver = GOGODriver.getMode() === "driver";
-    const el = document.createElement("div");
-    el.className = "gmode gmode-dash";
-    el.setAttribute("role", "tablist");
-    el.setAttribute("aria-label", "Mode");
-    el.innerHTML =
-      `<button class="gmode-b${isDriver ? "" : " on"}" data-mode="passenger" role="tab" aria-selected="${!isDriver}" type="button">Passenger</button>
-       <button class="gmode-b${isDriver ? " on" : ""}" data-mode="driver" role="tab" aria-selected="${isDriver}" type="button">Driver</button>`;
-    main.insertBefore(el, main.firstChild);
-    el.querySelectorAll("[data-mode]").forEach(b => {
+  /* The mode switch on the passenger side. Clicking Driver hands off to the
+     driver module, which owns its own rendering and its own server calls. */
+  function wireMode(host) {
+    host.querySelectorAll("[data-mode]").forEach((b) => {
       b.addEventListener("click", () => {
-        const want = b.getAttribute("data-mode");
-        if (GOGODriver.getMode() === want) return;
-        GOGODriver.setMode(want);
-        if (want === "driver") { mountDriver(); return; }
-        /* back to rider: rebuild the dashboard, which re-reads the store */
-        boot();
+        const m = b.getAttribute("data-mode");
+        if (window.GOGODriver) window.GOGODriver.setMode(m);
+        if (m === "driver" && window.GOGODriver) {
+          window.GOGODriver.render(host);
+        }
       });
     });
   }
 
-  function selectTab(id) {
-    const t = document.querySelector(`.gdb-tab[data-tab="${id}"]`);
-    if (t) t.click();
-  }
-
-  /* ?mode=driver from the Account page, or ?tab=driver from a link */
-  const params = new URLSearchParams(location.search);
-  const wantDriver = params.get("mode") === "driver" || params.get("tab") === "driver";
-  if (wantDriver) selectTab("driver");
-
-  document.querySelectorAll('.gdb-tab').forEach(t => {
-    t.addEventListener("click", () => {
-      if (t.dataset.tab === "driver") mountDriver();
-    });
-  });
-
-  /* ══ DRIVER MODE ═══════════════════════════════════════════════════════════
-     GOGODriver has sat unused since the dashboard was rebuilt. The Account page
-     still links to dashboard.html?mode=driver, and that link went nowhere because
-     no page loaded the module - so the Driver tab disappeared without anyone
-     deleting it, which is the worst way for a feature to vanish.
-
-     Rendered lazily on first use, so a passenger who never drives does not pay
-     for a /driver/me request on every dashboard visit. */
-  function mountDriver() {
-    const host = document.getElementById("gdbDriverHost");
-    if (!host || !window.GOGODriver) return;
-    if (host.dataset.mounted === "1") return;
-    host.dataset.mounted = "1";
-    GOGODriver.render(host);
-  }
-
-  function selectTab(id) {
-    const t = document.querySelector('.gdb-tab[data-tab="' + id + '"]');
-    if (t) t.click();
-  }
-
-  /* ══ TIMING ═══════════════════════════════════════════════════════════════
-     This ran at the end of the IIFE, before the dashboard had rendered its tabs,
-     so querySelectorAll(".gdb-tab") found nothing and the listener was never
-     attached — the Driver tab switched to an empty panel and stayed empty.
-
-     The tabs are built during boot, so the listener is delegated from document
-     (survives re-render) and the ?mode=driver case waits for the first paint. */
-  function wireDriver() { /* mode handling lives in boot() and paintModeSwitch() */ }
-  wireDriver();
+  return { boot, render, wireMode };
 })();
 
 window.GOGODashboard = GOGODashboard;
