@@ -138,7 +138,6 @@ const GOGODashboard = (() => {
         ${tab("trips", "My trips", false)}
         ${tab("parcels", "Parcels", false)}
         ${tab("plan", "Plan", false)}
-        ${tab("driver", "Driver", false)}
       </div>
 
       <div class="gdb-panels">
@@ -146,7 +145,6 @@ const GOGODashboard = (() => {
         ${panel("trips", false, tripsPane(data))}
         ${panel("parcels", false, parcelsPane(data))}
         ${panel("plan", false, planPane(home))}
-        ${panel("driver", false, '<div id="gdbDriverHost" class="gdb-driver-host"></div>')}
       </div>
 
       <!-- ── quiet footer rows ────────────────────────────────────────── -->
@@ -382,6 +380,16 @@ const GOGODashboard = (() => {
     const host = document.getElementById("main");
     if (!host) return;
 
+    /* ══ MODE FIRST ═══════════════════════════════════════════════════════════
+       If the mode is driver, the driver console IS this page. Rendering the rider
+       shell first and swapping afterwards showed a flash of the wrong screen and,
+       worse, nothing swapped at all when boot() was the only entry point. */
+    if (window.GOGODriver && GOGODriver.getMode() === "driver") {
+      host.innerHTML = '<div class="g-wrap g-section"><div id="gdbDriverHost"></div></div>';
+      GOGODriver.render(document.getElementById("gdbDriverHost"));
+      return;
+    }
+
     /* who is signed in. The dashboard gate has already redirected guests, so
        this should always resolve — but it must not render a name it cannot
        verify, so a failure falls back to a generic greeting. */
@@ -395,16 +403,22 @@ const GOGODashboard = (() => {
 
     animateIn(host);
     wireTabs(host);
+    paintModeSwitch();
 
     /* ── the Driver tab ───────────────────────────────────────────────────────
        boot() has just rendered the tablist, so this is the first moment the driver
        host exists. ?tab=driver - and the Account page's ?mode=driver - must both
        OPEN the tab and RENDER into it. A click handler alone can do neither on a
        cold load: there is no click. */
-    const params = new URLSearchParams(location.search);
-    if (params.get("mode") === "driver" || params.get("tab") === "driver") {
-      const dt = document.querySelector('.gdb-tab[data-tab="driver"]');
-      if (dt) dt.click();
+    /* ══ PASSENGER / DRIVER IS A MODE, NOT A TAB ══════════════════════════════
+       This was built as a fifth tab, which is the wrong shape entirely. There is
+       one account with two entire views: a rider's dashboard and a driver's
+       console with money, listings, load, and payouts. Everything a driver needs
+       lives in GOGODriver.render() - it was never a tab's worth of content.
+
+       So when the mode is driver, the whole dashboard is replaced by the driver
+       screen, and the switch it renders at the top brings you back. */
+    if (window.GOGODriver && GOGODriver.getMode() === "driver") {
       mountDriver();
     }
   }
@@ -419,16 +433,43 @@ const GOGODashboard = (() => {
 
      Rendered lazily on first use, so a passenger who never drives does not pay
      for /driver/me on every dashboard visit. */
+  /* ══ THE DRIVER SCREEN REPLACES THE DASHBOARD ═════════════════════════════
+     GOGODriver.render(host) already builds everything: the Passenger/Driver
+     switch, the balance with Withdraw, earned / pending / paid out, load factor,
+     seats sold, rating, the ride list with List a ride, and the ledger. It expects
+     a whole page, so it is given the page - not a tab panel a few hundred pixels
+     tall. */
   function mountDriver() {
-    const host = document.getElementById("gdbDriverHost");
-    if (!host || !window.GOGODriver) return;
-    /* mark only AFTER the render resolves. Setting it first meant a render that
-       was still in flight blocked the retry, so the panel could stay empty for
-       good on a slow connection. */
-    if (host.dataset.mounted === "1") return;
-    Promise.resolve(GOGODriver.render(host))
-      .then(() => { host.dataset.mounted = "1"; })
-      .catch(() => { host.dataset.mounted = ""; });
+    const main = document.getElementById("main");
+    if (!main || !window.GOGODriver) return;
+    main.innerHTML = '<div class="g-wrap g-section"><div id="gdbDriverHost"></div></div>';
+    return Promise.resolve(GOGODriver.render(document.getElementById("gdbDriverHost")));
+  }
+
+  /* the way IN: a switch on the passenger dashboard, mirroring the one the driver
+     screen renders for coming back */
+  function paintModeSwitch() {
+    const main = document.getElementById("main");
+    if (!main || !window.GOGODriver || main.querySelector(".gmode-dash")) return;
+    const isDriver = GOGODriver.getMode() === "driver";
+    const el = document.createElement("div");
+    el.className = "gmode gmode-dash";
+    el.setAttribute("role", "tablist");
+    el.setAttribute("aria-label", "Mode");
+    el.innerHTML =
+      `<button class="gmode-b${isDriver ? "" : " on"}" data-mode="passenger" role="tab" aria-selected="${!isDriver}" type="button">Passenger</button>
+       <button class="gmode-b${isDriver ? " on" : ""}" data-mode="driver" role="tab" aria-selected="${isDriver}" type="button">Driver</button>`;
+    main.insertBefore(el, main.firstChild);
+    el.querySelectorAll("[data-mode]").forEach(b => {
+      b.addEventListener("click", () => {
+        const want = b.getAttribute("data-mode");
+        if (GOGODriver.getMode() === want) return;
+        GOGODriver.setMode(want);
+        if (want === "driver") { mountDriver(); return; }
+        /* back to rider: rebuild the dashboard, which re-reads the store */
+        boot();
+      });
+    });
   }
 
   function selectTab(id) {
@@ -475,27 +516,7 @@ const GOGODashboard = (() => {
 
      The tabs are built during boot, so the listener is delegated from document
      (survives re-render) and the ?mode=driver case waits for the first paint. */
-  function wireDriver() {
-    document.addEventListener("click", e => {
-      const t = e.target.closest && e.target.closest('.gdb-tab[data-tab="driver"]');
-      if (t) mountDriver();
-    });
-
-    const params = new URLSearchParams(location.search);
-    const wantDriver = params.get("mode") === "driver" || params.get("tab") === "driver";
-    if (!wantDriver) return;
-
-    /* one frame after boot, when the panels exist */
-    const start = () => {
-      selectTab("driver");
-      mountDriver();
-    };
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => setTimeout(start, 0));
-    } else {
-      setTimeout(start, 0);
-    }
-  }
+  function wireDriver() { /* mode handling lives in boot() and paintModeSwitch() */ }
   wireDriver();
 })();
 
