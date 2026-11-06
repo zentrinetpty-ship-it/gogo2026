@@ -152,7 +152,64 @@ const GOGOSafety = (() => {
      Ordered by what the rider can act on fastest. A black frame and a wall both
      score badly, but the instruction for each is different, and telling someone
      "the photo failed" when the real answer is "step into the light" is useless. */
-  async function checkSelfie(dataUrl) {
+  /* ══ THE REAL FACE CHECK ═══════════════════════════════════════════════════
+     Everything below this function measures PIXELS: brightness, contrast,
+     sharpness, how much of the frame is skin-coloured. Those numbers can tell you
+     a photo is dark or blurry. They cannot tell you whether there is a human face
+     in it — a well-lit photo of a wall scores well on every one of them.
+
+     So the gate is now the detector: CompreFace's FaceNet on our own server, asked
+     one question — is there exactly one clear, frontal, whole face here. It answers
+     with a box and a confidence, and we judge the box.
+
+     The pixel checks stay, but only as a fast local pre-screen: if the frame is
+     black we say "too dark" without a round trip. They never REJECT on their own,
+     because a heuristic must not overrule a real detector.
+
+     If the detector is unreachable the photo is ACCEPTED with a warning. A safety
+     gate that locks a rider out of booking because our server hiccuped is worse
+     than the risk it guards against. */
+  async function checkFace(dataUrl, w, h) {
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const fd = new FormData();
+      fd.append("file", blob, "selfie.jpg");
+
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 15000);
+      let res;
+      try {
+        res = await fetch(`/api/selfie/check?w=${w || 0}&h=${h || 0}`, {
+          method: "POST", body: fd, signal: ctl.signal,
+        });
+      } finally { clearTimeout(timer); }
+
+      const out = await res.json();
+
+      if (out.code === "unavailable") {
+        return { pass: true, score: null, problems: [],
+                 note: "We could not check the photo. It has been kept as it is." };
+      }
+
+      if (out.ok) {
+        return { pass: true, score: Math.round((out.face.probability || 0) * 100),
+                 problems: [], note: out.say || "Clear photo",
+                 faceFraction: out.face.faceFraction };
+      }
+
+      return {
+        pass: false,
+        score: 0,
+        problems: [{ key: out.code, say: out.say, fix: out.hint }],
+      };
+    } catch (e) {
+      /* offline, timeout, or a non-JSON reply: never block the rider */
+      return { pass: true, score: null, problems: [],
+               note: "Could not reach the check. The photo has been kept." };
+    }
+  }
+
+  async function preScreen(dataUrl) {
     const stats = await analysePixels(dataUrl);
     if (!stats.ok) {
       return { pass: true, score: null, problems: [], note: "Could not read the photo, keeping it as-is." };
@@ -208,6 +265,38 @@ const GOGOSafety = (() => {
       faces,
       /* the reassurance line shown on a good photo, so success is not silent */
       note: problems.length === 0 ? "Clear photo — your driver will see this." : problems[0].say,
+    };
+  }
+
+  /* ══ THE GATE ═══════════════════════════════════════════════════════════════
+     The detector decides. The pixel numbers only speak first when the frame is
+     obviously unusable, so a rider in a dark room gets an instant answer instead
+     of waiting for a round trip to be told the same thing.
+
+     A local problem that the detector does not share is NOT a rejection: skin
+     tone, contrast and sharpness thresholds are heuristics, and a heuristic must
+     never overrule a face detector that actually found the face. If the detector
+     says there is one clear face, that is the answer. */
+  async function checkSelfie(dataUrl, w, h) {
+    const local = await preScreen(dataUrl);
+
+    /* only these three are certain enough to reject without asking the server */
+    const hardStop = local.problems.filter(p => p.key === "dark" || p.key === "blown" || p.key === "flat");
+    if (hardStop.length) {
+      return { pass: false, score: 0, problems: hardStop, note: hardStop[0].say };
+    }
+
+    const face = await checkFace(dataUrl, w, h);
+
+    if (!face.pass) {
+      return face;
+    }
+    return {
+      pass: true,
+      score: face.score,
+      problems: [],
+      note: face.note || "Clear photo — your driver will see this.",
+      faceFraction: face.faceFraction,
     };
   }
 
@@ -357,10 +446,10 @@ const GOGOSafety = (() => {
     }
 
     /* ── run the engine on a freshly taken photo ────────────────────────────── */
-    async function judge(candidate) {
+    async function judge(candidate, dw, dh) {
       checking = true; confirmed = true; paint();
       try {
-        verdict = await checkSelfie(candidate);
+        verdict = await checkSelfie(candidate, dw, dh);
       } catch (e) {
         /* the gate must never lock someone out because a measurement failed */
         verdict = { pass: true, score: null, problems: [], note: "Could not check the photo." };
@@ -389,7 +478,7 @@ const GOGOSafety = (() => {
       if (video.style.display !== "none" && video.videoWidth) {
         dataUrl = toDataUrl(video, video.videoWidth, video.videoHeight);
         confirmed = true; verdict = null;
-        judge(dataUrl);
+        judge(dataUrl, video.videoWidth, video.videoHeight);
       } else {
         sheet.querySelector("#camFile").click();                   // no camera: pick a photo
       }
@@ -400,7 +489,7 @@ const GOGOSafety = (() => {
     sheet.querySelector("#camFile").onchange = e => {
       const f = e.target.files && e.target.files[0]; if (!f) return;
       const img = new Image();
-      img.onload = () => { dataUrl = toDataUrl(img, img.width, img.height); confirmed = true; verdict = null; judge(dataUrl); };
+      img.onload = () => { dataUrl = toDataUrl(img, img.width, img.height); confirmed = true; verdict = null; judge(dataUrl, img.width, img.height); };
       img.src = URL.createObjectURL(f);
     };
     sheet.querySelector("#cancelBtn").onclick = () => { stopCam(); sheet.remove(); };

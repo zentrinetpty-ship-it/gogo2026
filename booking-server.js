@@ -23,6 +23,7 @@
    ========================================================================= */
 
 const http = require("http");
+const faceCheck = require("./selfie-face");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -565,6 +566,18 @@ const server = http.createServer(async (req, res) => {
 
   /* ── POST /quote ── the server prices a seat. The client calls this and
      shows the result. It never needs to compute a total itself. ── */
+  /* ── POST /selfie/check ──────────────────────────────────────────────────
+     The face check for a safety selfie. Runs before the booking routes because
+     it is the cheapest gate in the system and the one most likely to be called in
+     a loop as a rider retries.
+
+     The browser sends the photo and the ORIGINAL dimensions; this forwards to the
+     local face core and judges the result. Nothing is stored: the photo is read,
+     measured and dropped. */
+  if (req.method === "POST" && route === "/selfie/check") {
+    return faceCheck.checkSelfie(req, res, json);
+  }
+
   if (req.method === "POST" && route === "/quote") {
     const b = await body(req);
     if (!b) return json(res, 400, { error: "bad json" });
